@@ -1,5 +1,7 @@
 package core
 
+import "assimp/common"
+
 type AiLightSourceType int
 
 const (
@@ -54,7 +56,7 @@ type AiLight struct {
 	 *
 	 *  The position is undefined for directional lights.
 	 */
-	Position AiVector3D
+	Position common.AiVector3D
 
 	/** Direction of the light source in space. Relative to the
 	 *  transformation of the node corresponding to the light.
@@ -62,7 +64,7 @@ type AiLight struct {
 	 *  The direction is undefined for point lights. The vector
 	 *  may be normalized, but it needn't.
 	 */
-	Direction AiVector3D
+	Direction common.AiVector3D
 
 	/** Up direction of the light source in space. Relative to the
 	 *  transformation of the node corresponding to the light.
@@ -70,7 +72,7 @@ type AiLight struct {
 	 *  The direction is undefined for point lights. The vector
 	 *  may be normalized, but it needn't.
 	 */
-	Up AiVector3D
+	Up common.AiVector3D
 
 	/** Constant light attenuation factor.
 	 *
@@ -82,7 +84,7 @@ type AiLight struct {
 	 *  This member corresponds to the att0 variable in the equation.
 	 *  Naturally undefined for directional lights.
 	 */
-	AttenuationConstant float64
+	AttenuationConstant float32
 
 	/** Linear light attenuation factor.
 	 *
@@ -94,7 +96,7 @@ type AiLight struct {
 	 *  This member corresponds to the att1 variable in the equation.
 	 *  Naturally undefined for directional lights.
 	 */
-	AttenuationLinear float64
+	AttenuationLinear float32
 
 	/** Quadratic light attenuation factor.
 	 *
@@ -106,7 +108,7 @@ type AiLight struct {
 	 *  This member corresponds to the att2 variable in the equation.
 	 *  Naturally undefined for directional lights.
 	 */
-	mAttenuationQuadratic float64
+	mAttenuationQuadratic float32
 
 	/** Diffuse color of the light source
 	 *
@@ -114,7 +116,7 @@ type AiLight struct {
 	 *  material color to obtain the final color that contributes
 	 *  to the diffuse shading term.
 	 */
-	ColorDiffuse AiColor3D
+	ColorDiffuse common.AiColor3D
 
 	/** Specular color of the light source
 	 *
@@ -122,7 +124,7 @@ type AiLight struct {
 	 *  material color to obtain the final color that contributes
 	 *  to the specular shading term.
 	 */
-	ColorSpecular AiColor3D
+	ColorSpecular common.AiColor3D
 
 	/** Ambient color of the light source
 	 *
@@ -132,7 +134,7 @@ type AiLight struct {
 	 *  this value it, is just a remaining of the fixed-function pipeline
 	 *  that is still supported by quite many file formats.
 	 */
-	ColorAmbient AiColor3D
+	ColorAmbient common.AiColor3D
 
 	/** Inner angle of a spot light's light cone.
 	 *
@@ -140,7 +142,7 @@ type AiLight struct {
 	 *  angle. The angle is given in radians. It is 2PI for point
 	 *  lights and undefined for directional lights.
 	 */
-	AngleInnerCon float64
+	AngleInnerCon float32
 
 	/** Outer angle of a spot light's light cone.
 	 *
@@ -152,8 +154,8 @@ type AiLight struct {
 	 *  interpolation between the inner and the outer cone of the
 	 *  spot light.
 	 */
-	AngleOuterCone float64
+	AngleOuterCone float32
 
 	/** Size of area light source. */
-	Size AiVector2D
+	Size common.AiVector2D
 }

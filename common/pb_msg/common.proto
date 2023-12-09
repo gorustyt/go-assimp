@@ -1,0 +1,35 @@
+syntax = "proto3";
+option go_package = "common/pb_msg";
+package pb_msg;
+
+message AiVector2D {
+  float X=1;
+  float Y=2;
+}
+
+message AiVector3D {
+  float X=1;
+  float Y=2;
+  float Z=3;
+}
+
+message AiVector4D {
+  float X=1;
+  float Y=2;
+  float Z=3;
+  float W=4;
+}
+
+message AiColor3D {
+  float R=1;
+  float G=2;
+  float B=3;
+}
+
+message AiColor4D {
+  float R=1;
+  float G=2;
+  float B=3;
+  float A=4;
+}
+

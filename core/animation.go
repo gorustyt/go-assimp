@@ -27,10 +27,10 @@ type AiAnimation struct {
 	Name string
 
 	/** Duration of the animation in ticks.  */
-	Duration float64
+	Duration float32
 
 	/** Ticks per second. 0 if not specified in the imported file */
-	TicksPerSecond float64
+	TicksPerSecond float32
 
 	/** The number of bone animation channels. Each channel affects
 	 *  a single node. */
@@ -73,14 +73,14 @@ type AiMeshMorphAnim struct {
 
 type AiMeshMorphKey struct {
 	/** The time of this key */
-	Time float64
+	Time float32
 
 	/** The values and weights at the time of this key
 	 *   - mValues: index of attachment mesh to apply weight at the same position in mWeights
 	 *   - mWeights: weight to apply to the blend shape index at the same position in mValues
 	 */
 	Values  []int
-	Weights []float64
+	Weights []float32
 
 	/** The number of values and weights */
 	NumValuesAndWeights int
@@ -176,7 +176,7 @@ type AiMeshAnim struct {
 
 type AiMeshKey struct {
 	/** The time of this key */
-	Time float64
+	Time float32
 
 	/** Index into the aiMesh::mAnimMeshes array of the
 	 *  mesh corresponding to the #aiMeshAnim hosting this
@@ -189,7 +189,7 @@ type AiMeshKey struct {
 
 type AiVectorKey struct {
 	/** The time of this key */
-	Time float64
+	Time float32
 
 	/** The value of this key */
 	Value AiVector3D
@@ -197,7 +197,7 @@ type AiVectorKey struct {
 
 type AiQuatKey struct {
 	/** The time of this key */
-	Time float64
+	Time float32
 
 	/** The value of this key */
 	Value AiQuaternion

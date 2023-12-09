@@ -1,27 +1,42 @@
 package common
 
-type AiVector2D [2]float64
-type AiVector3D [3]float64
-type AiVector4D [4]float64
-type AiColor4D struct {
-	R, G, B, A float64
-}
-type AiColor3D struct {
-	R, G, B float64
+import "assimp/common/pb_msg"
+
+type AiVector2D struct {
+	X, Y float32
 }
 
-func NewAiColor3D(R, G, B float64) AiColor3D {
+func (ai AiVector2D) ToPbMsg() *pb_msg.AiVector2D {
+	return &pb_msg.AiVector2D{X: ai.X, Y: ai.Y}
+}
+
+type AiColor4D struct {
+	R, G, B, A float32
+}
+
+func (ai AiColor4D) Empty() bool {
+	return ai.R == 0 && ai.G == 0 && ai.B == 0 && ai.A == 0
+}
+func (ai AiColor4D) ToPbMsg() *pb_msg.AiColor4D {
+	return &pb_msg.AiColor4D{R: ai.R, G: ai.G, B: ai.B, A: ai.A}
+}
+
+type AiColor3D struct {
+	R, G, B float32
+}
+
+func (ai AiColor3D) ToPbMsg() *pb_msg.AiColor3D {
+	return &pb_msg.AiColor3D{R: ai.R, G: ai.G, B: ai.B}
+}
+
+func NewAiColor3D(R, G, B float32) AiColor3D {
 	return AiColor3D{R: R, G: G, B: B}
 }
 
-type AiMatrix4x4 [16]float64
-
 type AiQuaternion struct {
-	W, X, Y, Z float64
+	W, X, Y, Z float32
 }
 
 type AiPropertyStore struct {
 	Sentinel uint8
 }
-
-type AiMatrix3x3 [9]float64

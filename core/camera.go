@@ -41,14 +41,14 @@ type AiCamera struct {
 	 *  line of the screen and the left or right border.
 	 *  The default value is 1/4PI.
 	 */
-	HorizontalFOV float64
+	HorizontalFOV float32
 
 	/** Distance of the near clipping plane from the camera.
 	 *
 	 * The value may not be 0.f (for arithmetic reasons to prevent
 	 * a division through zero). The default value is 0.1f.
 	 */
-	ClipPlaneNear float64
+	ClipPlaneNear float32
 
 	/** Distance of the far clipping plane from the camera.
 	 *
@@ -58,7 +58,7 @@ type AiCamera struct {
 	 * large (between 1000-10000 should be ok) to avoid floating-point
 	 * inaccuracies which could lead to z-fighting.
 	 */
-	ClipPlaneFar float64
+	ClipPlaneFar float32
 
 	/** Screen aspect ratio.
 	 *
@@ -67,7 +67,7 @@ type AiCamera struct {
 	 * 0 if the aspect ratio is not defined in the source file.
 	 * 0 is also the default value.
 	 */
-	Aspect float64
+	Aspect float32
 
 	/** Half horizontal orthographic width, in scene units.
 	 *
@@ -78,5 +78,5 @@ type AiCamera struct {
 	 *  and mHorizontalFOV should be set to 0.
 	 *  The default value is 0 (not orthographic).
 	 */
-	OrthographicWidth float64
+	OrthographicWidth float32
 }

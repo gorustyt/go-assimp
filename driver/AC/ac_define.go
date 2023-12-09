@@ -9,10 +9,10 @@ import (
 type ObjectType int
 
 const (
-	World          ObjectType = 0x0
-	PolyObjectType ObjectType = 0x1
-	Group          ObjectType = 0x2
-	Light          ObjectType = 0x4
+	World ObjectType = 0x0
+	Poly  ObjectType = 0x1
+	Group ObjectType = 0x2
+	Light ObjectType = 0x4
 )
 
 // Represents an AC3D object
@@ -22,7 +22,7 @@ type Object struct {
 	name string
 
 	// object children
-	children []Object
+	children []*Object
 
 	// texture to be assigned to all surfaces of the object
 	// the .acc format supports up to 4 textures
@@ -41,7 +41,7 @@ type Object struct {
 	vertices []common.AiVector3D
 
 	// surfaces
-	surfaces []Surface
+	surfaces []*Surface
 
 	// number of indices (= num verts in verbose format)
 	numRefs int
@@ -51,7 +51,7 @@ type Object struct {
 	subDiv int
 
 	// max angle limit for smoothing
-	crease float64
+	crease float32
 }
 
 func newObject() *Object {
@@ -72,10 +72,10 @@ const (
 	Mask          SurfaceType = 0xf
 )
 
-type SurfaceEntry map[int]common.AiVector2D
+type SurfaceEntry common.Pair[int, common.AiVector2D]
 type Surface struct {
 	mat, flags int
-	entries    SurfaceEntry
+	entries    []*SurfaceEntry
 }
 
 func (s *Surface) GetType() int { return s.flags & int(Mask) }
@@ -94,10 +94,10 @@ type Material struct {
 	spec common.AiColor3D
 
 	// shininess exponent
-	shin float64
+	shin float32
 
 	// transparency. 0 == opaque
-	trans float64
+	trans float32
 
 	// name of the material. optional.
 	name string
@@ -126,13 +126,13 @@ type AC3DImporter struct {
 	// counts how many objects we have in the tree.
 	// basing on this information we can find a
 	// good estimate how many meshes we'll have in the final scene.
-	mNumMeshes int
+	NumMeshes int
 
 	// current list of light sources
-	mLights []*core.AiLight
+	Lights []*core.AiLight
 
 	// name counters
-	mLightsCounter, mGroupsCounter, mPolysCounter, mWorldsCounter int
+	LightsCounter, GroupsCounter, PolysCounter, WorldsCounter int
 	base.BaseImporter
 }
 

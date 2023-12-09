@@ -13,5 +13,4 @@ type BaseImporter struct {
 
 func (base *BaseImporter) CheckMagicToken(magic string) bool {
 	return base.Reader.GetLineNum() == 1 && strings.HasPrefix(base.Reader.GetLine(), magic)
-
 }

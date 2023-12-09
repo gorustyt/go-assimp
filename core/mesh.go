@@ -1,5 +1,7 @@
 package core
 
+import "assimp/common"
+
 type AiMorphingMethod int
 
 const (
@@ -69,7 +71,7 @@ type AiMesh struct {
 	 * This array is always present in a mesh. The array is
 	 * mNumVertices in size.
 	 */
-	Vertices []*AiVector3D
+	Vertices []common.AiVector3D
 
 	/**
 	 * @brief Vertex normals.
@@ -84,7 +86,7 @@ type AiMesh struct {
 	 * qNaN compares to inequal to *everything*, even to qNaN itself.
 	 * Using code like this to check whether a field is qnan is:
 	 * @code
-	 * #define IS_QNAN(f) (f != f)
+	 * IS_QNAN(f) (f != f)
 	 * @endcode
 	 * still dangerous because even 1.f == 1.f could evaluate to false! (
 	 * remember the subtleties of IEEE754 artithmetics). Use stuff like
@@ -93,7 +95,7 @@ type AiMesh struct {
 	 * However, this needn't apply for normals that have been taken
 	 * directly from the model file.
 	 */
-	mNormals []*AiVector3D
+	Normals []common.AiVector3D
 
 	/**
 	 * @brief Vertex tangents.
@@ -109,7 +111,7 @@ type AiMesh struct {
 	 * @note If the mesh contains tangents, it automatically also
 	 * contains bitangents.
 	 */
-	Tangents []*AiVector3D
+	Tangents []common.AiVector3D
 
 	/**
 	 * @brief Vertex bitangents.
@@ -120,7 +122,7 @@ type AiMesh struct {
 	 * @note If the mesh contains tangents, it automatically also contains
 	 * bitangents.
 	 */
-	mBitangents []*AiVector3D
+	Bitangents []common.AiVector3D
 
 	/**
 	 * @brief Vertex color sets.
@@ -129,7 +131,7 @@ type AiMesh struct {
 	 * colors per vertex. nullptr if not present. Each array is
 	 * mNumVertices in size if present.
 	 */
-	Colors []AiColor4D
+	Colors [][]common.AiColor4D
 
 	/**
 	 * @brief Vertex texture coordinates, also known as UV channels.
@@ -137,7 +139,7 @@ type AiMesh struct {
 	 * A mesh may contain 0 to AI_MAX_NUMBER_OF_TEXTURECOORDS per
 	 * vertex. nullptr if not present. The array is mNumVertices in size.
 	 */
-	TextureCoords []AiVector3D
+	TextureCoords [][]common.AiVector3D
 
 	/**
 	 * @brief Specifies the number of components for a given UV channel.
@@ -231,10 +233,107 @@ type AiMesh struct {
 	TextureCoordsNames []string
 }
 
+// ! @brief Check whether the mesh contains positions. Provided no special
+// !        scene flags are set, this will always be true
+// ! @return true, if positions are stored, false if not.
+func (ai *AiMesh) HasPositions() bool {
+	return ai.Vertices != nil && ai.NumVertices > 0
+}
+
+// ! @brief Check whether the mesh contains faces. If no special scene flags
+// !        are set this should always return true
+// ! @return true, if faces are stored, false if not.
+func (ai *AiMesh) HasFaces() bool {
+	return ai.Faces != nil && ai.NumFaces > 0
+}
+
+// ! @brief Check whether the mesh contains normal vectors
+// ! @return true, if normals are stored, false if not.
+func (ai *AiMesh) HasNormals() bool {
+	return ai.Normals != nil && ai.NumVertices > 0
+}
+
+// ! @brief Check whether the mesh contains tangent and bitangent vectors.
+// !
+// ! It is not possible that it contains tangents and no bitangents
+// ! (or the other way round). The existence of one of them
+// ! implies that the second is there, too.
+// ! @return true, if tangents and bi-tangents are stored, false if not.
+func (ai *AiMesh) HasTangentsAndBitangents() bool {
+	return ai.Tangents != nil && ai.Bitangents != nil && ai.NumVertices > 0
+}
+
+// ! @brief Check whether the mesh contains a vertex color set
+// ! @param index    Index of the vertex color set
+// ! @return true, if vertex colors are stored, false if not.
+func (ai *AiMesh) HasVertexColors(index int) bool {
+	if index >= AI_MAX_NUMBER_OF_COLOR_SETS {
+		return false
+	}
+	return ai.Colors[index] != nil && ai.NumVertices > 0
+}
+
+// ! @brief Check whether the mesh contains a texture coordinate set
+// ! @param index    Index of the texture coordinates set
+// ! @return true, if texture coordinates are stored, false if not.
+func (ai *AiMesh) HasTextureCoords(index int) bool {
+	if index >= AI_MAX_NUMBER_OF_TEXTURECOORDS {
+		return false
+	}
+	return (ai.TextureCoords[index] != nil && ai.NumVertices > 0)
+}
+
+// ! @brief Get the number of UV channels the mesh contains.
+// ! @return the number of stored uv-channels.
+func (ai *AiMesh) GetNumUVChannels() int {
+	var n int
+	for n < AI_MAX_NUMBER_OF_TEXTURECOORDS && ai.TextureCoords[n] != nil {
+		n++
+	}
+
+	return n
+}
+
+// ! @brief Get the number of vertex color channels the mesh contains.
+// ! @return The number of stored color channels.
+func (ai *AiMesh) GetNumColorChannels() int {
+	var n int
+	for n < AI_MAX_NUMBER_OF_COLOR_SETS && ai.Colors[n] != nil {
+		n++
+	}
+	return n
+}
+
+// ! @brief Check whether the mesh contains bones.
+// ! @return true, if bones are stored.
+func (ai *AiMesh) HasBones() bool {
+	return ai.Bones != nil && ai.NumBones > 0
+}
+
+// ! @brief  Check whether the mesh contains a texture coordinate set name
+// ! @param pIndex Index of the texture coordinates set
+// ! @return true, if texture coordinates for the index exists.
+func (ai *AiMesh) HasTextureCoordsName(pIndex int) bool {
+	if ai.TextureCoordsNames == nil || pIndex >= AI_MAX_NUMBER_OF_TEXTURECOORDS {
+		return false
+	}
+	return ai.TextureCoordsNames[pIndex] != ""
+}
+
+// ! @brief  Get a texture coordinate set name
+// ! @param  pIndex Index of the texture coordinates set
+// ! @return The texture coordinate name.
+func (ai *AiMesh) GetTextureCoordsName(index int) string {
+	if ai.TextureCoordsNames == nil || index >= AI_MAX_NUMBER_OF_TEXTURECOORDS {
+		return ""
+	}
+
+	return ai.TextureCoordsNames[index]
+}
 func NewAiMesh() *AiMesh {
 	return &AiMesh{
 		NumUVComponents: make([]int, AI_MAX_NUMBER_OF_TEXTURECOORDS),
-		Colors:          make([]AiColor4D, AI_MAX_NUMBER_OF_COLOR_SETS),
+		Colors:          make([][]common.AiColor4D, AI_MAX_NUMBER_OF_COLOR_SETS),
 	}
 }
 
@@ -260,22 +359,22 @@ type AiAnimMesh struct {
 	 *  meshes may neither add or nor remove vertex components (if
 	 *  a replacement array is nullptr and the corresponding source
 	 *  array is not, the source data is taken instead)*/
-	Vertices []AiVector3D
+	Vertices []common.AiVector3D
 
 	/** Replacement for aiMesh::mNormals.  */
-	Normals []AiVector3D
+	Normals []common.AiVector3D
 
 	/** Replacement for aiMesh::mTangents. */
-	mTangents []AiVector3D
+	Tangents []common.AiVector3D
 
 	/** Replacement for aiMesh::mBitangents. */
-	mBitangents []AiVector3D
+	Bitangents []common.AiVector3D
 
 	/** Replacement for aiMesh::mColors */
-	Colors []AiColor4D
+	Colors [][]common.AiColor4D
 
 	/** Replacement for aiMesh::mTextureCoords */
-	TextureCoords []AiVector3D
+	TextureCoords [][]common.AiVector3D
 
 	/** The number of vertices in the aiAnimMesh, and thus the length of all
 	 * the member arrays.
@@ -290,20 +389,70 @@ type AiAnimMesh struct {
 	/**
 	 * Weight of the AnimMesh.
 	 */
-	Weight float64
+	Weight float32
+}
+
+func (ai *AiAnimMesh) HasNormals() bool {
+	return ai.Normals != nil
+}
+
+/**
+ *  @brief Check whether the anim-mesh overrides the vertex tangents
+ *         and bitangents of its host mesh. As for aiMesh,
+ *         tangents and bitangents always go together.
+ *  @return true if tangents and bi-tangents are stored, false if not.
+ */
+func (ai *AiAnimMesh) HasTangentsAndBitangents() bool {
+	return ai.Tangents != nil
+}
+
+/**
+ *  @brief Check whether the anim mesh overrides a particular
+ *         set of vertex colors on his host mesh.
+ *  @param pIndex 0<index<AI_MAX_NUMBER_OF_COLOR_SETS
+ *  @return true if vertex colors are stored, false if not.
+ */
+
+func (ai *AiAnimMesh) HasVertexColors(pIndex int) bool {
+	if pIndex >= AI_MAX_NUMBER_OF_COLOR_SETS {
+		return false
+	}
+	return ai.Colors[pIndex] != nil
+}
+
+/**
+ *  @brief Check whether the anim mesh overrides a particular
+ *        set of texture coordinates on his host mesh.
+ *  @param pIndex 0<index<AI_MAX_NUMBER_OF_TEXTURECOORDS
+ *  @return true if texture coordinates are stored, false if not.
+ */
+func (ai *AiAnimMesh) HasTextureCoords(pIndex int) bool {
+	if pIndex >= AI_MAX_NUMBER_OF_TEXTURECOORDS {
+		return false
+	}
+	return ai.TextureCoords[pIndex] != nil
+}
+
+/**
+ *  @brief Check whether the anim-mesh overrides the vertex positions
+ *         of its host mesh.
+ *  @return true if positions are stored, false if not.
+ */
+func (ai *AiAnimMesh) HasPositions() bool {
+	return ai.Vertices != nil
 }
 
 func NewAiAnimMesh() *AiAnimMesh {
 	return &AiAnimMesh{
-		Colors:        make([]AiColor4D, AI_MAX_NUMBER_OF_COLOR_SETS),
-		TextureCoords: make([]AiVector3D, AI_MAX_NUMBER_OF_TEXTURECOORDS),
+		Colors:        make([][]common.AiColor4D, AI_MAX_NUMBER_OF_COLOR_SETS),
+		TextureCoords: make([][]common.AiVector3D, AI_MAX_NUMBER_OF_TEXTURECOORDS),
 	}
 }
 
 type AiFace struct {
 	//! Number of indices defining this face.
 	//! The maximum value for this member is #AI_MAX_FACE_INDICES.
-	NumIndices []int
+	NumIndices int
 
 	//! Pointer to the indices array. Size of the array is given in numIndices.
 	Indices []int
@@ -315,7 +464,7 @@ type AiVertexWeight struct {
 
 	//! The strength of the influence in the range (0...1).
 	//! The influence from all bones at one vertex amounts to 1.
-	Weight float64
+	Weight float32
 }
 
 type AiBone struct {
@@ -358,7 +507,7 @@ type AiBone struct {
 	 * It is sometimes called an inverse-bind matrix,
 	 * or inverse bind pose matrix.
 	 */
-	OffsetMatrix AiMatrix4x4
+	OffsetMatrix common.AiMatrix4x4
 }
 
 /**
@@ -372,7 +521,7 @@ type AiBone struct {
  *               node3  node4
  * If you want to calculate the transformation of node three you need to compute the
  * transformation hierarchy for the transformation chain of node3:
- * root->node1->node3
+ * root.node1.node3
  * Each node is represented as a skeleton instance.
  */
 
@@ -405,7 +554,7 @@ type AiSkeleton struct {
  * A skeleton bone stores its offset-matrix, which is the absolute transformation
  * for the bone. The bone stores the locale transformation to its parent as well.
  * You can compute the offset matrix by multiplying the hierarchy like:
- * Tree: s1 -> s2 -> s3
+ * Tree: s1 . s2 . s3
  * Offset-Matrix s3 = locale-s3 * locale-s2 * locale-s1
  */
 
@@ -439,8 +588,8 @@ type AiSkeletonBone struct {
 	 * It is sometimes called an inverse-bind matrix,
 	 * or inverse bind pose matrix.
 	 */
-	OffsetMatrix AiMatrix4x4
+	OffsetMatrix common.AiMatrix4x4
 
 	/// Matrix that transforms the locale bone in bind pose.
-	LocalMatrix AiMatrix4x4
+	LocalMatrix common.AiMatrix4x4
 }

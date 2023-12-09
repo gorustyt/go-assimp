@@ -1,5 +1,7 @@
 package core
 
+import "assimp/common"
+
 type AiScene struct {
 	/** Any combination of the AI_SCENE_FLAGS_XXX flags. By default
 	 * this value is 0, no flags are set. Most applications will
@@ -15,11 +17,7 @@ type AiScene struct {
 	 * Presence of further nodes depends on the format and content
 	 * of the imported file.
 	 */
-	RootNode []*AiNode
-
-	/** The number of meshes in the scene. */
-	NumMeshes int
-
+	RootNode *AiNode
 	/** The array of meshes.
 	 *
 	 * Use the indices given in the aiNode structure to access
@@ -28,10 +26,6 @@ type AiScene struct {
 	 * be at least ONE material.
 	 */
 	Meshes []*AiMesh
-
-	/** The number of materials in the scene. */
-	NumMaterials int
-
 	/** The array of materials.
 	 *
 	 * Use the index given in each aiMesh structure to access this
@@ -40,20 +34,12 @@ type AiScene struct {
 	 * be at least ONE material.
 	 */
 	Materials []*AiMaterial
-
-	/** The number of animations in the scene. */
-	NumAnimations int
-
 	/** The array of animations.
 	 *
 	 * All animations imported from the given file are listed here.
 	 * The array is mNumAnimations in size.
 	 */
 	Animations []*AiAnimation
-
-	/** The number of textures embedded into the file */
-	NumTextures int
-
 	/** The array of embedded textures.
 	 *
 	 * Not many file formats embed their textures into the file.
@@ -61,24 +47,12 @@ type AiScene struct {
 	 * some GameStudio versions)
 	 */
 	Textures []*AiTexture
-
-	/** The number of light sources in the scene. Light sources
-	 * are fully optional, in most cases this attribute will be 0
-	 */
-	NumLights int
-
 	/** The array of light sources.
 	 *
 	 * All light sources imported from the given file are
 	 * listed here. The array is mNumLights in size.
 	 */
 	Lights []*AiLight
-
-	/** The number of cameras in the scene. Cameras
-	 * are fully optional, in most cases this attribute will be 0
-	 */
-	NumCameras int
-
 	/** The array of cameras.
 	 *
 	 * All cameras imported from the given file are listed here.
@@ -100,12 +74,6 @@ type AiScene struct {
 	/** The name of the scene itself.
 	 */
 	Name string
-
-	/**
-	 *
-	 */
-	NumSkeletons int
-
 	/**
 	 *
 	 */
@@ -146,27 +114,16 @@ type AiNode struct {
 	 *  @verbatim<DummyRootNode> @endverbatim.
 	 */
 	Name string
-
 	/** The transformation relative to the node's parent. */
-	Transformation [16]float64
-
+	Transformation common.AiMatrix4x4
 	/** Parent node. nullptr if this node is the root node. */
 	Parent *AiNode
-
-	/** The number of child nodes of this node. */
-	NumChildren int
-
 	/** The child nodes of this node. nullptr if mNumChildren is 0. */
 	Children []*AiNode
-
-	/** The number of meshes of this node. */
-	NumMeshes int
-
 	/** The meshes of this node. Each entry is an index into the
 	 * mesh list of the #aiScene.
 	 */
 	Meshes []int
-
 	/** Metadata associated with this node or nullptr if there is no metadata.
 	 *  Whether any metadata is generated depends on the source file format. See the
 	 * @link importer_notes @endlink page for more information on every source file

@@ -1,5 +1,7 @@
 package core
 
+import "assimp/common"
+
 type AiCamera struct {
 	/** The name of the camera.
 	 *
@@ -14,7 +16,7 @@ type AiCamera struct {
 	 *
 	 *  The default value is 0|0|0.
 	 */
-	Position AiVector3D
+	Position common.AiVector3D
 
 	/** 'Up' - vector of the camera coordinate system relative to
 	 *  the coordinate space defined by the corresponding node.
@@ -24,7 +26,7 @@ type AiCamera struct {
 	 *  The default value is 0|1|0. The vector
 	 *  may be normalized, but it needn't.
 	 */
-	Up AiVector3D
+	Up common.AiVector3D
 
 	/** 'LookAt' - vector of the camera coordinate system relative to
 	 *  the coordinate space defined by the corresponding node.
@@ -33,7 +35,7 @@ type AiCamera struct {
 	 *  The default value is 0|0|1. The vector
 	 *  may be normalized, but it needn't.
 	 */
-	LookAt AiVector3D
+	LookAt common.AiVector3D
 
 	/** Horizontal field of view angle, in radians.
 	 *

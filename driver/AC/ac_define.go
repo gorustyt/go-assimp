@@ -2,8 +2,10 @@ package AC
 
 import (
 	"assimp/common"
+	"assimp/common/logger"
 	"assimp/core"
 	"assimp/driver/base"
+	"strings"
 )
 
 type ObjectType int
@@ -136,6 +138,17 @@ type AC3DImporter struct {
 	base.BaseImporter
 }
 
+func (im *AC3DImporter) CanRead(checkSig bool) bool {
+	im.Reader.NextLine()
+	if im.Reader.GetLineNum() == 1 && !strings.HasPrefix(im.Reader.GetLine(), im.Magic()) {
+		logger.WarnF("not found magic expect:%v found:%v", im.Magic(), im.Reader.GetLine())
+		return false
+	}
+	//version := strings.TrimSuffix(im.Reader.GetLine(), im.Magic())
+	//hex.de
+	im.Reader.NextLine()
+	return true
+}
 func (im *AC3DImporter) Magic() string {
 	return "AC3D"
 }

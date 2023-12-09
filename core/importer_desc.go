@@ -30,7 +30,7 @@ const (
 
 /** Meta information about a particular importer. Importers need to fill
  *  this structure, but they can freely decide how talkative they are.
- *  A common use case for loader meta info is a user interface
+ *  A common use case for loader meta info is a user iassimp
  *  in which the user can choose between various import/export file
  *  formats. Building such an UI by hand means a lot of maintenance
  *  as importers/exporters are added to Assimp, so it might be useful

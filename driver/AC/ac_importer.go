@@ -3,10 +3,10 @@ package AC
 import (
 	"assimp/common"
 	"assimp/common/logger"
+	"assimp/common/reader"
 	"assimp/core"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"unsafe"
 )
@@ -26,14 +26,10 @@ var (
 	}
 )
 
-func NewAC3DImporter(reader *common.AiReader) *AC3DImporter {
+func NewAC3DImporter(reader *reader.AiReader) *AC3DImporter {
 	im := &AC3DImporter{}
-	im.BaseImporter.Reader = reader
+	im.BaseImporter.Init(im, reader)
 	return im
-}
-
-func (ac *AC3DImporter) CanRead(pFile string, checkSig bool) {
-
 }
 
 func (ac *AC3DImporter) LoadObjectSection() (objects []*Object, err error) {
@@ -45,6 +41,7 @@ func (ac *AC3DImporter) LoadObjectSection() (objects []*Object, err error) {
 		return objects, err
 	}
 	var obj Object
+	objects = append(objects, &obj)
 	var light *core.AiLight
 	switch name {
 	case "light":
@@ -61,7 +58,7 @@ func (ac *AC3DImporter) LoadObjectSection() (objects []*Object, err error) {
 		}
 		light.Name = fmt.Sprintf("ACLight_%s", light.Name)
 		obj.name = light.Name
-		log.Printf("AC3D: Light source encountered")
+		logger.Info("AC3D: Light source encountered")
 		obj.Type = Light
 		ac.Lights = append(ac.Lights, light)
 	case "group":
@@ -71,8 +68,7 @@ func (ac *AC3DImporter) LoadObjectSection() (objects []*Object, err error) {
 	default:
 		obj.Type = Poly
 	}
-	ac.Reader.NextLine()
-	for {
+	for !ac.Reader.EOF() {
 		if ac.Reader.HasPrefix("kids") {
 			num, err := ac.Reader.MustOneKeyInt("kids")
 			if err != nil {
@@ -133,7 +129,7 @@ func (ac *AC3DImporter) LoadObjectSection() (objects []*Object, err error) {
 			}
 			continue
 		} else if ac.Reader.HasPrefix("crease") {
-			obj.crease, err = ac.Reader.MustOneKeyfloat32("crease")
+			obj.crease, err = ac.Reader.MustOneKeyFloat32("crease")
 			if err != nil {
 				return nil, err
 			}
@@ -190,6 +186,7 @@ func (ac *AC3DImporter) LoadObjectSection() (objects []*Object, err error) {
 		}
 		ac.Reader.NextLine()
 	}
+	return objects, err
 }
 func (ac *AC3DImporter) ConvertMaterial(object *Object,
 	matSrc *Material,
@@ -224,9 +221,10 @@ func (ac *AC3DImporter) ConvertMaterial(object *Object,
 	f := 1.0 - matSrc.trans
 	matDest.AddFloat32PropertyVar(core.AI_MATKEY_OPACITY, f)
 }
-func (ac *AC3DImporter) ConvertObjectSection(object *Object, parent *core.AiNode) (meshes []*core.AiMesh,
-	outMaterials []*core.AiMaterial,
-	materials []*Material, node *core.AiNode) {
+
+func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiMesh,
+	outMaterials *[]*core.AiMaterial,
+	materials *[]*Material, parent *core.AiNode) (node *core.AiNode) {
 	node = &core.AiNode{}
 	node.Parent = parent
 	if len(object.vertices) > 0 {
@@ -241,7 +239,7 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, parent *core.AiNode
 			*/
 			logger.InfoF("AC3D: No surfaces defined in object definition a point list is returned")
 			var mesh core.AiMesh
-			meshes = append(meshes, &mesh)
+			*meshes = append(*meshes, &mesh)
 			mesh.NumVertices = len(object.vertices)
 			mesh.NumFaces = mesh.NumVertices
 			mesh.Faces = make([]*core.AiFace, mesh.NumFaces)
@@ -265,10 +263,10 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, parent *core.AiNode
 			// and no faces.
 			mesh.MaterialIndex = 0
 			var tmp core.AiMaterial
-			outMaterials = append(outMaterials, &tmp)
-			ac.ConvertMaterial(object, materials[0], &tmp)
+			*outMaterials = append(*outMaterials, &tmp)
+			ac.ConvertMaterial(object, (*materials)[0], &tmp)
 		} else {
-			var needMat = make([]*common.Pair[int, int], len(materials))
+			var needMat = make([]*common.Pair[int, int], len(*materials))
 			for i := range needMat {
 				needMat[i] = &common.Pair[int, int]{}
 			}
@@ -319,7 +317,7 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, parent *core.AiNode
 			}
 			node.Meshes = make([]int, len(node.Meshes))
 			mat := 0
-			oldm := len(meshes)
+			oldm := len(*meshes)
 			cit := 0
 			cend := len(needMat) - 1
 			for cit != cend {
@@ -330,11 +328,11 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, parent *core.AiNode
 					continue
 				}
 				var mesh core.AiMesh
-				meshes = append(meshes, &mesh)
-				mesh.MaterialIndex = len(outMaterials)
+				*meshes = append(*meshes, &mesh)
+				mesh.MaterialIndex = len(*outMaterials)
 				var tmpMaterial core.AiMaterial
-				outMaterials = append(outMaterials, &tmpMaterial)
-				ac.ConvertMaterial(object, materials[mat], &tmpMaterial)
+				*outMaterials = append(*outMaterials, &tmpMaterial)
+				ac.ConvertMaterial(object, (*materials)[mat], &tmpMaterial)
 				// allocate storage for vertices and normals
 				mesh.NumFaces = citv.First
 				if mesh.NumFaces == 0 {
@@ -475,7 +473,7 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, parent *core.AiNode
 
 								// copy vertex positions
 								if it2 == len(itv.entries) {
-									log.Fatalf("AC3D: Bad line")
+									logger.FatalF("AC3D: Bad line")
 								}
 								common.AiAssert(itv.entries[it2].First < len(object.vertices))
 								mesh.Vertices[vertices] = object.vertices[itv.entries[it2].First]
@@ -513,10 +511,10 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, parent *core.AiNode
 				if ac.configEvalSubdivision {
 					div := core.NewSubDivision(core.CATMULL_CLARKE)
 					logger.InfoF("AC3D: Evaluating subdivision surface: ", object.name)
-					cpy := make([]*core.AiMesh, len(meshes)-oldm)
-					tmp := meshes[oldm:]
+					cpy := make([]*core.AiMesh, len(*meshes)-oldm)
+					tmp := (*meshes)[oldm:]
 					div.Subdivide1(&tmp, len(cpy), &cpy, object.subDiv, true)
-					copy(meshes[oldm:], cpy)
+					copy((*meshes)[oldm:], cpy)
 					// previous meshes are deleted vy Subdivide().
 				} else {
 					logger.InfoF("AC3D: Letting the subdivision surface untouched due to my configuration: %v", object.name)
@@ -554,10 +552,7 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, parent *core.AiNode
 	// add children to the object
 	if len(object.children) > 0 {
 		for i := 0; i < len(object.children); i++ {
-			meshesTmp, outMaterialsTmp, materialsTmp, nodeTmp := ac.ConvertObjectSection(object.children[i], node)
-			meshes = append(meshes, meshesTmp...)
-			outMaterials = append(outMaterials, outMaterialsTmp...)
-			materials = append(materials, materialsTmp...)
+			nodeTmp := ac.ConvertObjectSection(object.children[i], meshes, outMaterials, materials, node)
 			node.Children = append(node.Children, nodeTmp)
 		}
 	}
@@ -568,7 +563,7 @@ func (ac *AC3DImporter) Read(pScene *core.AiScene) (err error) {
 	materials := make([]*Material, 0)
 	rootObjects := make([]*Object, 0)
 	var lights []*core.AiLight
-	for !ac.Reader.Eof {
+	for !ac.Reader.EOF() {
 		if ac.Reader.HasPrefix("MATERIAL") {
 			var mat Material
 			materials = append(materials, &mat)
@@ -592,11 +587,11 @@ func (ac *AC3DImporter) Read(pScene *core.AiScene) (err error) {
 			if err != nil {
 				return err
 			}
-			mat.shin, err = ac.Reader.NextOneKeyfloat32("shi")
+			mat.shin, err = ac.Reader.NextOneKeyFloat32("shi")
 			if err != nil {
 				return err
 			}
-			mat.trans, err = ac.Reader.NextOneKeyfloat32("trans")
+			mat.trans, err = ac.Reader.NextOneKeyFloat32("trans")
 			if err != nil {
 				return err
 			}
@@ -612,7 +607,8 @@ func (ac *AC3DImporter) Read(pScene *core.AiScene) (err error) {
 		return errors.New("AC3D: No meshes have been loaded")
 	}
 	if len(materials) == 0 {
-		return errors.New("AC3D: No material has been found")
+		logger.Warn("AC3D: No material has been found")
+		materials = append(materials, &Material{})
 	}
 	ac.NumMeshes += (ac.NumMeshes >> 2) + 1
 	var root *Object
@@ -621,7 +617,9 @@ func (ac *AC3DImporter) Read(pScene *core.AiScene) (err error) {
 	} else {
 		root = &Object{}
 	}
-	meshes, omaterials, materials, node := ac.ConvertObjectSection(root, nil)
+	var meshes []*core.AiMesh
+	var omaterials []*core.AiMaterial
+	node := ac.ConvertObjectSection(root, &meshes, &omaterials, &materials, nil)
 	pScene.RootNode = node
 	if strings.HasPrefix(pScene.RootNode.Name, "Node") {
 		pScene.RootNode.Name = "<AC3DWorld>"

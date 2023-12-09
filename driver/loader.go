@@ -1,8 +1,11 @@
 package driver
 
 import (
-	"assimp/common"
+	"assimp/common/reader"
 	"assimp/core"
+	"assimp/driver/AC"
+	"assimp/driver/base/iassimp"
+	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -12,7 +15,7 @@ var (
 	loader sync.Map
 )
 
-func RegisterLoader(name string, l Loader) {
+func RegisterLoader(name string, l iassimp.Loader) {
 	_, ok := loader.Load(name)
 	if ok {
 		panic(fmt.Sprintf("name:%v loader has exist!", name))
@@ -24,29 +27,27 @@ func GetLoader() {
 
 }
 
-type Loader struct {
-}
-
-type Importer interface {
-}
-
 type importer struct {
-	IntPropertyMap    map[int]int
-	FloatPropertyMap  map[int]float64
-	StringProperties  map[int]string
-	MatrixPropertyMap map[int]int
-	PointerProperties map[int]*common.AiMatrix4x4
 }
 
-func NewImporter() Importer {
+func NewImporter() iassimp.Importer {
 	return &importer{}
 }
 
 func (im *importer) ReadFile(path string) (*core.AiScene, error) {
-	file, err := os.Open(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	r, err := reader.NewReader(data)
+	if err != nil {
+		return nil, err
+	}
 
+	l := AC.NewAC3DImporter(r)
+	if !l.CanRead(true) {
+		return nil, errors.New("invalid format")
+	}
+	res := &core.AiScene{}
+	return res, l.Read(res)
 }

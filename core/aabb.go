@@ -1,6 +1,8 @@
 package core
 
+import "assimp/common"
+
 type AiAABB struct {
-	mMin AiVector3D
-	mMax AiVector3D
+	mMin common.AiVector3D
+	mMax common.AiVector3D
 }

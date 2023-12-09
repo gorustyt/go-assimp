@@ -1,16 +1,16 @@
 package base
 
 import (
-	"assimp/common"
-	"strings"
+	"assimp/common/reader"
+	"assimp/driver/base/iassimp"
 )
 
 type BaseImporter struct {
-	Reader *common.AiReader
+	Reader reader.LineReader
+	loader iassimp.Loader
 }
 
-// Check for magic bytes at the beginning of the file.
-
-func (base *BaseImporter) CheckMagicToken(magic string) bool {
-	return base.Reader.GetLineNum() == 1 && strings.HasPrefix(base.Reader.GetLine(), magic)
+func (base *BaseImporter) Init(loader iassimp.Loader, reader *reader.AiReader) {
+	base.Reader = reader.GetLineReader()
+	base.loader = loader
 }

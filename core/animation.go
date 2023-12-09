@@ -1,5 +1,7 @@
 package core
 
+import "assimp/common"
+
 type AiAnimBehaviour int
 
 const (
@@ -192,7 +194,7 @@ type AiVectorKey struct {
 	Time float32
 
 	/** The value of this key */
-	Value AiVector3D
+	Value common.AiVector3D
 }
 
 type AiQuatKey struct {
@@ -200,5 +202,5 @@ type AiQuatKey struct {
 	Time float32
 
 	/** The value of this key */
-	Value AiQuaternion
+	Value common.AiQuaternion
 }

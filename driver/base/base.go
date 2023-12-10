@@ -3,11 +3,15 @@ package base
 import (
 	"assimp/common/reader"
 	"assimp/driver/base/iassimp"
+	"context"
 )
 
 type BaseImporter struct {
-	Reader reader.LineReader
-	loader iassimp.Loader
+	Reader               reader.LineReader
+	loader               iassimp.Loader
+	bExtraVerbose        bool
+	mPostProcessingSteps []iassimp.AiPostProcessSteps
+	context              context.Context
 }
 
 func (base *BaseImporter) Init(loader iassimp.Loader, reader *reader.AiReader) {

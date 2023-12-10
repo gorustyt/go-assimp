@@ -1,6 +1,8 @@
 package iassimp
 
-import "assimp/core"
+import (
+	"assimp/core"
+)
 
 type Loader interface {
 	CanRead(checkSig bool) bool

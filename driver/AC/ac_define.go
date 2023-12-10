@@ -144,8 +144,8 @@ func (im *AC3DImporter) CanRead(checkSig bool) bool {
 		logger.WarnF("not found magic expect:%v found:%v", im.Magic(), im.Reader.GetLine())
 		return false
 	}
-	//version := strings.TrimSuffix(im.Reader.GetLine(), im.Magic())
-	//hex.de
+	version := strings.TrimPrefix(im.Reader.GetLine(), im.Magic())
+	logger.InfoF("importer:%v version:%v", Desc.Name, version)
 	im.Reader.NextLine()
 	return true
 }

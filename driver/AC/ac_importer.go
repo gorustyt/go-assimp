@@ -5,6 +5,7 @@ import (
 	"assimp/common/logger"
 	"assimp/common/reader"
 	"assimp/core"
+	"assimp/driver/base/iassimp"
 	"errors"
 	"fmt"
 	"strings"
@@ -12,7 +13,7 @@ import (
 )
 
 var (
-	desc = core.AiImporterDesc{
+	Desc = core.AiImporterDesc{
 		"AC3D Importer",
 		"",
 		"",
@@ -22,11 +23,11 @@ var (
 		0,
 		0,
 		0,
-		"ac acc ac3d",
+		[]string{".ac", ".acc", ".ac3d"},
 	}
 )
 
-func NewAC3DImporter(reader *reader.AiReader) *AC3DImporter {
+func NewAC3DImporter(reader *reader.AiReader) iassimp.Loader {
 	im := &AC3DImporter{}
 	im.BaseImporter.Init(im, reader)
 	return im

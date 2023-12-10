@@ -81,5 +81,5 @@ type AiImporterDesc struct {
 	  other methods to quickly reject files (i.e. magic
 	  words) so this does not mean that common or generic
 	  file extensions such as XML would be tediously slow. */
-	FileExtensions string
+	FileExtensions []string
 }

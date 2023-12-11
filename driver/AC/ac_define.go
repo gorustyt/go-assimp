@@ -145,7 +145,7 @@ func (im *AC3DImporter) CanRead(checkSig bool) bool {
 		return false
 	}
 	version := strings.TrimPrefix(im.Reader.GetLine(), im.Magic())
-	logger.InfoF("importer:%v version:%v", Desc.Name, version)
+	logger.InfoF("importer:%v version:%v", Desc.Name, common.HexDigitToDecimal([]byte(version)[0]))
 	im.Reader.NextLine()
 	return true
 }

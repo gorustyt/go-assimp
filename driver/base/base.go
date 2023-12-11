@@ -7,11 +7,10 @@ import (
 )
 
 type BaseImporter struct {
-	Reader               reader.LineReader
-	loader               iassimp.Loader
-	bExtraVerbose        bool
-	mPostProcessingSteps []iassimp.AiPostProcessSteps
-	context              context.Context
+	Reader        reader.LineReader
+	loader        iassimp.Loader
+	bExtraVerbose bool
+	context       context.Context
 }
 
 func (base *BaseImporter) Init(loader iassimp.Loader, reader *reader.AiReader) {

@@ -10,5 +10,5 @@ type Loader interface {
 }
 
 type Importer interface {
-	ReadFile(path string) (*core.AiScene, error)
+	ReadFile(path string, pFlags int) (*core.AiScene, error)
 }

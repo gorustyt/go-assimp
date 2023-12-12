@@ -31,16 +31,16 @@ type Object struct {
 	textures []string
 
 	// texture repat factors (scaling for all coordinates)
-	texRepeat, texOffset common.AiVector2D
+	texRepeat, texOffset *common.AiVector2D
 
 	// rotation matrix
-	rotation common.AiMatrix3x3
+	rotation *common.AiMatrix3x3
 
 	// translation vector
-	translation common.AiVector3D
+	translation *common.AiVector3D
 
 	// vertices
-	vertices []common.AiVector3D
+	vertices []*common.AiVector3D
 
 	// surfaces
 	surfaces []*Surface
@@ -59,7 +59,7 @@ type Object struct {
 func newObject() *Object {
 	return &Object{
 		Type:      World,
-		texRepeat: common.AiVector2D{1, 1},
+		texRepeat: &common.AiVector2D{1, 1},
 	}
 }
 
@@ -84,16 +84,16 @@ func (s *Surface) GetType() int { return s.flags & int(Mask) }
 
 type Material struct {
 	// base color of the material
-	rgb common.AiColor3D
+	rgb *common.AiColor3D
 
 	// ambient color of the material
-	amb common.AiColor3D
+	amb *common.AiColor3D
 
 	// emissive color of the material
-	emis common.AiColor3D
+	emis *common.AiColor3D
 
 	// specular color of the material
-	spec common.AiColor3D
+	spec *common.AiColor3D
 
 	// shininess exponent
 	shin float32
@@ -140,15 +140,14 @@ type AC3DImporter struct {
 
 func (im *AC3DImporter) CanRead(checkSig bool) bool {
 	im.Reader.NextLine()
-	if im.Reader.GetLineNum() == 1 && !strings.HasPrefix(im.Reader.GetLine(), im.Magic()) {
-		logger.WarnF("not found magic expect:%v found:%v", im.Magic(), im.Reader.GetLine())
+	if im.Reader.GetLineNum() == 1 && !strings.HasPrefix(im.Reader.GetLine(), Desc.Magic) {
+		if !checkSig {
+			logger.WarnF("not found magic expect:%v found:%v", Desc.Magic, im.Reader.GetLine())
+		}
 		return false
 	}
-	version := strings.TrimPrefix(im.Reader.GetLine(), im.Magic())
+	version := strings.TrimPrefix(im.Reader.GetLine(), Desc.Magic)
 	logger.InfoF("importer:%v version:%v", Desc.Name, common.HexDigitToDecimal([]byte(version)[0]))
 	im.Reader.NextLine()
 	return true
-}
-func (im *AC3DImporter) Magic() string {
-	return "AC3D"
 }

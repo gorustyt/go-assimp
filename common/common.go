@@ -1,19 +1,10 @@
 package common
 
-import "assimp/common/pb_msg"
-
-type AiVector2D struct {
-	X, Y float32
-}
-
-func (ai *AiVector2D) ToPbMsg() *pb_msg.AiVector2D {
-	return &pb_msg.AiVector2D{X: ai.X, Y: ai.Y}
-}
-
-func (ai *AiVector2D) Set(pX, pY float32) {
-	ai.X = pX
-	ai.Y = pY
-}
+import (
+	"assimp/common/pb_msg"
+	"encoding/binary"
+	"unsafe"
+)
 
 type AiColor4D struct {
 	R, G, B, A float32
@@ -34,8 +25,8 @@ func (ai AiColor3D) ToPbMsg() *pb_msg.AiColor3D {
 	return &pb_msg.AiColor3D{R: ai.R, G: ai.G, B: ai.B}
 }
 
-func NewAiColor3D(R, G, B float32) AiColor3D {
-	return AiColor3D{R: R, G: G, B: B}
+func NewAiColor3D(R, G, B float32) *AiColor3D {
+	return &AiColor3D{R: R, G: G, B: B}
 }
 
 type AiQuaternion struct {
@@ -62,4 +53,30 @@ func HexDigitToDecimal(in byte) (out uint) {
 
 	// return value is UINT_MAX if the input is not a hex digit
 	return out
+}
+
+func GetBytesOrder() binary.ByteOrder {
+	if IsLittleEndian() {
+		return binary.LittleEndian
+	}
+	return binary.BigEndian
+}
+
+func IsLittleEndian() bool {
+	n := 0x1234
+	return *(*byte)(unsafe.Pointer(&n)) == 0x34
+}
+
+// ------------------------------------------------------------------------------------
+// Convert a string in decimal format to a number
+// ------------------------------------------------------------------------------------
+func Strtoul10(in string) int32 {
+	value := int32(0)
+	for _, v := range in {
+		if v < '0' || v > '9' {
+			break
+		}
+		value = (value * 10) + (v - '0')
+	}
+	return value
 }

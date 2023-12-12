@@ -116,7 +116,7 @@ type AiLight struct {
 	 *  material color to obtain the final color that contributes
 	 *  to the diffuse shading term.
 	 */
-	ColorDiffuse common.AiColor3D
+	ColorDiffuse *common.AiColor3D
 
 	/** Specular color of the light source
 	 *
@@ -124,7 +124,7 @@ type AiLight struct {
 	 *  material color to obtain the final color that contributes
 	 *  to the specular shading term.
 	 */
-	ColorSpecular common.AiColor3D
+	ColorSpecular *common.AiColor3D
 
 	/** Ambient color of the light source
 	 *
@@ -134,7 +134,7 @@ type AiLight struct {
 	 *  this value it, is just a remaining of the fixed-function pipeline
 	 *  that is still supported by quite many file formats.
 	 */
-	ColorAmbient common.AiColor3D
+	ColorAmbient *common.AiColor3D
 
 	/** Inner angle of a spot light's light cone.
 	 *
@@ -157,5 +157,5 @@ type AiLight struct {
 	AngleOuterCone float32
 
 	/** Size of area light source. */
-	Size common.AiVector2D
+	Size *common.AiVector2D
 }

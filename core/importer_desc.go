@@ -82,4 +82,5 @@ type AiImporterDesc struct {
 	  words) so this does not mean that common or generic
 	  file extensions such as XML would be tediously slow. */
 	FileExtensions []string
+	Magic          string
 }

@@ -16,7 +16,7 @@ func (ai AiVector3D) ToPbMsg() *pb_msg.AiVector3D {
 	return &pb_msg.AiVector3D{X: ai.X, Y: ai.Y, Z: ai.Z}
 }
 
-func (ai AiVector3D) Add(o AiVector3D) *AiVector3D {
+func (ai AiVector3D) Add(o *AiVector3D) *AiVector3D {
 	ai.X += o.X
 	ai.Y += o.Y
 	ai.Z += o.Z

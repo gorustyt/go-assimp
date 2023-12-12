@@ -5,6 +5,7 @@ import (
 	"assimp/common/reader"
 	"assimp/core"
 	"assimp/driver/AC"
+	"assimp/driver/BLEND"
 	"assimp/driver/base/iassimp"
 	"assimp/driver/post_processing"
 	"assimp/driver/pre_processing"
@@ -22,6 +23,7 @@ type LoaderCons func(aiReader *reader.AiReader) iassimp.Loader
 
 func init() {
 	RegisterLoader(AC.NewAC3DImporter, AC.Desc)
+	RegisterLoader(BLEND.NewBlenderImporter, BLEND.Desc)
 }
 
 func RegisterLoader(l LoaderCons, desc core.AiImporterDesc) {

@@ -24,6 +24,7 @@ var (
 		0,
 		0,
 		[]string{".ac", ".acc", ".ac3d"},
+		"AC3D",
 	}
 )
 
@@ -106,7 +107,7 @@ func (ac *AC3DImporter) LoadObjectSection() (objects []*Object, err error) {
 				return nil, err
 			}
 			if obj.texRepeat.X == 0 || obj.texRepeat.Y == 0 {
-				obj.texRepeat = common.AiVector2D{1, 1}
+				obj.texRepeat = &common.AiVector2D{1, 1}
 			}
 		} else if ac.Reader.HasPrefix("texoff") {
 			obj.texOffset, err = ac.Reader.NextKeyAiVector2d("texoff")
@@ -247,7 +248,7 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 			for i := range mesh.Faces {
 				mesh.Faces[i] = &core.AiFace{}
 			}
-			mesh.Vertices = make([]common.AiVector3D, mesh.NumVertices)
+			mesh.Vertices = make([]*common.AiVector3D, mesh.NumVertices)
 			faces := 0
 			verts := 0
 			for i := 0; i < mesh.NumVertices; i++ {
@@ -354,13 +355,13 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 				} else if mesh.NumVertices*4*3 > 256*1024*1024 {
 					logger.FatalF("AC3D: Too many vertices, would run out of memory")
 				}
-				mesh.Vertices = make([]common.AiVector3D, mesh.NumVertices)
+				mesh.Vertices = make([]*common.AiVector3D, mesh.NumVertices)
 				cur := 0
 				// allocate UV coordinates, but only if the texture name for the
 				// surface is not empty
 				uv := 0
 				if len(object.textures) != 0 {
-					mesh.TextureCoords[0] = make([]common.AiVector3D, mesh.NumVertices)
+					mesh.TextureCoords[0] = make([]*common.AiVector3D, mesh.NumVertices)
 					mesh.NumUVComponents[0] = 2
 				}
 				uvs := mesh.TextureCoords[0]

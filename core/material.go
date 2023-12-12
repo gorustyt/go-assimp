@@ -1046,7 +1046,7 @@ func (ai *AiMaterial) AddAiUVTransformPropertyVar(pro AiMaterialProperty, data A
 	pro.Data = bytesData
 	ai.AddProperty(pro)
 }
-func (ai *AiMaterial) AddAiColorDPropertyVar(pro AiMaterialProperty, data common.AiColor3D) {
+func (ai *AiMaterial) AddAiColorDPropertyVar(pro AiMaterialProperty, data *common.AiColor3D) {
 	pro = pro.ResetData()
 	pro.DataType = pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D
 	bytesData, err := proto.Marshal(data.ToPbMsg())
@@ -1056,7 +1056,7 @@ func (ai *AiMaterial) AddAiColorDPropertyVar(pro AiMaterialProperty, data common
 	pro.Data = bytesData
 	ai.AddProperty(pro)
 }
-func (ai *AiMaterial) AddAiVector3DPropertyVar(pro AiMaterialProperty, data common.AiVector3D) {
+func (ai *AiMaterial) AddAiVector3DPropertyVar(pro AiMaterialProperty, data *common.AiVector3D) {
 	pro = pro.ResetData()
 	pro.DataType = pb_msg.AiMaterialPropertyType_AiPropertyTypeVector3D
 	bytesData, err := proto.Marshal(data.ToPbMsg())
@@ -1157,13 +1157,13 @@ type AiUVTransform struct {
 	 *
 	 *  The default value is (0|0).
 	 */
-	Translation common.AiVector2D
+	Translation *common.AiVector2D
 
 	/** Scaling on the u and v axes.
 	 *
 	 *  The default value is (1|1).
 	 */
-	Scaling common.AiVector2D
+	Scaling *common.AiVector2D
 
 	/** Rotation - in counter-clockwise direction.
 	 *

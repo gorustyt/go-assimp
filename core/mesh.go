@@ -71,7 +71,7 @@ type AiMesh struct {
 	 * This array is always present in a mesh. The array is
 	 * mNumVertices in size.
 	 */
-	Vertices []common.AiVector3D
+	Vertices []*common.AiVector3D
 
 	/**
 	 * @brief Vertex normals.
@@ -95,7 +95,7 @@ type AiMesh struct {
 	 * However, this needn't apply for normals that have been taken
 	 * directly from the model file.
 	 */
-	Normals []common.AiVector3D
+	Normals []*common.AiVector3D
 
 	/**
 	 * @brief Vertex tangents.
@@ -111,7 +111,7 @@ type AiMesh struct {
 	 * @note If the mesh contains tangents, it automatically also
 	 * contains bitangents.
 	 */
-	Tangents []common.AiVector3D
+	Tangents []*common.AiVector3D
 
 	/**
 	 * @brief Vertex bitangents.
@@ -122,7 +122,7 @@ type AiMesh struct {
 	 * @note If the mesh contains tangents, it automatically also contains
 	 * bitangents.
 	 */
-	Bitangents []common.AiVector3D
+	Bitangents []*common.AiVector3D
 
 	/**
 	 * @brief Vertex color sets.
@@ -131,7 +131,7 @@ type AiMesh struct {
 	 * colors per vertex. nullptr if not present. Each array is
 	 * mNumVertices in size if present.
 	 */
-	Colors [][]common.AiColor4D
+	Colors [][]*common.AiColor4D
 
 	/**
 	 * @brief Vertex texture coordinates, also known as UV channels.
@@ -139,7 +139,7 @@ type AiMesh struct {
 	 * A mesh may contain 0 to AI_MAX_NUMBER_OF_TEXTURECOORDS per
 	 * vertex. nullptr if not present. The array is mNumVertices in size.
 	 */
-	TextureCoords [][]common.AiVector3D
+	TextureCoords [][]*common.AiVector3D
 
 	/**
 	 * @brief Specifies the number of components for a given UV channel.
@@ -333,7 +333,7 @@ func (ai *AiMesh) GetTextureCoordsName(index int) string {
 func NewAiMesh() *AiMesh {
 	return &AiMesh{
 		NumUVComponents: make([]int, AI_MAX_NUMBER_OF_TEXTURECOORDS),
-		Colors:          make([][]common.AiColor4D, AI_MAX_NUMBER_OF_COLOR_SETS),
+		Colors:          make([][]*common.AiColor4D, AI_MAX_NUMBER_OF_COLOR_SETS),
 	}
 }
 
@@ -359,22 +359,22 @@ type AiAnimMesh struct {
 	 *  meshes may neither add or nor remove vertex components (if
 	 *  a replacement array is nullptr and the corresponding source
 	 *  array is not, the source data is taken instead)*/
-	Vertices []common.AiVector3D
+	Vertices []*common.AiVector3D
 
 	/** Replacement for aiMesh::mNormals.  */
-	Normals []common.AiVector3D
+	Normals []*common.AiVector3D
 
 	/** Replacement for aiMesh::mTangents. */
-	Tangents []common.AiVector3D
+	Tangents []*common.AiVector3D
 
 	/** Replacement for aiMesh::mBitangents. */
-	Bitangents []common.AiVector3D
+	Bitangents []*common.AiVector3D
 
 	/** Replacement for aiMesh::mColors */
-	Colors [][]common.AiColor4D
+	Colors [][]*common.AiColor4D
 
 	/** Replacement for aiMesh::mTextureCoords */
-	TextureCoords [][]common.AiVector3D
+	TextureCoords [][]*common.AiVector3D
 
 	/** The number of vertices in the aiAnimMesh, and thus the length of all
 	 * the member arrays.
@@ -444,8 +444,8 @@ func (ai *AiAnimMesh) HasPositions() bool {
 
 func NewAiAnimMesh() *AiAnimMesh {
 	return &AiAnimMesh{
-		Colors:        make([][]common.AiColor4D, AI_MAX_NUMBER_OF_COLOR_SETS),
-		TextureCoords: make([][]common.AiVector3D, AI_MAX_NUMBER_OF_TEXTURECOORDS),
+		Colors:        make([][]*common.AiColor4D, AI_MAX_NUMBER_OF_COLOR_SETS),
+		TextureCoords: make([][]*common.AiVector3D, AI_MAX_NUMBER_OF_TEXTURECOORDS),
 	}
 }
 

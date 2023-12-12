@@ -115,7 +115,7 @@ type AiNode struct {
 	 */
 	Name string
 	/** The transformation relative to the node's parent. */
-	Transformation common.AiMatrix4x4
+	Transformation *common.AiMatrix4x4
 	/** Parent node. nullptr if this node is the root node. */
 	Parent *AiNode
 	/** The child nodes of this node. nullptr if mNumChildren is 0. */

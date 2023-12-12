@@ -1,18 +1,27 @@
 package BLEND
 
+import (
+	"assimp/common/reader"
+	"errors"
+)
+
 type DNA struct {
 	structures []*Structure
 	indices    map[string]int
 	//converters map[string]FactoryPair
 }
 
+func NewDNA() *DNA {
+	return &DNA{indices: map[string]int{}}
+}
+
 type FileDatabase struct {
 	i64bit bool
 	little bool
 
-	dna     DNA
-	reader  reader
-	entries []FileBlockHead
+	dna *DNA
+	//reader  reader
+	entries []*FileBlockHead
 
 	_stats         *Statistics
 	_cacheArrays   []*ObjectCache
@@ -51,7 +60,45 @@ type ElemBase struct {
 	dna_type string
 }
 
+// -------------------------------------------------------------------------------
+/** Mixed flags for use in #Field */
+// -------------------------------------------------------------------------------
+const (
+	FieldFlag_Pointer = 0x1
+	FieldFlag_Array   = 0x2
+)
+
+type Field struct {
+	name   string
+	Type   string
+	size   int32
+	offset int32
+	/** Size of each array dimension. For flat arrays,
+	 *  the second dimension is set to 1. */
+	array_sizes [2]int32
+	/** Any of the #FieldFlags enumerated values */
+	flags int32
+}
+
 type Structure struct {
+	name    string
+	fields  []*Field
+	indices map[string]int32
+	size    int32
+}
+
+func NewStructure() *Structure {
+	return &Structure{indices: map[string]int32{}}
+}
+
+// -------------------------------------------------------------------------------
+/** Represents a generic pointer to a memory location, which can be either 32
+ *  or 64 bits. These pointers are loaded from the BLEND file and finally
+ *  fixed to point to the real, converted representation of the objects
+ *  they used to point to.*/
+// -------------------------------------------------------------------------------
+type Pointer struct {
+	val uint64
 }
 
 // -------------------------------------------------------------------------------
@@ -62,13 +109,14 @@ type Structure struct {
 type FileBlockHead struct {
 	// points right after the header of the file block
 	id   string
-	size int
+	size int32
 	// original memory address of the data
 	// index into DNA
-	dna_index int
-
+	dna_index int32
+	// original memory address of the data
+	address Pointer
 	// number of structure instances to follow
-	num int
+	num int32
 }
 
 // -------------------------------------------------------------------------------
@@ -76,9 +124,60 @@ type FileBlockHead struct {
 // -------------------------------------------------------------------------------
 
 type SectionParser struct {
-	current FileBlockHead
-	//stream  StreamReaderAny
+	current *FileBlockHead
+	reader.StreamReader
 	ptr64 bool
+}
+
+func NewSectionParser(reader reader.StreamReader, ptr64 bool) *SectionParser {
+	return &SectionParser{StreamReader: reader, ptr64: ptr64, current: &FileBlockHead{}}
+}
+func (s *SectionParser) GetCurrent() *FileBlockHead {
+	return s.current
+}
+
+// Advance to the next section.
+func (s *SectionParser) Next() error {
+	tmp, err := s.GetNBytes(4)
+	if err != nil {
+		return err
+	}
+	if tmp[3] != 0 {
+		s.current.id = string(tmp)
+	} else if tmp[2] != 0 {
+		s.current.id = string(tmp[:3])
+	} else if tmp[1] != 0 {
+		s.current.id = string(tmp[:2])
+	} else {
+		s.current.id = string(tmp[:1])
+	}
+
+	s.current.size, err = s.GetInt32()
+	if err != nil {
+		return err
+	}
+	if s.ptr64 {
+		s.current.address.val, err = s.GetUInt64()
+	} else {
+		var tmp uint32
+		tmp, err = s.GetUInt32()
+		s.current.address.val = uint64(tmp)
+	}
+	if err != nil {
+		return err
+	}
+	s.current.dna_index, err = s.GetInt32()
+	if err != nil {
+		return err
+	}
+	s.current.num, err = s.GetInt32()
+	if err != nil {
+		return err
+	}
+	if s.Remain() < s.current.size {
+		return errors.New("BLEND: invalid size of file block")
+	}
+	return nil
 }
 
 // -------------------------------------------------------------------------------
@@ -87,13 +186,19 @@ type SectionParser struct {
 
 type DNAParser struct {
 	db *FileDatabase
+	reader.StreamReader
 }
 
-func NewDNAParser(db *FileDatabase) *DNAParser {
-	return &DNAParser{db: db}
+func NewDNAParser(db *FileDatabase, reader reader.StreamReader) *DNAParser {
+	return &DNAParser{db: db, StreamReader: reader}
 }
 
 /** Obtain a reference to the extracted DNA information */
-func (d *DNAParser) GetDNA() DNA {
+func (d *DNAParser) GetDNA() *DNA {
 	return d.db.dna
+}
+
+type Type struct {
+	size int32
+	name string
 }

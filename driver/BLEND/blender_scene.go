@@ -356,9 +356,9 @@ type Mesh struct {
 	mface    []MFace
 	mtface   []MTFace
 	tface    []TFace
-	mvert    []MVert
+	mvert    []*MVert
 	medge    []MEdge
-	mloop    []MLoop
+	mloop    []*MLoop
 	mloopuv  []*MLoopUV
 	mloopcol []MLoopCol
 	mpoly    []*MPoly

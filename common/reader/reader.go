@@ -84,6 +84,14 @@ func (r *AiReader) GetLineReader() LineReader {
 	return NewLineReader(r.reader)
 }
 
+func (r *AiReader) GetReader() *bufio.Reader {
+	return r.reader
+}
+
+func (r *AiReader) GetStreamReader() StreamReader {
+	return NewStreamReader(r.reader)
+}
+
 // Convert to UTF8 data
 func (r *AiReader) ConvertToUTF8() (err error) {
 	//ConversionResult result;

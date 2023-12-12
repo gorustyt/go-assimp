@@ -66,8 +66,8 @@ func (b *BlenderBMeshConverter) ConvertPolyToFaces(poly *MPoly) {
 		}
 	} else if poly.totloop > 4 {
 		if b.ASSIMP_BLEND_WITH_GLU_TESSELLATE {
-			var tessGL BlenderTessellatorGL
-			tessGL.Tessellate(polyLoop, poly.totloop, b.triMesh.mvert)
+			//var tessGL BlenderTessellatorGL
+			//tessGL.Tessellate(polyLoop, poly.totloop, b.triMesh.mvert)
 		} else {
 			var tessP2T BlenderTessellatorP2T
 			tessP2T.Tessellate(polyLoop, poly.totloop, b.triMesh.mvert)

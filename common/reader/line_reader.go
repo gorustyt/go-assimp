@@ -14,21 +14,21 @@ type LineReader interface {
 	NextLine()
 	GetLine() string
 	GetLineNum() int
-	NextLineVector3(verticesKey string) (vertices []common.AiVector3D, err error)
-	ReadLineAiVector3d() (res common.AiVector3D, err error)
+	NextLineVector3(verticesKey string) (vertices []*common.AiVector3D, err error)
+	ReadLineAiVector3d() (res *common.AiVector3D, err error)
 	HasPrefix(prefix string) bool
 	NextKeyString(key string, index int) (res []string, err error)
 	NextOneKeyInt(key string) (res int, err error)
 	NextOneKeyFloat32(key string) (res float32, err error)
-	NextKeyAiColor3d(key string) (res common.AiColor3D, err error)
-	NextKeyAiMatrix3x3(key string) (res common.AiMatrix3x3, err error)
+	NextKeyAiColor3d(key string) (res *common.AiColor3D, err error)
+	NextKeyAiMatrix3x3(key string) (res *common.AiMatrix3x3, err error)
 	EOF() bool
 
 	MustOneKeyString(key string) (string, error)
 	MustOneKeyInt(key string) (int, error)
-	NextKeyAiVector2d(key string) (res common.AiVector2D, err error)
+	NextKeyAiVector2d(key string) (res *common.AiVector2D, err error)
 	MustOneKeyFloat32(key string) (float32, error)
-	NextKeyAiVector3d(key string) (res common.AiVector3D, err error)
+	NextKeyAiVector3d(key string) (res *common.AiVector3D, err error)
 	NextOneKeyString(key string) (res string, err error)
 }
 
@@ -144,15 +144,16 @@ func (r *lineReader) MustOneKeyString(key string) (string, error) {
 	r.NextLine()
 	return values[0], nil
 }
-func (r *lineReader) NextKeyAiColor3d(key string) (res common.AiColor3D, err error) {
+func (r *lineReader) NextKeyAiColor3d(key string) (res *common.AiColor3D, err error) {
 	data, err := r.NextKeyFloat32(key, 3)
 	if err != nil {
 		return res, nil
 	}
-	return common.AiColor3D{data[0], data[1], data[2]}, err
+	return &common.AiColor3D{data[0], data[1], data[2]}, err
 }
 
-func (r *lineReader) NextKeyAiMatrix3x3(key string) (res common.AiMatrix3x3, err error) {
+func (r *lineReader) NextKeyAiMatrix3x3(key string) (res *common.AiMatrix3x3, err error) {
+	res = &common.AiMatrix3x3{}
 	data, err := r.NextKeyFloat32(key, 9)
 	if err != nil {
 		return res, nil
@@ -169,20 +170,20 @@ func (r *lineReader) NextKeyAiMatrix3x3(key string) (res common.AiMatrix3x3, err
 	return res, err
 }
 
-func (r *lineReader) NextKeyAiVector2d(key string) (res common.AiVector2D, err error) {
+func (r *lineReader) NextKeyAiVector2d(key string) (res *common.AiVector2D, err error) {
 	data, err := r.NextKeyFloat32(key, 2)
 	if err != nil {
 		return res, nil
 	}
-	return common.AiVector2D{data[0], data[1]}, err
+	return &common.AiVector2D{data[0], data[1]}, err
 }
 
-func (r *lineReader) NextKeyAiVector3d(key string) (res common.AiVector3D, err error) {
+func (r *lineReader) NextKeyAiVector3d(key string) (res *common.AiVector3D, err error) {
 	data, err := r.NextKeyFloat32(key, 3)
 	if err != nil {
 		return res, nil
 	}
-	return common.AiVector3D{data[0], data[1], data[2]}, err
+	return &common.AiVector3D{data[0], data[1], data[2]}, err
 }
 
 func (r *lineReader) NextOneKeyFloat32(key string) (res float32, err error) {
@@ -276,7 +277,7 @@ func (r *lineReader) ReadLineFloat32() (res []float32, err error) {
 	return res, err
 }
 
-func (r *lineReader) ReadLineAiVector3d() (res common.AiVector3D, err error) {
+func (r *lineReader) ReadLineAiVector3d() (res *common.AiVector3D, err error) {
 	values, err := r.ReadLineFloat32()
 	if err != nil {
 		return res, err
@@ -288,10 +289,10 @@ func (r *lineReader) ReadLineAiVector3d() (res common.AiVector3D, err error) {
 		logger.WarnF("expect find element 3 but found:%v %v", len(values), values)
 	}
 
-	return common.AiVector3D{values[0], values[1], values[2]}, err
+	return &common.AiVector3D{values[0], values[1], values[2]}, err
 }
 
-func (r *lineReader) NextLineVector3(verticesKey string) (vertices []common.AiVector3D, err error) {
+func (r *lineReader) NextLineVector3(verticesKey string) (vertices []*common.AiVector3D, err error) {
 	if !r.HasPrefix(verticesKey) {
 		return vertices, ErrBadParams
 	}

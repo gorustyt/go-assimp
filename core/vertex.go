@@ -3,18 +3,18 @@ package core
 import "assimp/common"
 
 type Vertex struct {
-	position           common.AiVector3D
-	normal             common.AiVector3D
-	tangent, bitangent common.AiVector3D
+	position           *common.AiVector3D
+	normal             *common.AiVector3D
+	tangent, bitangent *common.AiVector3D
 
-	texcoords []common.AiVector3D
-	colors    []common.AiColor4D
+	texcoords []*common.AiVector3D
+	colors    []*common.AiColor4D
 }
 
 func NewVertex() *Vertex {
 	return &Vertex{
-		texcoords: make([]common.AiVector3D, AI_MAX_NUMBER_OF_TEXTURECOORDS),
-		colors:    make([]common.AiColor4D, AI_MAX_NUMBER_OF_COLOR_SETS),
+		texcoords: make([]*common.AiVector3D, AI_MAX_NUMBER_OF_TEXTURECOORDS),
+		colors:    make([]*common.AiColor4D, AI_MAX_NUMBER_OF_COLOR_SETS),
 	}
 }
 

@@ -33,7 +33,7 @@ func NewAiMatrix4x4FromValues(_a1, _a2, _a3, _a4, _b1, _b2, _b3, _b4,
 	return ai
 }
 
-func NewAiMatrix4x4FromAiMatrix3x3(m AiMatrix3x3) AiMatrix4x4 {
+func NewAiMatrix4x4FromAiMatrix3x3(m *AiMatrix3x3) *AiMatrix4x4 {
 	ai := AiMatrix4x4{}
 	ai.A1 = m.A1
 	ai.A2 = m.A2
@@ -51,7 +51,7 @@ func NewAiMatrix4x4FromAiMatrix3x3(m AiMatrix3x3) AiMatrix4x4 {
 	ai.D2 = 0.0
 	ai.D3 = 0.0
 	ai.D4 = 1.0
-	return ai
+	return &ai
 }
 
 func (ai *AiMatrix4x4) Determinant() float32 {

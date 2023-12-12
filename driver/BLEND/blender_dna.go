@@ -3,6 +3,7 @@ package BLEND
 import (
 	"assimp/common"
 	"assimp/common/logger"
+	"assimp/common/reader"
 	"errors"
 	"fmt"
 	"strings"
@@ -293,6 +294,30 @@ func (d *DNA) AddPrimitiveStructures() {
 	// no long, seemingly.
 }
 
+// --------------------------------------------------------------------------------
+func (d *DNA) Get(ss string) *Structure {
+	return d.structures[d.indices[ss]]
+}
+
+// --------------------------------------------------------------------------------
+func (d *DNA) IndexByString(ss string) *Structure {
+	it, ok := d.indices[ss]
+	if !ok {
+		logger.ErrorF("BlendDNA: Did not find a structure named `%v`", ss)
+		return nil
+	}
+	return d.structures[it]
+}
+
+// --------------------------------------------------------------------------------
+func (d *DNA) Index(i int) *Structure {
+	if i >= len(d.structures) {
+		logger.ErrorF("BlendDNA: There is no structure with index `%v`", i)
+	}
+
+	return d.structures[i]
+}
+
 // --------------------------------------------------------
 /** Fill the @c converters member with converters for all
  *  known data types. The implementation of this method is
@@ -301,5 +326,199 @@ func (d *DNA) AddPrimitiveStructures() {
  *  exact data type is a runtime-property and not yet
  *  known at compile time (consider Object::data).*/
 func (d *DNA) RegisterConverters() {
+	d.converters["Object"] = func() any {
+		return &Object{}
+	}
+	d.converters["Group"] = func() any {
+		return &Group{}
+	}
+	d.converters["MTex"] = func() any {
+		return &MTex{}
+	}
+	d.converters["TFace"] = func() any {
+		return &TFace{}
+	}
+	d.converters["SubsurfModifierData"] = func() any {
+		return &SubsurfModifierData{}
+	}
+	d.converters["MFace"] = func() any {
+		return &MFace{}
+	}
+	d.converters["Lamp"] = func() any {
+		return &Lamp{}
+	}
+	d.converters["MDeformWeight"] = func() any {
+		return &MDeformWeight{}
+	}
+	d.converters["PackedFile"] = func() any {
+		return &PackedFile{}
+	}
+	d.converters["Base"] = func() any {
+		return &Base{}
+	}
+	d.converters["MTFace"] = func() any {
+		return &MTFace{}
+	}
+	d.converters["Material"] = func() any {
+		return &Material{}
+	}
+	d.converters["MTexPoly"] = func() any {
+		return &MTexPoly{}
+	}
+	d.converters["Mesh"] = func() any {
+		return &Mesh{}
+	}
+	d.converters["MDeformVert"] = func() any {
+		return &MDeformVert{}
+	}
+	d.converters["World"] = func() any {
+		return &World{}
+	}
+	d.converters["MLoopCol"] = func() any {
+		return &MLoopCol{}
+	}
+	d.converters["MVert"] = func() any {
+		return &MVert{}
+	}
+	d.converters["MEdge"] = func() any {
+		return &MEdge{}
+	}
+	d.converters["MLoopUV"] = func() any {
+		return &MLoopUV{}
+	}
+	d.converters["GroupObject"] = func() any {
+		return &GroupObject{}
+	}
+	d.converters["ListBase"] = func() any {
+		return &ListBase{}
+	}
+	d.converters["MLoop"] = func() any {
+		return &MLoop{}
+	}
+	d.converters["ModifierData"] = func() any {
+		return &ModifierData{}
+	}
+	d.converters["ID"] = func() any {
+		return &ID{}
+	}
+	d.converters["MCol"] = func() any {
+		return &MCol{}
+	}
+	d.converters["MPoly"] = func() any {
+		return &MPoly{}
+	}
+	d.converters["Scene"] = func() any {
+		return &Scene{}
+	}
+	d.converters["Library"] = func() any {
+		return &Library{}
+	}
+	d.converters["Tex"] = func() any {
+		return &Tex{}
+	}
+	d.converters["Camera"] = func() any {
+		return &Camera{}
+	}
+	d.converters["MirrorModifierData"] = func() any {
+		return &MirrorModifierData{}
+	}
+	d.converters["Image"] = func() any {
+		return &Image{}
+	}
+	d.converters["CustomData"] = func() any {
+		return &CustomData{}
+	}
+	d.converters["CustomDataLayer"] = func() any {
+		return &CustomDataLayer{}
+	}
+	d.converters["Collection"] = func() any {
+		return &Collection{}
+	}
+	d.converters["CollectionChild"] = func() any {
+		return &CollectionChild{}
+	}
+	d.converters["CollectionObject"] = func() any {
+		return &CollectionObject{}
+	}
+}
 
+// --------------------------------------------------------------------------------
+func (s *Structure) Index(i int) *Field {
+	if i >= len(s.fields) {
+		logger.ErrorF("BlendDNA: There is no field with index %v` ` in structure `%v`", i, s.name)
+		return nil
+	}
+
+	return s.fields[i]
+}
+
+func (s *Structure) IndexByString(ss string) *Field {
+	it, ok := s.indices[ss]
+	if !ok {
+		logger.ErrorF("BlendDNA: Did not find a field named `%v ` in structure `%v", ss, s.name)
+		return nil
+	}
+
+	return s.fields[it]
+}
+
+func (s *Structure) ReadField(out any, name string, db *FileDatabase) {
+	old := reader.GetReadNum()
+	f := s.IndexByString(name)
+	// find the structure definition pertaining to this field
+	ss := db.dna.IndexByString(f.Type)
+	s.Convert(out, db)
+	// and recover the previous stream position
+	db.stats().fields_read++
+}
+
+// --------------------------------------------------------
+/** Try to read an instance of the structure from the stream
+ *  and attempt to convert to `T`. This is done by
+ *  an appropriate specialization. If none is available,
+ *  a compiler complain is the result.
+ *  @param dest Destination value to be written
+ *  @param db File database, including input stream. */
+
+func (s *Structure) Convert(out any, db *FileDatabase) error {
+	switch out.(type) {
+	case *float64:
+
+	}
+	return nil
+}
+
+func (s *Structure) ConvertFloat64(db *FileDatabase) (dest float64, err error) {
+	if s.name == "char" {
+		v, err := s.GetInt8()
+		if err != nil {
+			return 0, err
+		}
+		dest = float64(v) / 255.
+		return
+	} else if s.name == "short" {
+		v, err := s.GetInt16()
+		if err != nil {
+			return 0, err
+		}
+		dest = float64(v) / 32767.
+		return
+	}
+	return 0, s.ConvertDispatcher(dest, db)
+}
+
+// ------------------------------------------------------------------------------------------------
+func (s *Structure) ConvertDispatcher(out any, db *FileDatabase) error {
+	if s.name == "int" {
+		out = s.GetU4()
+	} else if s.name == "short" {
+		out = s.GetU2()
+	} else if s.name == "char" {
+		out = s.GetU1()
+	} else if s.name == "float" {
+		out = s.GetF4()
+	} else if s.name == "double" {
+		out = s.GetF8()
+	}
+	return fmt.Errorf("Unknown source for conversion to primitive data type: %v", s.name)
 }

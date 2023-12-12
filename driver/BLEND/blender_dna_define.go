@@ -5,14 +5,19 @@ import (
 	"errors"
 )
 
+type DNAConvert interface {
+	Convert(db *FileDatabase) error
+}
+
+type DNAConverterFactory func() DNAConvert
 type DNA struct {
 	structures []*Structure
 	indices    map[string]int
-	//converters map[string]FactoryPair
+	converters map[string]DNAConverterFactory
 }
 
 func NewDNA() *DNA {
-	return &DNA{indices: map[string]int{}}
+	return &DNA{indices: map[string]int{}, converters: map[string]DNAConverterFactory{}}
 }
 
 type FileDatabase struct {
@@ -33,6 +38,10 @@ func NewFileDatabase() *FileDatabase {
 	f := &FileDatabase{}
 
 	return f
+}
+
+func (db *FileDatabase) stats() *Statistics {
+	return db._stats
 }
 
 type ObjectCache struct {
@@ -81,6 +90,7 @@ type Field struct {
 }
 
 type Structure struct {
+	reader.StreamReader
 	name    string
 	fields  []*Field
 	indices map[string]int32

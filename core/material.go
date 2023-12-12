@@ -706,7 +706,7 @@ func (ai AiTextureType) ToString() string {
  *  as closely as possible.<br>
  *
  *  In content pipelines you'll usually define how textures have to be handled,
- *  and the artists working on models have to conform to this specification,
+ *  and the artists working on exmaple_data have to conform to this specification,
  *  regardless which 3D tool they're using.
  */
 
@@ -853,14 +853,14 @@ const (
 )
 
 // ---------------------------------------------------------------------------
-/** @brief Defines all shading models supported by the library
+/** @brief Defines all shading exmaple_data supported by the library
  *
  *  Property: #AI_MATKEY_SHADING_MODEL
  *
  *  The list of shading modes has been taken from Blender.
  *  See Blender documentation for more information. The API does
  *  not distinguish between "specular" and "diffuse" shaders (thus the
- *  specular term for diffuse shading models like Oren-Nayar remains
+ *  specular term for diffuse shading exmaple_data like Oren-Nayar remains
  *  undefined). <br>
  *  Again, this value is just a hint. Assimp tries to select the shader whose
  *  most common implementation matches the original rendering results of the
@@ -944,7 +944,7 @@ const (
  *  Usually you'll instruct your cg artists how textures have to look like ...
  *  and how they will be processed in your application. However, if you use
  *  Assimp for completely generic loading purposes you might also need to
- *  process these flags in order to display as many 'unknown' 3D models as
+ *  process these flags in order to display as many 'unknown' 3D exmaple_data as
  *  possible correctly.
  *
  *  This corresponds to the #AI_MATKEY_TEXFLAGS property.

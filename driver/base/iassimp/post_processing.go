@@ -234,7 +234,7 @@ const (
 	 * http://www.cs.princeton.edu/gfx/pubs/Sander_2007_%3ETR/tipsy.pdf">this
 	 * paper</a>).
 	 *
-	 * If you intend to render huge models in hardware, this step might
+	 * If you intend to render huge exmaple_data in hardware, this step might
 	 * be of interest to you. The <tt>#AI_CONFIG_PP_ICL_PTCACHE_SIZE</tt>
 	 * importer property can be used to fine-tune the cache optimization.
 	 */
@@ -249,7 +249,7 @@ const (
 	 * their work if two meshes have different materials. Because several
 	 * material settings are lost during Assimp's import filters,
 	 * (and because many exporters don't check for redundant materials), huge
-	 * models often have materials which are are defined several times with
+	 * exmaple_data often have materials which are are defined several times with
 	 * exactly the same settings.
 	 *
 	 * Several material settings not contributing to the final appearance of
@@ -280,7 +280,7 @@ const (
 	 * This step generically populates aiBone->mArmature and aiBone->mNode generically
 	 * The point of these is it saves you later having to calculate these elements
 	 * This is useful when handling rest information or skin information
-	 * If you have multiple armatures on your models we strongly recommend enabling this
+	 * If you have multiple armatures on your exmaple_data we strongly recommend enabling this
 	 * Instead of writing your own multi-root, multi-armature lookups we have done the
 	 * hard work for you :)
 	 */

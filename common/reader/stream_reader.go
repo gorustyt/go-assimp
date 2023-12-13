@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"math"
 )
 
 type StreamReader interface {
@@ -22,10 +23,16 @@ type StreamReader interface {
 	GetUInt16() (v uint16, err error)
 	GetUInt8() (v uint8, err error)
 
+	GetFloat32() (v float32, err error)
+	GetFloat64() (v float64, err error)
+
 	Remain() int32
 	Peek(n int) ([]byte, error)
 	Discard(n int) error
 	GetReadNum() int32
+
+	StartPeekRead(pos int)
+	EndPeekRead()
 }
 
 type streamReader struct {
@@ -33,6 +40,9 @@ type streamReader struct {
 	buf []byte
 	binary.ByteOrder
 	r int32 //hasRead
+
+	peekReadEnable bool
+	peekPos        int
 }
 
 func NewStreamReader(reader *bufio.Reader) StreamReader {
@@ -41,12 +51,23 @@ func NewStreamReader(reader *bufio.Reader) StreamReader {
 		ByteOrder: binary.LittleEndian}
 }
 
+func (s *streamReader) StartPeekRead(pos int) {
+	s.peekReadEnable = true
+	s.peekPos = pos
+}
+
+func (s *streamReader) EndPeekRead() {
+	s.peekReadEnable = false
+	s.peekPos = 0
+}
+
 func (s *streamReader) Remain() int32 {
 	return int32(s.Reader.Size()) - s.r
 }
 func (s *streamReader) GetReadNum() int32 {
 	return s.r
 }
+
 func (s *streamReader) Discard(n int) error {
 	dis, err := s.Reader.Discard(n)
 	if err != nil {
@@ -127,6 +148,25 @@ func (s *streamReader) GetInt8() (v int8, err error) {
 	return int8(tmp), err
 }
 
+func (s *streamReader) GetFloat64() (v float64, err error) {
+	res, err := s.GetNBytes(8)
+	if err != nil {
+		return v, err
+	}
+	bits := binary.LittleEndian.Uint64(res)
+	float := math.Float64frombits(bits)
+	return float, nil
+}
+
+func (s *streamReader) GetFloat32() (v float32, err error) {
+	res, err := s.GetNBytes(4)
+	if err != nil {
+		return v, err
+	}
+	bits := binary.LittleEndian.Uint32(res)
+	float := math.Float32frombits(bits)
+	return float, nil
+}
 func (s *streamReader) GetString(n int) (string, error) {
 	res, err := s.GetNBytes(n)
 	if err != nil {
@@ -136,17 +176,39 @@ func (s *streamReader) GetString(n int) (string, error) {
 }
 
 func (s *streamReader) GetNBytes(n int) (res []byte, err error) {
-	if n > 1024 {
-		return nil, errors.New("streamReader limit bytes 1024")
+	var bytes []byte
+	if s.peekReadEnable {
+		bytes, err = s.peekRead(n)
+	} else {
+		bytes, err = s.read(n)
 	}
-	_, err = io.ReadFull(s.Reader, s.buf[:n])
 	if err != nil {
 		return nil, err
 	}
 	res = make([]byte, n)
-	copy(res, s.buf[:n])
+	copy(res, bytes)
 	s.r += int32(n)
 	return res, nil
+}
+
+func (s *streamReader) read(n int) (res []byte, err error) {
+	if n > 1024 {
+		return res, errors.New("streamReader limit bytes 1024")
+	}
+	_, err = io.ReadFull(s.Reader, s.buf[:n])
+	if err != nil {
+		return res, err
+	}
+	return s.buf[:n], nil
+}
+
+func (s *streamReader) peekRead(n int) (res []byte, err error) {
+	bytes, err := s.Peek(s.peekPos + n)
+	if err != nil {
+		return nil, err
+	}
+	s.peekPos += n
+	return bytes[s.peekPos:], nil
 }
 
 func (s *streamReader) ResetGzipReader() error {

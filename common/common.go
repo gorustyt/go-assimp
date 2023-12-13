@@ -80,3 +80,22 @@ func Strtoul10(in string) int32 {
 	}
 	return value
 }
+
+// find >=
+func LowerBound(begin, end int, less func(index int) bool) int {
+	for begin < end {
+		half := begin + (end-begin)>>1
+		if less(half) {
+			begin = half + 1
+		} else {
+			end = half
+		}
+	}
+	return end
+}
+
+type Number interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 |
+		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 |
+		~float32 | ~float64
+}

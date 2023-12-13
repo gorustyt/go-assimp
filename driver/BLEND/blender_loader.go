@@ -85,7 +85,7 @@ func (b *BlenderImporter) Read(pScene *core.AiScene) (err error) {
 	if err != nil {
 		return err
 	}
-	file := NewFileDatabase()
+	file := NewFileDatabase(b.StreamReader)
 	buffer, err := b.GetNBytes(1)
 	if err != nil {
 		return err
@@ -117,7 +117,43 @@ func (b *BlenderImporter) Read(pScene *core.AiScene) (err error) {
 	}
 	return b.ConvertBlendFile(pScene, &scene, file)
 }
+
 func (b *BlenderImporter) ExtractScene(out *Scene, file *FileDatabase) error {
+	var   block  *FileBlockHead
+ 	it ,ok:= file.dna.indices["Scene"]
+	if !ok {
+		return errors.New("there is no `Scene` structure record");
+	}
+
+	ss := file.dna.structures[it];
+
+	// we need a scene somewhere to start with.
+	for _,bl :=range file.entries {
+
+		// Fix: using the DNA index is more reliable to locate scenes
+		//if (bl.id == "SC") {
+
+		if (int(bl.dna_index) == it) {
+			block = bl;
+			break;
+		}
+	}
+
+	if (block==nil) {
+		return errors.New("there is not a single `Scene` record to load");
+	}
+
+	file.reader->SetCurrentPos(block.start);
+	err:=ss.Convert(out, file);
+	if err!=nil{
+		return err
+	}
+
+	logger.InfoF(
+		"(Stats) Fields read:%v, pointers resolved:%v, cache hits: %v, cached objects: ", file.stats().fields_read,
+		 file.stats().pointers_resolved,
+		 file.stats().cache_hits,
+		 file.stats().cached_objects);
 	return nil
 }
 

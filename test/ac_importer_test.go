@@ -9,7 +9,7 @@ import (
 
 func TestAcImporter(t *testing.T) {
 	im := driver.NewImporter()
-	p, err := im.ReadFile("../example_data/exmaple_data/AC/closedLine.ac")
+	p, err := im.ReadFile("../example_data/exmaple_data/AC/closedLine.ac", 0)
 	if err != nil {
 		logger.Fatal("", zap.Error(err))
 	}
@@ -18,7 +18,7 @@ func TestAcImporter(t *testing.T) {
 
 func TestAcImporter1(t *testing.T) {
 	im := driver.NewImporter()
-	p, err := im.ReadFile("../example_data/exmaple_data/AC/nosurfaces.ac")
+	p, err := im.ReadFile("../example_data/exmaple_data/AC/nosurfaces.ac", 0)
 	if err != nil {
 		logger.Fatal("", zap.Error(err))
 	}
@@ -27,7 +27,7 @@ func TestAcImporter1(t *testing.T) {
 
 func TestAcImporter2(t *testing.T) {
 	im := driver.NewImporter()
-	p, err := im.ReadFile("../example_data/exmaple_data/AC/openLine.ac")
+	p, err := im.ReadFile("../example_data/exmaple_data/AC/openLine.ac", 0)
 	if err != nil {
 		logger.Fatal("", zap.Error(err))
 	}
@@ -36,7 +36,7 @@ func TestAcImporter2(t *testing.T) {
 
 func TestAcImporter3(t *testing.T) {
 	im := driver.NewImporter()
-	p, err := im.ReadFile("../example_data/exmaple_data/AC/sample_subdiv.ac")
+	p, err := im.ReadFile("../example_data/exmaple_data/AC/sample_subdiv.ac", 0)
 	if err != nil {
 		logger.Fatal("", zap.Error(err))
 	}
@@ -45,7 +45,7 @@ func TestAcImporter3(t *testing.T) {
 
 func TestAcImporter4(t *testing.T) {
 	im := driver.NewImporter()
-	p, err := im.ReadFile("../example_data/exmaple_data/AC/SphereWithLight.ac")
+	p, err := im.ReadFile("../example_data/exmaple_data/AC/SphereWithLight.ac", 0)
 	if err != nil {
 		logger.Fatal("", zap.Error(err))
 	}
@@ -54,7 +54,7 @@ func TestAcImporter4(t *testing.T) {
 
 func TestAcImporter5(t *testing.T) {
 	im := driver.NewImporter()
-	p, err := im.ReadFile("../example_data/exmaple_data/AC/SphereWithLight_UTF8BOM.ac")
+	p, err := im.ReadFile("../example_data/exmaple_data/AC/SphereWithLight_UTF8BOM.ac", 0)
 	if err != nil {
 		logger.Fatal("", zap.Error(err))
 	}
@@ -63,7 +63,7 @@ func TestAcImporter5(t *testing.T) {
 
 func TestAcImporter6(t *testing.T) {
 	im := driver.NewImporter()
-	p, err := im.ReadFile("../example_data/exmaple_data/AC/SphereWithLight_UTF16LE.ac")
+	p, err := im.ReadFile("../example_data/exmaple_data/AC/SphereWithLight_UTF16LE.ac", 0)
 	if err != nil {
 		logger.Fatal("", zap.Error(err))
 	}
@@ -72,7 +72,7 @@ func TestAcImporter6(t *testing.T) {
 
 func TestAcImporter7(t *testing.T) {
 	im := driver.NewImporter()
-	p, err := im.ReadFile("../example_data/exmaple_data/AC/SphereWithLightUvScaling4X.ac")
+	p, err := im.ReadFile("../example_data/exmaple_data/AC/SphereWithLightUvScaling4X.ac", 0)
 	if err != nil {
 		logger.Fatal("", zap.Error(err))
 	}
@@ -81,7 +81,7 @@ func TestAcImporter7(t *testing.T) {
 
 func TestAcImporter8(t *testing.T) {
 	im := driver.NewImporter()
-	p, err := im.ReadFile("../example_data/exmaple_data/AC/TestFormatDetection")
+	p, err := im.ReadFile("../example_data/exmaple_data/AC/TestFormatDetection", 0)
 	if err != nil {
 		logger.Fatal("", zap.Error(err))
 	}
@@ -90,7 +90,7 @@ func TestAcImporter8(t *testing.T) {
 
 func TestAcImporter9(t *testing.T) {
 	im := driver.NewImporter()
-	p, err := im.ReadFile("../example_data/exmaple_data/AC/Wuson.ac")
+	p, err := im.ReadFile("../example_data/exmaple_data/AC/Wuson.ac", 0)
 	if err != nil {
 		logger.Fatal("", zap.Error(err))
 	}
@@ -99,7 +99,7 @@ func TestAcImporter9(t *testing.T) {
 
 func TestAcImporter10(t *testing.T) {
 	im := driver.NewImporter()
-	p, err := im.ReadFile("../example_data/exmaple_data/AC/Wuson.acc")
+	p, err := im.ReadFile("../example_data/exmaple_data/AC/Wuson.acc", 0)
 	if err != nil {
 		logger.Fatal("", zap.Error(err))
 	}

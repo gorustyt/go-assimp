@@ -3,19 +3,19 @@ package BLEND
 type ID struct {
 	name string
 	flag int16
-	ElemBase
+	*ElemBase
 }
 
 // -------------------------------------------------------------------------------
 type ListBase struct {
-	ElemBase
+	*ElemBase
 	first *ElemBase
 	last  *ElemBase
 }
 
 // -------------------------------------------------------------------------------
 type PackedFile struct {
-	ElemBase
+	*ElemBase
 	size int32
 	seek int32
 	data *FileOffset
@@ -23,7 +23,7 @@ type PackedFile struct {
 
 // -------------------------------------------------------------------------------
 type GroupObject struct {
-	ElemBase
+	*ElemBase
 	prev, next *GroupObject
 	ob         Object
 }
@@ -38,7 +38,7 @@ type Group struct {
 
 // -------------------------------------------------------------------------------
 type CollectionObject struct {
-	ElemBase
+	*ElemBase
 	//CollectionObject* prev;
 	next *CollectionObject
 	ob   *Object
@@ -46,7 +46,7 @@ type CollectionObject struct {
 
 // -------------------------------------------------------------------------------
 type CollectionChild struct {
-	ElemBase
+	*ElemBase
 	next, prev *CollectionChild
 	collection *Collection
 }
@@ -60,7 +60,7 @@ type Collection struct {
 
 // -------------------------------------------------------------------------------
 type MVert struct {
-	ElemBase
+	*ElemBase
 	co      [3]float64
 	no      [3]float64 // read as and divided through / 32767.f
 	flag    int8
@@ -70,7 +70,7 @@ type MVert struct {
 
 // -------------------------------------------------------------------------------
 type MEdge struct {
-	ElemBase
+	*ElemBase
 	v1, v2          int32
 	crease, bweight int8
 	flag            int16
@@ -78,33 +78,33 @@ type MEdge struct {
 
 // -------------------------------------------------------------------------------
 type MLoop struct {
-	ElemBase
+	*ElemBase
 	v, e int32
 }
 
 // -------------------------------------------------------------------------------
 type MLoopUV struct {
-	ElemBase
+	*ElemBase
 	uv   [2]float64
 	flag int32
 }
 
 // -------------------------------------------------------------------------------
 type World struct {
-	ElemBase
+	*ElemBase
 	id ID
 }
 
 // -------------------------------------------------------------------------------
 // Note that red and blue are not swapped, as with MCol
 type MLoopCol struct {
-	ElemBase
+	*ElemBase
 	r, g, b, a int8
 }
 
 // -------------------------------------------------------------------------------
 type MPoly struct {
-	ElemBase
+	*ElemBase
 	loopstart int32
 	totloop   int32
 	mat_nr    int16
@@ -113,7 +113,7 @@ type MPoly struct {
 
 // -------------------------------------------------------------------------------
 type MTexPoly struct {
-	ElemBase
+	*ElemBase
 	tpage           *Image
 	flag, transp    int8
 	mode, tile, pad int16
@@ -121,13 +121,13 @@ type MTexPoly struct {
 
 // -------------------------------------------------------------------------------
 type MCol struct {
-	ElemBase
+	*ElemBase
 	r, g, b, a int8
 }
 
 // -------------------------------------------------------------------------------
 type MFace struct {
-	ElemBase
+	*ElemBase
 	v1, v2, v3, v4 int32
 	mat_nr         int32
 	flag           int8
@@ -135,7 +135,7 @@ type MFace struct {
 
 // -------------------------------------------------------------------------------
 type TFace struct {
-	ElemBase
+	*ElemBase
 	uv     [4][2]float64
 	col    [4]int32
 	flag   int8
@@ -146,7 +146,7 @@ type TFace struct {
 
 // -------------------------------------------------------------------------------
 type MTFace struct {
-	ElemBase
+	*ElemBase
 	uv     [4][2]float64
 	flag   int8
 	mode   int16
@@ -157,14 +157,14 @@ type MTFace struct {
 
 // -------------------------------------------------------------------------------
 type MDeformWeight struct {
-	ElemBase
+	*ElemBase
 	def_nr int32
 	weight float64
 }
 
 // -------------------------------------------------------------------------------
 type MDeformVert struct {
-	ElemBase
+	*ElemBase
 	dw        []*MDeformWeight
 	totweight int32
 }
@@ -179,7 +179,7 @@ const (
 )
 
 type Material struct {
-	ElemBase
+	*ElemBase
 	id ID
 
 	r, g, b             float64
@@ -301,8 +301,8 @@ CustomDataLayer 104
 	void *data 96 8
 */
 type CustomDataLayer struct {
-	ElemBase
-	Type         int32
+	*ElemBase
+	Type         CustomDataType
 	offset       int32
 	flag         int32
 	active       int32
@@ -311,7 +311,7 @@ type CustomDataLayer struct {
 	active_mask  int32
 	uid          int32
 	name         string
-	data         ElemBase
+	data         IElemBase
 }
 
 /*
@@ -327,7 +327,7 @@ CustomData 208
 	CustomDataExternal *external 200 8
 */
 type CustomData struct {
-	layers   *CustomDataLayer
+	layers   []*CustomDataLayer
 	typemap  [42]int32 // CD_NUMTYPES
 	totlayer int32
 	maxlayer int32
@@ -339,7 +339,7 @@ type CustomData struct {
 }
 
 type Mesh struct {
-	ElemBase
+	*ElemBase
 	id ID
 
 	totface int32
@@ -381,7 +381,7 @@ func NewMesh() *Mesh {
 
 // -------------------------------------------------------------------------------
 type Library struct {
-	ElemBase
+	*ElemBase
 	id ID
 
 	name     string
@@ -398,7 +398,7 @@ const (
 
 // -------------------------------------------------------------------------------
 type Camera struct {
-	ElemBase
+	*ElemBase
 
 	id ID
 
@@ -431,7 +431,7 @@ const (
 )
 
 type Lamp struct {
-	ElemBase
+	*ElemBase
 	id ID
 	//AnimData *adt;
 
@@ -539,7 +539,7 @@ const (
 )
 
 type ModifierData struct {
-	ElemBase
+	*ElemBase
 	next *ElemBase
 	prev *ElemBase
 
@@ -549,7 +549,7 @@ type ModifierData struct {
 
 // ------------------------------------------------------------------------------------------------
 type SharedModifierData struct {
-	ElemBase
+	*ElemBase
 	modifier ModifierData
 }
 
@@ -566,6 +566,7 @@ const (
 )
 
 type SubsurfModifierData struct {
+	*ElemBase
 	SharedModifierData
 	subdivType   int16
 	levels       int16
@@ -587,6 +588,7 @@ const (
 )
 
 type MirrorModifierData struct {
+	*ElemBase
 	SharedModifierData
 	axis, flag int16
 	tolerance  float64
@@ -611,7 +613,7 @@ const (
 )
 
 type Object struct {
-	ElemBase
+	*ElemBase
 	id        ID
 	Type      ObjectType
 	obmat     [4][4]float64
@@ -637,7 +639,7 @@ type Base struct {
 
 // -------------------------------------------------------------------------------
 type Scene struct {
-	ElemBase
+	*ElemBase
 	id ID
 
 	camera            *Object
@@ -649,7 +651,7 @@ type Scene struct {
 
 // -------------------------------------------------------------------------------
 type Image struct {
-	ElemBase
+	*ElemBase
 	id ID
 
 	name string
@@ -711,7 +713,7 @@ const (
 )
 
 type Tex struct {
-	ElemBase
+	*ElemBase
 	id ID
 	// AnimData *adt;
 
@@ -831,7 +833,7 @@ const (
 )
 
 type MTex struct {
-	ElemBase
+	*ElemBase
 	// short texco, maptoneg;
 	mapto MTexMapType
 

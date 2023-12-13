@@ -5,11 +5,11 @@ import (
 	"errors"
 )
 
-type DNAConvert interface {
+type Converter interface {
+	IElemBase
 	Convert(db *FileDatabase) error
 }
-
-type DNAConverterFactory func() DNAConvert
+type DNAConverterFactory func() Converter
 type DNA struct {
 	structures []*Structure
 	indices    map[string]int
@@ -25,17 +25,17 @@ type FileDatabase struct {
 	little bool
 
 	dna *DNA
-	//reader  reader
+	reader.StreamReader
 	entries []*FileBlockHead
 
 	_stats         *Statistics
 	_cacheArrays   []*ObjectCache
 	_cache         *ObjectCache
-	next_cache_idx int
+	next_cache_idx int32
 }
 
-func NewFileDatabase() *FileDatabase {
-	f := &FileDatabase{}
+func NewFileDatabase(reader reader.StreamReader) *FileDatabase {
+	f := &FileDatabase{_stats: &Statistics{}, StreamReader: reader}
 
 	return f
 }
@@ -44,11 +44,51 @@ func (db *FileDatabase) stats() *Statistics {
 	return db._stats
 }
 
-type ObjectCache struct {
+func (db *FileDatabase) cache() *ObjectCache {
+	return db._cache
 }
 
-func NewObjectCache() {
+func (db *FileDatabase) cacheArray() []*ObjectCache {
+	return db._cacheArrays
+}
 
+type ObjectCache struct {
+	caches []map[*Pointer]*ElemBase
+	db     *FileDatabase
+}
+
+// --------------------------------------------------------------------------------
+func (oc *ObjectCache) get(s *Structure, ptr *Pointer) *ElemBase {
+	if s.cache_idx == -1 {
+		s.cache_idx = oc.db.next_cache_idx
+		oc.db.next_cache_idx++
+		oc.caches = make([]map[*Pointer]*ElemBase, oc.db.next_cache_idx)
+		return nil
+	}
+	it, ok := oc.caches[s.cache_idx][ptr]
+	if !ok {
+		oc.db.stats().cache_hits++
+	}
+	return it
+	// otherwise, out remains untouched
+}
+
+// --------------------------------------------------------------------------------
+func (oc *ObjectCache) set(s *Structure, ptr *Pointer, value *ElemBase) {
+	if s.cache_idx == -1 {
+		s.cache_idx = oc.db.next_cache_idx
+		oc.db.next_cache_idx++
+		oc.caches = make([]map[*Pointer]*ElemBase, oc.db.next_cache_idx)
+	}
+	if oc.caches[s.cache_idx] == nil {
+		oc.caches[s.cache_idx] = map[*Pointer]*ElemBase{}
+	}
+	oc.caches[s.cache_idx][ptr] = value
+	oc.db.stats().cached_objects++
+
+}
+func NewObjectCache(db *FileDatabase) *ObjectCache {
+	return &ObjectCache{db: db}
 }
 
 type Statistics struct {
@@ -67,6 +107,14 @@ type Statistics struct {
 
 type ElemBase struct {
 	dna_type string
+}
+
+func (e *ElemBase) GetDnaType() string         { return e.dna_type }
+func (e *ElemBase) SetDnaType(dna_type string) { e.dna_type = dna_type }
+
+type IElemBase interface {
+	GetDnaType() string
+	SetDnaType(dna_type string)
 }
 
 // -------------------------------------------------------------------------------
@@ -90,11 +138,12 @@ type Field struct {
 }
 
 type Structure struct {
-	reader.StreamReader
 	name    string
 	fields  []*Field
 	indices map[string]int32
 	size    int32
+
+	cache_idx int32
 }
 
 func NewStructure() *Structure {

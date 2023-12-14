@@ -9,8 +9,8 @@ type ID struct {
 // -------------------------------------------------------------------------------
 type ListBase struct {
 	*ElemBase
-	first *ElemBase
-	last  *ElemBase
+	first IElemBase
+	last  IElemBase
 }
 
 // -------------------------------------------------------------------------------
@@ -30,7 +30,7 @@ type GroupObject struct {
 
 // -------------------------------------------------------------------------------
 type Group struct {
-	ElemBase
+	*ElemBase
 	id      ID
 	layer   int32
 	gobject *GroupObject
@@ -53,6 +53,7 @@ type CollectionChild struct {
 
 // -------------------------------------------------------------------------------
 type Collection struct {
+	*ElemBase
 	id       ID
 	gobject  ListBase // CollectionObject
 	children ListBase // CollectionChild
@@ -283,7 +284,7 @@ type Material struct {
 	diff_shader int32
 	spec_shader int32
 
-	mtex [18]MTex
+	mtex [18]*MTex
 }
 
 /*
@@ -311,7 +312,7 @@ type CustomDataLayer struct {
 	active_mask  int32
 	uid          int32
 	name         string
-	data         IElemBase
+	data         []IElemBase
 }
 
 /*
@@ -327,6 +328,7 @@ CustomData 208
 	CustomDataExternal *external 200 8
 */
 type CustomData struct {
+	*ElemBase
 	layers   []*CustomDataLayer
 	typemap  [42]int32 // CD_NUMTYPES
 	totlayer int32
@@ -353,26 +355,26 @@ type Mesh struct {
 	subsurftype int16
 	smoothresh  int16
 
-	mface    []MFace
-	mtface   []MTFace
-	tface    []TFace
+	mface    []*MFace
+	mtface   []*MTFace
+	tface    []*TFace
 	mvert    []*MVert
-	medge    []MEdge
+	medge    []*MEdge
 	mloop    []*MLoop
 	mloopuv  []*MLoopUV
-	mloopcol []MLoopCol
+	mloopcol []*MLoopCol
 	mpoly    []*MPoly
-	mtpoly   []MTexPoly
-	dvert    []MDeformVert
-	mcol     []MCol
+	mtpoly   []*MTexPoly
+	dvert    []*MDeformVert
+	mcol     []*MCol
 
 	mat []*Material
 
-	vdata CustomData
-	edata CustomData
-	fdata CustomData
-	pdata CustomData
-	ldata CustomData
+	vdata *CustomData
+	edata *CustomData
+	fdata *CustomData
+	pdata *CustomData
+	ldata *CustomData
 }
 
 func NewMesh() *Mesh {
@@ -540,8 +542,8 @@ const (
 
 type ModifierData struct {
 	*ElemBase
-	next *ElemBase
-	prev *ElemBase
+	next IElemBase
+	prev IElemBase
 
 	Type, mode int32
 	name       string
@@ -625,13 +627,14 @@ type Object struct {
 
 	proxy, proxy_from, proxy_group *Object
 	dup_group                      *Group
-	data                           *ElemBase
+	data                           IElemBase
 
-	modifiers ListBase
+	modifiers *ListBase
 }
 
 // -------------------------------------------------------------------------------
 type Base struct {
+	*ElemBase
 	prev   *Base
 	next   *Base
 	object *Object

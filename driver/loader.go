@@ -2,7 +2,6 @@ package driver
 
 import (
 	"assimp/common/logger"
-	"assimp/common/reader"
 	"assimp/core"
 	"assimp/driver/AC"
 	"assimp/driver/BLEND"
@@ -19,7 +18,7 @@ var (
 	loader sync.Map
 )
 
-type LoaderCons func(aiReader *reader.AiReader) iassimp.Loader
+type LoaderCons func(data []byte) (iassimp.Loader, error)
 
 func init() {
 	RegisterLoader(AC.NewAC3DImporter, AC.Desc)
@@ -64,12 +63,8 @@ func (im *importer) ApplyPostProcessing(pScene *core.AiScene, pFlags int) {
 	ds.Execute(pScene)
 	logger.Info("Leaving post processing pipeline")
 }
-func (im *importer) ReadFile(path string, pFlags int) (*core.AiScene, error) {
+func (im *importer) ReadFile(path string, pFlags int) (s *core.AiScene, err error) {
 	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	r, err := reader.NewReader(data)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +73,14 @@ func (im *importer) ReadFile(path string, pFlags int) (*core.AiScene, error) {
 	var l iassimp.Loader
 	try := func(vsi interface{}) bool {
 		for _, v := range vsi.([]LoaderCons) {
-			ls := v(r)
+			if err != nil {
+				return false
+			}
+			ls, ierr := v(data)
+			if ierr != nil {
+				err = ierr
+				return false
+			}
 			if ls.CanRead(true) {
 				l = ls
 				return true

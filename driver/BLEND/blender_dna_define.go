@@ -7,7 +7,7 @@ import (
 
 type Converter interface {
 	IElemBase
-	Convert(db *FileDatabase) error
+	Convert(db *FileDatabase, s *Structure) error
 }
 type DNAConverterFactory func() Converter
 type DNA struct {
@@ -53,16 +53,16 @@ func (db *FileDatabase) cacheArray() []*ObjectCache {
 }
 
 type ObjectCache struct {
-	caches []map[*Pointer]*ElemBase
+	caches []map[*Pointer]IElemBase
 	db     *FileDatabase
 }
 
 // --------------------------------------------------------------------------------
-func (oc *ObjectCache) get(s *Structure, ptr *Pointer) *ElemBase {
+func (oc *ObjectCache) get(s *Structure, ptr *Pointer) IElemBase {
 	if s.cache_idx == -1 {
 		s.cache_idx = oc.db.next_cache_idx
 		oc.db.next_cache_idx++
-		oc.caches = make([]map[*Pointer]*ElemBase, oc.db.next_cache_idx)
+		oc.caches = make([]map[*Pointer]IElemBase, oc.db.next_cache_idx)
 		return nil
 	}
 	it, ok := oc.caches[s.cache_idx][ptr]
@@ -74,14 +74,14 @@ func (oc *ObjectCache) get(s *Structure, ptr *Pointer) *ElemBase {
 }
 
 // --------------------------------------------------------------------------------
-func (oc *ObjectCache) set(s *Structure, ptr *Pointer, value *ElemBase) {
+func (oc *ObjectCache) set(s *Structure, ptr *Pointer, value IElemBase) {
 	if s.cache_idx == -1 {
 		s.cache_idx = oc.db.next_cache_idx
 		oc.db.next_cache_idx++
-		oc.caches = make([]map[*Pointer]*ElemBase, oc.db.next_cache_idx)
+		oc.caches = make([]map[*Pointer]IElemBase, oc.db.next_cache_idx)
 	}
 	if oc.caches[s.cache_idx] == nil {
-		oc.caches[s.cache_idx] = map[*Pointer]*ElemBase{}
+		oc.caches[s.cache_idx] = map[*Pointer]IElemBase{}
 	}
 	oc.caches[s.cache_idx][ptr] = value
 	oc.db.stats().cached_objects++
@@ -170,6 +170,7 @@ type FileBlockHead struct {
 	id   string
 	size int32
 	// original memory address of the data
+	start int
 	// index into DNA
 	dna_index int32
 	// original memory address of the data
@@ -233,7 +234,8 @@ func (s *SectionParser) Next() error {
 	if err != nil {
 		return err
 	}
-	if s.Remain() < s.current.size {
+	s.current.start = s.GetCurPos()
+	if s.Remain() < int(s.current.size) {
 		return errors.New("BLEND: invalid size of file block")
 	}
 	return nil

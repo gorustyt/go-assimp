@@ -28,17 +28,20 @@ var (
 	}
 )
 
-func NewAC3DImporter(reader *reader.AiReader) iassimp.Loader {
-	im := &AC3DImporter{}
-	im.BaseImporter.Init(im, reader)
-	return im
+func NewAC3DImporter(data []byte) (iassimp.Loader, error) {
+	r, err := reader.NewFileLineReader(data)
+	if err != nil {
+		return nil, err
+	}
+	im := &AC3DImporter{LineReader: r}
+	return im, nil
 }
 
 func (ac *AC3DImporter) LoadObjectSection() (objects []*Object, err error) {
-	if !ac.Reader.HasPrefix("OBJECT") {
+	if !ac.HasPrefix("OBJECT") {
 		return objects, nil
 	}
-	name, err := ac.Reader.MustOneKeyString("OBJECT")
+	name, err := ac.MustOneKeyString("OBJECT")
 	if err != nil {
 		return objects, err
 	}
@@ -54,7 +57,7 @@ func (ac *AC3DImporter) LoadObjectSection() (objects []*Object, err error) {
 		light.ColorSpecular = common.NewAiColor3D(1.0, 1.0, 1.0)
 		light.ColorDiffuse = light.ColorSpecular
 		light.AttenuationConstant = 1.0
-		light.Name, err = ac.Reader.MustOneKeyString("name")
+		light.Name, err = ac.MustOneKeyString("name")
 		if err != nil {
 			return objects, err
 		}
@@ -70,9 +73,9 @@ func (ac *AC3DImporter) LoadObjectSection() (objects []*Object, err error) {
 	default:
 		obj.Type = Poly
 	}
-	for !ac.Reader.EOF() {
-		if ac.Reader.HasPrefix("kids") {
-			num, err := ac.Reader.MustOneKeyInt("kids")
+	for !ac.EOF() {
+		if ac.HasPrefix("kids") {
+			num, err := ac.MustOneKeyInt("kids")
 			if err != nil {
 				return objects, err
 			}
@@ -85,8 +88,8 @@ func (ac *AC3DImporter) LoadObjectSection() (objects []*Object, err error) {
 					obj.children = append(obj.children, children...)
 				}
 			}
-		} else if ac.Reader.HasPrefix("name") {
-			obj.name, err = ac.Reader.MustOneKeyString("name")
+		} else if ac.HasPrefix("name") {
+			obj.name, err = ac.MustOneKeyString("name")
 			if err != nil {
 				return nil, err
 			}
@@ -94,82 +97,82 @@ func (ac *AC3DImporter) LoadObjectSection() (objects []*Object, err error) {
 				light.Name = obj.name
 			}
 			continue
-		} else if ac.Reader.HasPrefix("texture") {
-			texture, err := ac.Reader.MustOneKeyString("texture")
+		} else if ac.HasPrefix("texture") {
+			texture, err := ac.MustOneKeyString("texture")
 			if err != nil {
 				return nil, err
 			}
 			obj.textures = append(obj.textures, texture)
 			continue
-		} else if ac.Reader.HasPrefix("texrep") {
-			obj.texRepeat, err = ac.Reader.NextKeyAiVector2d("texrep")
+		} else if ac.HasPrefix("texrep") {
+			obj.texRepeat, err = ac.NextKeyAiVector2d("texrep")
 			if err != nil {
 				return nil, err
 			}
 			if obj.texRepeat.X == 0 || obj.texRepeat.Y == 0 {
 				obj.texRepeat = &common.AiVector2D{1, 1}
 			}
-		} else if ac.Reader.HasPrefix("texoff") {
-			obj.texOffset, err = ac.Reader.NextKeyAiVector2d("texoff")
+		} else if ac.HasPrefix("texoff") {
+			obj.texOffset, err = ac.NextKeyAiVector2d("texoff")
 			if err != nil {
 				return nil, err
 			}
-		} else if ac.Reader.HasPrefix("rot") {
-			obj.rotation, err = ac.Reader.NextKeyAiMatrix3x3("loc")
+		} else if ac.HasPrefix("rot") {
+			obj.rotation, err = ac.NextKeyAiMatrix3x3("loc")
 			if err != nil {
 				return nil, err
 			}
-		} else if ac.Reader.HasPrefix("loc") {
-			obj.translation, err = ac.Reader.NextKeyAiVector3d("loc")
+		} else if ac.HasPrefix("loc") {
+			obj.translation, err = ac.NextKeyAiVector3d("loc")
 			if err != nil {
 				return nil, err
 			}
-		} else if ac.Reader.HasPrefix("subdiv") {
-			obj.subDiv, err = ac.Reader.MustOneKeyInt("subdiv")
-			if err != nil {
-				return nil, err
-			}
-			continue
-		} else if ac.Reader.HasPrefix("crease") {
-			obj.crease, err = ac.Reader.MustOneKeyFloat32("crease")
+		} else if ac.HasPrefix("subdiv") {
+			obj.subDiv, err = ac.MustOneKeyInt("subdiv")
 			if err != nil {
 				return nil, err
 			}
 			continue
-		} else if ac.Reader.HasPrefix("numvert") {
-			vs, err := ac.Reader.NextLineVector3("numvert")
+		} else if ac.HasPrefix("crease") {
+			obj.crease, err = ac.MustOneKeyFloat32("crease")
+			if err != nil {
+				return nil, err
+			}
+			continue
+		} else if ac.HasPrefix("numvert") {
+			vs, err := ac.NextLineVector3("numvert")
 			if err != nil {
 				return nil, err
 			}
 			obj.vertices = append(obj.vertices, vs...)
-		} else if ac.Reader.HasPrefix("numsurf") {
+		} else if ac.HasPrefix("numsurf") {
 			Q3DWorkAround := false
 			var surf Surface
-			num, err := ac.Reader.MustOneKeyInt("numsurf")
+			num, err := ac.MustOneKeyInt("numsurf")
 			if err != nil {
 				return nil, err
 			}
 			for i := 0; i < num; i++ {
 				// FIX: this can occur for some files - Quick 3D for
 				// example writes no surf chunks
-				if ac.Reader.HasPrefix("SURF") {
+				if ac.HasPrefix("SURF") {
 					Q3DWorkAround = true
 				} else {
-					_, err := ac.Reader.MustOneKeyInt("SURF")
+					_, err := ac.MustOneKeyInt("SURF")
 					if err != nil {
 						return nil, err
 					}
 				}
-				if ac.Reader.HasPrefix("mat") {
-					surf.mat, err = ac.Reader.MustOneKeyInt("SURF")
+				if ac.HasPrefix("mat") {
+					surf.mat, err = ac.MustOneKeyInt("SURF")
 					if err != nil {
 						return nil, err
 					}
-				} else if ac.Reader.HasPrefix("refs") {
+				} else if ac.HasPrefix("refs") {
 					if Q3DWorkAround {
 
 					}
-					vs, err := ac.Reader.NextLineVector3("refs")
+					vs, err := ac.NextLineVector3("refs")
 					if err != nil {
 						return nil, err
 					}
@@ -183,10 +186,10 @@ func (ac *AC3DImporter) LoadObjectSection() (objects []*Object, err error) {
 				} else { // make sure the line is processed a second time
 					break
 				}
-				ac.Reader.NextLine()
+				ac.NextLine()
 			}
 		}
-		ac.Reader.NextLine()
+		ac.NextLine()
 	}
 	return objects, err
 }
@@ -565,39 +568,39 @@ func (ac *AC3DImporter) Read(pScene *core.AiScene) (err error) {
 	materials := make([]*Material, 0)
 	rootObjects := make([]*Object, 0)
 	var lights []*core.AiLight
-	for !ac.Reader.EOF() {
-		if ac.Reader.HasPrefix("MATERIAL") {
+	for !ac.EOF() {
+		if ac.HasPrefix("MATERIAL") {
 			var mat Material
 			materials = append(materials, &mat)
-			mat.name, err = ac.Reader.NextOneKeyString("MATERIAL")
+			mat.name, err = ac.NextOneKeyString("MATERIAL")
 			if err != nil {
 				return err
 			}
-			mat.rgb, err = ac.Reader.NextKeyAiColor3d("rgb")
+			mat.rgb, err = ac.NextKeyAiColor3d("rgb")
 			if err != nil {
 				return err
 			}
-			mat.amb, err = ac.Reader.NextKeyAiColor3d("amb")
+			mat.amb, err = ac.NextKeyAiColor3d("amb")
 			if err != nil {
 				return err
 			}
-			mat.emis, err = ac.Reader.NextKeyAiColor3d("emis")
+			mat.emis, err = ac.NextKeyAiColor3d("emis")
 			if err != nil {
 				return err
 			}
-			mat.spec, err = ac.Reader.NextKeyAiColor3d("spec")
+			mat.spec, err = ac.NextKeyAiColor3d("spec")
 			if err != nil {
 				return err
 			}
-			mat.shin, err = ac.Reader.NextOneKeyFloat32("shi")
+			mat.shin, err = ac.NextOneKeyFloat32("shi")
 			if err != nil {
 				return err
 			}
-			mat.trans, err = ac.Reader.NextOneKeyFloat32("trans")
+			mat.trans, err = ac.NextOneKeyFloat32("trans")
 			if err != nil {
 				return err
 			}
-			ac.Reader.NextLine()
+			ac.NextLine()
 		}
 		objs, err := ac.LoadObjectSection()
 		if err != nil {

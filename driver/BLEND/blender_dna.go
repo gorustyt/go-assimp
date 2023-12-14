@@ -56,7 +56,7 @@ func (d *DNAParser) Parse() error {
 		names[i] += string(tmp)
 	}
 	skip := func() error {
-		for d.GetReadNum()&0x3 != 0 {
+		for d.GetCurPos()&0x3 != 0 {
 			_, err = d.GetInt8()
 			if err != nil {
 				return err
@@ -325,130 +325,6 @@ func (d *DNA) GetBlobToStructureConverter(structure *Structure, db *FileDatabase
 	return d.converters[structure.name]
 }
 
-// --------------------------------------------------------
-/** Fill the @c converters member with converters for all
- *  known data types. The implementation of this method is
- *  in BlenderScene.cpp and is machine-generated.
- *  Converters are used to quickly handle objects whose
- *  exact data type is a runtime-property and not yet
- *  known at compile time (consider Object::data).*/
-func (d *DNA) RegisterConverters() {
-	//d.converters["Object"] = func() any {
-	//	return &Object{}
-	//}
-	//d.converters["Group"] = func() any {
-	//	return &Group{}
-	//}
-	//d.converters["MTex"] = func() any {
-	//	return &MTex{}
-	//}
-	//d.converters["TFace"] = func() any {
-	//	return &TFace{}
-	//}
-	//d.converters["SubsurfModifierData"] = func() any {
-	//	return &SubsurfModifierData{}
-	//}
-	//d.converters["MFace"] = func() any {
-	//	return &MFace{}
-	//}
-	//d.converters["Lamp"] = func() any {
-	//	return &Lamp{}
-	//}
-	//d.converters["MDeformWeight"] = func() any {
-	//	return &MDeformWeight{}
-	//}
-	//d.converters["PackedFile"] = func() any {
-	//	return &PackedFile{}
-	//}
-	//d.converters["Base"] = func() any {
-	//	return &Base{}
-	//}
-	//d.converters["MTFace"] = func() any {
-	//	return &MTFace{}
-	//}
-	//d.converters["Material"] = func() any {
-	//	return &Material{}
-	//}
-	//d.converters["MTexPoly"] = func() any {
-	//	return &MTexPoly{}
-	//}
-	//d.converters["Mesh"] = func() any {
-	//	return &Mesh{}
-	//}
-	//d.converters["MDeformVert"] = func() any {
-	//	return &MDeformVert{}
-	//}
-	//d.converters["World"] = func() any {
-	//	return &World{}
-	//}
-	//d.converters["MLoopCol"] = func() any {
-	//	return &MLoopCol{}
-	//}
-	//d.converters["MVert"] = func() any {
-	//	return &MVert{}
-	//}
-	//d.converters["MEdge"] = func() any {
-	//	return &MEdge{}
-	//}
-	//d.converters["MLoopUV"] = func() any {
-	//	return &MLoopUV{}
-	//}
-	//d.converters["GroupObject"] = func() any {
-	//	return &GroupObject{}
-	//}
-	//d.converters["ListBase"] = func() any {
-	//	return &ListBase{}
-	//}
-	//d.converters["MLoop"] = func() any {
-	//	return &MLoop{}
-	//}
-	//d.converters["ModifierData"] = func() any {
-	//	return &ModifierData{}
-	//}
-	//d.converters["ID"] = func() any {
-	//	return &ID{}
-	//}
-	//d.converters["MCol"] = func() any {
-	//	return &MCol{}
-	//}
-	//d.converters["MPoly"] = func() any {
-	//	return &MPoly{}
-	//}
-	//d.converters["Scene"] = func() any {
-	//	return &Scene{}
-	//}
-	//d.converters["Library"] = func() any {
-	//	return &Library{}
-	//}
-	//d.converters["Tex"] = func() any {
-	//	return &Tex{}
-	//}
-	//d.converters["Camera"] = func() any {
-	//	return &Camera{}
-	//}
-	//d.converters["MirrorModifierData"] = func() any {
-	//	return &MirrorModifierData{}
-	//}
-	//d.converters["Image"] = func() any {
-	//	return &Image{}
-	//}
-	//d.converters["CustomData"] = func() any {
-	//	return &CustomData{}
-	//}
-	//d.converters["CustomDataLayer"] = func() any {
-	//	return &CustomDataLayer{}
-	//}
-	//d.converters["Collection"] = func() any {
-	//	return &Collection{}
-	//}
-	//d.converters["CollectionChild"] = func() any {
-	//	return &CollectionChild{}
-	//}
-	//d.converters["CollectionObject"] = func() any {
-	//	return &CollectionObject{}
-	//}
-}
-
 // --------------------------------------------------------------------------------
 func (s *Structure) Index(i int) *Field {
 	if i >= len(s.fields) {
@@ -471,125 +347,271 @@ func (s *Structure) IndexByString(ss string) *Field {
 
 func (s *Structure) ReadField(out any, name string, db *FileDatabase) error {
 	f := s.IndexByString(name)
-	db.StartPeekRead(int(f.offset))
-	defer db.EndPeekRead()
-	// find the structure definition pertaining to this field
-	ss := db.dna.IndexByString(f.Type)
-	err := ss.Convert(out, db)
+	oldPos := db.GetCurPos()
+	defer db.SetCurPos(oldPos)
+	err := db.Discard(int(f.offset))
 	if err != nil {
 		return err
 	}
+	// find the structure definition pertaining to this field
+	ss := db.dna.IndexByString(f.Type)
+	err = ss.Convert(out, db)
+	if err != nil {
+		return err
+	}
+
 	// and recover the previous stream position
 	db.stats().fields_read++
 	return nil
 }
 
-func (s *Structure) ReadFieldPtr(out []any, name string, db *FileDatabase) (error, bool) {
-	ptrval := make([]Pointer, len(out))
+// --------------------------------------------------------------------------------
+func (s *Structure) ReadFieldPtr(name string, db *FileDatabase, non_recursives ...bool) (out any, err error) {
+	return s.readFieldPtr((IElemBase)(nil), name, db, non_recursives...)
+}
+func (s *Structure) ReadFieldFileOffsetPtr(name string, db *FileDatabase, non_recursives ...bool) (out any, err error) {
+	return s.readFieldPtr((*FileOffset)(nil), name, db, non_recursives...)
+}
+func (s *Structure) readFieldPtr(in any, name string, db *FileDatabase, non_recursives ...bool) (out any, err error) {
+	non_recursive := false
+	if len(non_recursives) > 0 {
+		non_recursive = non_recursives[0]
+	}
+	old := db.GetCurPos()
+	var ptrval Pointer
+
+	f := s.IndexByString(name)
+
+	// sanity check, should never happen if the genblenddna script is right
+	if (f.flags & FieldFlag_Pointer) == 0 {
+		return out, fmt.Errorf("field `%v` of structure `%v` ought to be a pointer", name, s.name)
+	}
+
+	err = db.Discard(int(f.offset))
+	if err != nil {
+		return out, err
+	}
+	err = s.Convert(ptrval, db)
+	if err != nil {
+		return out, err
+	}
+	// actually it is meaningless on which Structure the Convert is called
+	// because the `Pointer` argument triggers a special implementation.
+
+	// resolve the pointer and load the corresponding structure
+	out, err = s.ResolvePointer(in, &ptrval, db, f, non_recursive)
+
+	if !non_recursive {
+		// and recover the previous stream position
+		db.SetCurPos(old)
+	}
+	db.stats().fields_read++
+	return out, nil
+}
+
+func (s *Structure) ReadFieldPtrArray(count int, name string, db *FileDatabase) (out []any, err error) {
+	return s.readFieldPtrArray((IElemBase)(nil), count, name, db)
+}
+
+func (s *Structure) ReadFieldFileOffsetPtrArray(count int, name string, db *FileDatabase) (out []any, err error) {
+	return s.readFieldPtrArray((*FileOffset)(nil), count, name, db)
+}
+
+//--------------------------------------------------------------------------------
+
+func (s *Structure) ReadFieldPtrSlice(name string, db *FileDatabase) (out []any, err error) {
+	old := db.GetCurPos()
+	defer db.SetCurPos(old)
+
+	var ptrval Pointer
+	f := s.IndexByString(name)
+	err = db.Discard(int(f.offset))
+	if err != nil {
+		return out, err
+	}
+	// sanity check, should never happen if the genblenddna script is right
+	if (f.flags & FieldFlag_Pointer) == 0 {
+		return out, fmt.Errorf("Field `%v` of structure `%v` ought to be a pointer", name, s.name)
+	}
+
+	err = s.Convert(&ptrval, db)
+	// actually it is meaningless on which Structure the Convert is called
+	// because the `Pointer` argument triggers a special implementation.
+
+	if ptrval.val != 0 {
+		// find the file block the pointer is pointing to
+		block, err := s.LocateFileBlockForAddress(&ptrval, db)
+		if err != nil {
+			return out, err
+		}
+		db.SetCurPos(block.start + int(ptrval.val-block.address.val))
+		// FIXME: basically, this could cause problems with 64 bit pointers on 32 bit systems.
+		// I really ought to improve StreamReader to work with 64 bit indices exclusively.
+
+		ss := db.dna.IndexByString(f.Type)
+		for i := int32(0); i < block.num; i++ {
+			// allocate the object hull
+			// continue conversion after allocating the required storage
+			fa := db.dna.GetBlobToStructureConverter(s, db)
+			if fa == nil {
+				// this might happen if DNA::RegisterConverters hasn't been called so far
+				// or if the target type is not contained in `our` DNA.
+				logger.WarnF("Failed to find a converter for the `%v` structure", s.name)
+				return out, nil
+			}
+			oc := fa()
+			err = oc.Convert(db, ss)
+			if err != nil {
+				return out, err
+			}
+			// store a pointer to the name string of the actual type
+			// in the object itself. This allows the conversion code
+			// to perform additional type checking.
+			oc.SetDnaType(s.name)
+			out = append(out, oc)
+		}
+	}
+
+	db.SetCurPos(old)
+	db.stats().fields_read++
+	return out, nil
+}
+
+func (s *Structure) readFieldPtrArray(in any, count int, name string, db *FileDatabase) (out1 []any, err error) {
+	ptrval := make([]Pointer, count)
 	f := s.IndexByString(name)
 	// sanity check, should never happen if the genblenddna script is right
 	if (FieldFlag_Pointer | FieldFlag_Pointer) != (f.flags & (FieldFlag_Pointer | FieldFlag_Pointer)) {
-		return fmt.Errorf("field ` %v` of structure ` %v ` ought to be a pointer AND an array", name, s.name), false
+		return out1, fmt.Errorf("field ` %v` of structure ` %v ` ought to be a pointer AND an array", name, s.name)
 	}
-	db.StartPeekRead(int(f.offset))
-	defer db.EndPeekRead()
+	oldPos := db.GetCurPos()
+	defer db.SetCurPos(oldPos)
+	err = db.Discard(int(f.offset))
+	if err != nil {
+		return out1, err
+	}
 	// find the structure definition pertaining to this field
 	i := 0
 	for ; i < int(math.Min(float64(f.array_sizes[0]), float64(len(ptrval)))); i++ {
 		err := s.Convert(ptrval[i], db)
 		if err != nil {
-			return err, false
+			return out1, err
 		}
 	}
-	for ; i < len(out); i++ {
+	for ; i < count; i++ {
 		ptrval[i] = Pointer{}
 	}
-	res := true
-	for i = 0; i < len(out); i++ {
+	for i = 0; i < count; i++ {
 		// resolve the pointer and load the corresponding structure
-		outValue, ok, err := s.ResolvePointer(&ptrval[i], db, f)
+		v, err := s.ResolvePointer(in, &ptrval[i], db, f)
 		if err != nil {
-			return err, false
+			return out1, err
 		}
-		out[i] = outValue
-		res = ok && res
+		out1 = append(out1, v)
 	}
+
 	// and recover the previous stream position
 	db.stats().fields_read++
-	return nil, res
+	return out1, nil
 }
 
-func (st *Structure) ResolvePointer(ptrval *Pointer, db *FileDatabase, f *Field, non_recursiveds ...bool) (out any, ok bool, err error) {
+func (st *Structure) ResolvePointer(in any, ptrval *Pointer, db *FileDatabase, f *Field, non_recursiveds ...bool) (out any, err error) {
+	switch v := in.(type) {
+	case IElemBase:
+		return st.ResolvePointerObject(v, ptrval, db, f)
+	case *FileOffset:
+		return v, st.ResolvePointerFileOffset(v, ptrval, db, f)
+	default:
+		panic("not impl")
+	}
+}
+
+func (st *Structure) ResolvePointerFileOffset(out *FileOffset, ptrval *Pointer, db *FileDatabase,
+	f *Field) error {
+	// Currently used exclusively by PackedFile::data to represent
+	// a simple offset into the mapped BLEND file.
+
+	if ptrval.val == 0 {
+		return nil
+	}
+
+	// find the file block the pointer is pointing to
+	block, err := st.LocateFileBlockForAddress(ptrval, db)
+	if err != nil {
+		return err
+	}
+	out.val = block.start + int(ptrval.val-block.address.val)
+	return nil
+}
+
+func (st *Structure) resolvePointer(out IElemBase, ptrval *Pointer, db *FileDatabase, f *Field, non_recursiveds ...bool) (ok bool, err error) {
 	non_recursived := false
 	if len(non_recursiveds) > 0 {
 		non_recursived = non_recursiveds[0]
 	}
 	if ptrval.val == 0 {
-		return out, false, nil
+		return false, nil
 	}
 	s := db.dna.IndexByString(f.Type)
 	// find the file block the pointer is pointing to
 	block, err := st.LocateFileBlockForAddress(ptrval, db)
 	if err != nil {
-		return out, false, nil
+		return false, nil
 	}
 	// also determine the target type from the block header
 	// and check if it matches the type which we expect.
 	ss := db.dna.Index(int(block.dna_index))
 	if ss != s {
-		return nil, false, fmt.Errorf("expected target to be of type `%v ` but seemingly it is a `%v ` instead", s.name, ss.name)
+		return false, fmt.Errorf("expected target to be of type `%v ` but seemingly it is a `%v ` instead", s.name, ss.name)
 	}
 
 	// try to retrieve the object from the cache
 	out = db.cache().get(s, ptrval)
 	if out != nil {
-		return out, true, nil
+		return true, nil
 	}
-
+	pold := db.GetCurPos()
+	db.SetCurPos(int(ptrval.val - block.address.val))
 	// seek to this location, but save the previous stream pointer.
-	db.StartPeekRead(int(ptrval.val - block.address.val))
-	defer db.EndPeekRead()
 	// FIXME: basically, this could cause problems with 64 bit pointers on 32 bit systems.
 	// I really ought to improve StreamReader to work with 64 bit indices exclusively.
 
 	// continue conversion after allocating the required storage
-	num := block.size / ss.size
-	o := make([]any, num)
+	//num := block.size / ss.size
 	// cache the object before we convert it to avoid cyclic recursion.
-	db.cache().set(s, out, ptrval)
+	db.cache().set(s, ptrval, out)
 
 	// if the non_recursive flag is set, we don't do anything but leave
 	// the cursor at the correct position to resolve the object.
 	if !non_recursived {
-		for i := int32(0); i < num; i++ {
-			err = s.Convert(out[i], db)
-			if err != nil {
-				return err, false
-			}
+		err = s.Convert(out, db)
+		if err != nil {
+			return false, err
 		}
+		db.SetCurPos(pold)
 	}
 	if out != nil {
 		db.stats().pointers_resolved++
 	}
 
-	return nil, false
+	return false, nil
 }
 
 // --------------------------------------------------------------------------------
-func (st *Structure) ResolvePointerObject(out IElemBase,
+func (st *Structure) ResolvePointerObject(in IElemBase,
 	ptrval *Pointer,
 	db *FileDatabase,
-	f *Field) (ok bool, err error) {
+	f *Field) (out IElemBase, err error) {
 	// Special case when the data type needs to be determined at runtime.
 	// Less secure than in the `strongly-typed` case.
 	if ptrval.val == 0 {
-		return ok, err
+		return in, err
 	}
 
 	// find the file block the pointer is pointing to
 	block, err := st.LocateFileBlockForAddress(ptrval, db)
 	if err != nil {
-		return ok, err
+		return in, err
 	}
 	// determine the target type from the block header
 	s := db.dna.Index(int(block.dna_index))
@@ -597,12 +619,12 @@ func (st *Structure) ResolvePointerObject(out IElemBase,
 	// try to retrieve the object from the cache
 	out = db.cache().get(s, ptrval)
 	if out != nil {
-		return true, nil
+		return out, nil
 	}
-
+	pold := db.GetCurPos()
+	defer db.SetCurPos(pold)
 	// seek to this location, but save the previous stream pointer.
-	db.StartPeekRead(block.start + ptrval.val - block.address.val)
-	defer db.EndPeekRead()
+	db.SetCurPos(block.start + int(ptrval.val-block.address.val))
 	// FIXME: basically, this could cause problems with 64 bit pointers on 32 bit systems.
 	// I really ought to improve StreamReader to work with 64 bit indices exclusively.
 
@@ -612,7 +634,7 @@ func (st *Structure) ResolvePointerObject(out IElemBase,
 		// this might happen if DNA::RegisterConverters hasn't been called so far
 		// or if the target type is not contained in `our` DNA.
 		logger.WarnF("Failed to find a converter for the `%v` structure", s.name)
-		return false, nil
+		return in, nil
 	}
 
 	// allocate the object hull
@@ -622,22 +644,27 @@ func (st *Structure) ResolvePointerObject(out IElemBase,
 	// circular list with a single element (i.e. a self-referencing element).
 	db.cache().set(s, ptrval, oc)
 	// and do the actual conversion
-	err = oc.Convert(db)
+	err = oc.Convert(db, s)
 	if err != nil {
-		return false, err
+		return oc, err
 	}
 	// store a pointer to the name string of the actual type
 	// in the object itself. This allows the conversion code
 	// to perform additional type checking.
+
 	out.SetDnaType(s.name)
 	db.stats().pointers_resolved++
-	return false, err
+	return oc, err
 }
 
 func (s *Structure) ReadFieldArray(out []any, name string, db *FileDatabase) error {
 	f := s.IndexByString(name)
-	db.StartPeekRead(int(f.offset))
-	defer db.EndPeekRead()
+	oldPos := db.GetCurPos()
+	defer db.SetCurPos(oldPos)
+	err := db.Discard(int(f.offset))
+	if err != nil {
+		return err
+	}
 	// is the input actually an array?
 	if f.flags&FieldFlag_Array == 0 {
 		return fmt.Errorf("field `%v ` of structure `%v ` ought to be an array of size %v", name, s.name, len(out))
@@ -653,6 +680,7 @@ func (s *Structure) ReadFieldArray(out []any, name string, db *FileDatabase) err
 	for ; i < len(out); i++ {
 		//TODO
 	}
+
 	// and recover the previous stream position
 	db.stats().fields_read++
 	return nil
@@ -661,8 +689,12 @@ func (s *Structure) ReadFieldArray(out []any, name string, db *FileDatabase) err
 func (s *Structure) ReadFieldArray2(out [][]any, name string, db *FileDatabase) error {
 	M, N := len(out), len(out[0])
 	f := s.IndexByString(name)
-	db.StartPeekRead(int(f.offset))
-	defer db.EndPeekRead()
+	oldPos := db.GetCurPos()
+	defer db.SetCurPos(oldPos)
+	err := db.Discard(int(f.offset))
+	if err != nil {
+		return err
+	}
 	// is the input actually an array?
 	if f.flags&FieldFlag_Array == 0 {
 		return fmt.Errorf("field `%v ` of structure `%v ` ought to be an array of size %v*%v", name, s.name, M, N)
@@ -684,42 +716,47 @@ func (s *Structure) ReadFieldArray2(out [][]any, name string, db *FileDatabase) 
 	for ; i < float64(M); i++ {
 		out[int(i)] = nil
 	}
+
 	// and recover the previous stream position
 	db.stats().fields_read++
 
 	return nil
 }
 
-func (s *Structure) ReadCustomDataPtr(cdtype int, name string, db *FileDatabase) (ok bool, err error) {
+func (s *Structure) ReadCustomDataPtr(cdtype int, name string, db *FileDatabase) (out []IElemBase, err error) {
 	ptrval := &Pointer{}
 	f := s.IndexByString(name)
-	db.StartPeekRead(int(f.offset))
-	defer db.EndPeekRead()
+	oldPos := db.GetCurPos()
+	defer db.SetCurPos(oldPos)
+	err = db.Discard(int(f.offset))
+	if err != nil {
+		return out, err
+	}
 	// sanity check, should never happen if the genblenddna script is right
 	if (f.flags & FieldFlag_Pointer) == 0 {
-		return ok, fmt.Errorf("field `%v ` of structure `%v ` ought to be a pointer", name, s.name)
+		return out, fmt.Errorf("field `%v ` of structure `%v ` ought to be a pointer", name, s.name)
 	}
 	err = s.ConvertPointer(ptrval, db)
 	if err != nil {
-		return ok, err
+		return out, err
 	}
-	ok = true
 	if ptrval.val != 0 {
 		// get block for ptr
 		block, err := s.LocateFileBlockForAddress(ptrval, db)
 		if err != nil {
-			return ok, err
+			return out, err
 		}
-		db.reader.SetCurrentPos(block.start + (ptrval.val - block.address.val))
+		db.SetCurPos(block.start + int(ptrval.val-block.address.val))
 		// read block->num instances of given type to out
-		readOk, err = readCustomData(out, cdtype, block.num, db)
+		out, err = readCustomData(cdtype, int(block.num), db)
 		if err != nil {
-			return ok, err
+			return out, err
 		}
 	}
+
 	// and recover the previous stream position
 	db.stats().fields_read++
-	return ok, nil
+	return out, nil
 }
 
 // --------------------------------------------------------
@@ -731,9 +768,11 @@ func (s *Structure) ReadCustomDataPtr(cdtype int, name string, db *FileDatabase)
  *  @param db File database, including input stream. */
 
 func (s *Structure) Convert(out any, db *FileDatabase) error {
-	switch out.(type) {
-	case *float64:
+	switch v := out.(type) {
+	case IElemBase:
 
+	case *Pointer:
+		return s.ConvertPointer(v, db)
 	}
 	return nil
 }
@@ -792,7 +831,6 @@ func (s *Structure) ConvertInt(dest any, db *FileDatabase) error {
 func (s *Structure) ConvertInt16(dest any, db *FileDatabase) error {
 	// automatic rescaling from short to float and vice versa (seems to be used by normals)
 	if s.name == "float" {
-
 		f, err := db.GetFloat32()
 		if err != nil {
 			return err
@@ -917,31 +955,31 @@ func (s *Structure) ConvertDispatcher(out any, db *FileDatabase) error {
 		if err != nil {
 			return err
 		}
-		return ConvertValue(Desc, v)
+		return ConvertValue(out, v)
 	} else if s.name == "short" {
 		v, err := db.GetUInt16()
 		if err != nil {
 			return err
 		}
-		return ConvertValue(Desc, v)
+		return ConvertValue(out, v)
 	} else if s.name == "char" {
 		v, err := db.GetUInt8()
 		if err != nil {
 			return err
 		}
-		return ConvertValue(Desc, v)
+		return ConvertValue(out, v)
 	} else if s.name == "float" {
 		v, err := db.GetFloat32()
 		if err != nil {
 			return err
 		}
-		return ConvertValue(Desc, v)
+		return ConvertValue(out, v)
 	} else if s.name == "double" {
 		v, err := db.GetFloat64()
 		if err != nil {
 			return err
 		}
-		return ConvertValue(Desc, v)
+		return ConvertValue(out, v)
 	}
 	return fmt.Errorf("unknown source for conversion to primitive data type: %v", s.name)
 }

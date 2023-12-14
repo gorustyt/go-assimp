@@ -4,6 +4,7 @@ import (
 	"assimp/common"
 	"assimp/common/logger"
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"strconv"
@@ -32,12 +33,13 @@ type LineReader interface {
 	NextOneKeyString(key string) (res string, err error)
 }
 
-func NewLineReader(reader *bufio.Reader) LineReader {
-	return &lineReader{reader: reader}
+func newLineReader(r *BaseReader) LineReader {
+	return &lineReader{Reader: bufio.NewReader(bytes.NewReader(r.data)), BaseReader: r}
 }
 
 type lineReader struct {
-	reader   *bufio.Reader
+	*BaseReader
+	*bufio.Reader
 	lineNum  int
 	curLine  string
 	curLines []string
@@ -51,7 +53,7 @@ func (r *lineReader) NextLine() {
 	r.curLines = r.curLines[:0]
 	r.curIndex = 0
 ReadLine:
-	line, isPrefix, err := r.reader.ReadLine()
+	line, isPrefix, err := r.ReadLine()
 	r.curLine += string(line)
 	if err == io.EOF {
 		r.eof = true

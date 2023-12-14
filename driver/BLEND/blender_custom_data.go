@@ -1,6 +1,9 @@
 package BLEND
 
-import "fmt"
+import (
+	"fmt"
+	"reflect"
+)
 
 type CustomDataType int
 
@@ -59,32 +62,35 @@ const (
 /**
  *   @brief  read/convert of Structure array to memory
  */
+func SetCustomPRead(pr PRead, pc PCreate) {
+	iPRead = pr
+	iPCreate = pc
+}
+
+var (
+	iPRead   PRead   = defaultPRead
+	iPCreate PCreate = defaultPCreate
+)
 
 func read[T any](s *Structure, p []T, db *FileDatabase) error {
 	for i := 0; i < len(p); i++ {
-		var r T
-		err := s.Convert(r, db)
+		err := s.Convert(p[i], db)
 		if err != nil {
 			return err
 		}
-		p[i] = r
 	}
 	return nil
 }
 
-type PRead func(pOut IElemBase, cnt int, db *FileDatabase) bool
+type PRead func(pOut []IElemBase, db *FileDatabase) error
 type PCreate func(cnt int) []IElemBase
-type PDestroy func(IElemBase)
 
-func defaultPRead(pOut []*IElemBase, cnt int, db *FileDatabase) bool {
-	return read(db.dna[], prt, db)
+func defaultPRead(pOut []IElemBase, db *FileDatabase) error {
+	return read(db.dna.IndexByString(reflect.TypeOf(pOut[0]).Name()), pOut, db)
 }
 
 func defaultPCreate(cnt int) []IElemBase {
 	return make([]IElemBase, cnt)
-}
-func defaultPDestroy(IElemBase) {
-
 }
 
 /**
@@ -93,11 +99,11 @@ func defaultPDestroy(IElemBase) {
  */
 
 func DECL_STRUCT_CUSTOMDATATYPEDESCRIPTION(ty IElemBase) *CustomDataTypeDescription {
-	return newCustomDataTypeDescription(defaultPRead, defaultPCreate, defaultPDestroy)
+	return newCustomDataTypeDescription(iPRead, iPCreate)
 }
 
 func DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION() *CustomDataTypeDescription {
-	return newCustomDataTypeDescription(nil, nil, nil)
+	return newCustomDataTypeDescription(nil, nil)
 }
 
 /**
@@ -158,33 +164,31 @@ var customDataTypeDescriptions = []*CustomDataTypeDescription{
  *   @brief  describes the size of data and the read function to be used for single CustomerData.type
  */
 type CustomDataTypeDescription struct {
-	Read    PRead   ///< function to read one CustomData type element
-	Create  PCreate ///< function to allocate n type elements
-	Destroy PDestroy
+	Read   PRead   ///< function to read one CustomData type element
+	Create PCreate ///< function to allocate n type elements
 }
 
-func newCustomDataTypeDescription(read PRead, create PCreate, destroy PDestroy) *CustomDataTypeDescription {
+func newCustomDataTypeDescription(read PRead, create PCreate) *CustomDataTypeDescription {
 	return &CustomDataTypeDescription{
-		Read:    read,
-		Create:  create,
-		Destroy: destroy,
+		Read:   read,
+		Create: create,
 	}
 }
 func isValidCustomDataType(cdtype int) bool {
 	return cdtype >= 0 && cdtype < int(CD_NUMTYPES)
 }
 
-func readCustomData(out IElemBase, cdtype int, cnt int, db *FileDatabase) (ok bool, err error) {
+func readCustomData(cdtype int, cnt int, db *FileDatabase) (out []IElemBase, err error) {
 	if !isValidCustomDataType(cdtype) {
-		return ok, fmt.Errorf("CustomData.type %v out of index", cdtype)
+		return out, fmt.Errorf("CustomData.type %v out of index", cdtype)
 	}
 	cdtd := customDataTypeDescriptions[cdtype]
-	if cdtd.Read != nil && cdtd.Create != nil && cdtd.Destroy != nil && cnt > 0 {
+	if cdtd.Read != nil && cdtd.Create != nil && cnt > 0 {
 		// allocate cnt elements and parse them from file
-		out.reset(cdtd.Create(cnt), cdtd.Destroy)
-		return cdtd.Read(out, cnt, db), nil
+		out = cdtd.Create(cnt)
+		return out, cdtd.Read(out, db)
 	}
-	return false, nil
+	return out, nil
 }
 
 func getCustomDataLayer(customdata *CustomData, cdtype CustomDataType, name string) *CustomDataLayer {
@@ -196,7 +200,7 @@ func getCustomDataLayer(customdata *CustomData, cdtype CustomDataType, name stri
 	return nil
 }
 
-func getCustomDataLayerData(customdata *CustomData, cdtype CustomDataType, name string) IElemBase {
+func getCustomDataLayerData(customdata *CustomData, cdtype CustomDataType, name string) []IElemBase {
 	pLayer := getCustomDataLayer(customdata, cdtype, name)
 	if pLayer != nil && pLayer.data != nil {
 		return pLayer.data

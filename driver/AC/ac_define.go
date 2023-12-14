@@ -3,8 +3,8 @@ package AC
 import (
 	"assimp/common"
 	"assimp/common/logger"
+	"assimp/common/reader"
 	"assimp/core"
-	"assimp/driver/base"
 	"strings"
 )
 
@@ -135,19 +135,19 @@ type AC3DImporter struct {
 
 	// name counters
 	LightsCounter, GroupsCounter, PolysCounter, WorldsCounter int
-	base.BaseImporter
+	reader.LineReader
 }
 
 func (im *AC3DImporter) CanRead(checkSig bool) bool {
-	im.Reader.NextLine()
-	if im.Reader.GetLineNum() == 1 && !strings.HasPrefix(im.Reader.GetLine(), Desc.Magic) {
+	im.NextLine()
+	if im.GetLineNum() == 1 && !strings.HasPrefix(im.GetLine(), Desc.Magic) {
 		if !checkSig {
-			logger.WarnF("not found magic expect:%v found:%v", Desc.Magic, im.Reader.GetLine())
+			logger.WarnF("not found magic expect:%v found:%v", Desc.Magic, im.GetLine())
 		}
 		return false
 	}
-	version := strings.TrimPrefix(im.Reader.GetLine(), Desc.Magic)
+	version := strings.TrimPrefix(im.GetLine(), Desc.Magic)
 	logger.InfoF("importer:%v version:%v", Desc.Name, common.HexDigitToDecimal([]byte(version)[0]))
-	im.Reader.NextLine()
+	im.NextLine()
 	return true
 }

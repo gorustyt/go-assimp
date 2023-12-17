@@ -29,12 +29,15 @@ type StreamReader interface {
 	SetCurPos(pos int)
 	GetCurPos() int
 	Remain() int
+	ResetData()
 }
 
 type streamReader struct {
 	*BaseReader
 	binary.ByteOrder
 	mCurrent int
+	offset   bool
+	mBuffer  int
 }
 
 func newStreamReader(b *BaseReader) StreamReader {
@@ -42,23 +45,39 @@ func newStreamReader(b *BaseReader) StreamReader {
 }
 
 func (s *streamReader) SetCurPos(pos int) {
-	s.mCurrent = pos
+	s.offset = true
+	s.mCurrent = s.mBuffer + pos
 }
 func (s *streamReader) GetCurPos() int {
-	return s.mCurrent
+	return s.mCurrent - s.mBuffer
 }
 func (s *streamReader) Remain() int {
 	return len(s.data) - s.GetCurPos()
+}
+
+func (s *streamReader) ResetData() {
+	s.data = s.data[s.mCurrent:]
+	s.mCurrent = 0
+	s.mBuffer = 0
 }
 
 func (s *streamReader) Discard(n int) error {
 	if s.mCurrent+n > len(s.data) {
 		return io.EOF
 	}
-	s.mCurrent += n
+	s.incPos(n)
 	return nil
 }
 
+func (s *streamReader) incPos(n int) {
+	if !s.offset {
+		s.mCurrent += n
+		s.mBuffer += n
+	} else {
+		s.mCurrent += n
+	}
+
+}
 func (s *streamReader) Peek(n int) ([]byte, error) {
 	return s.read(n, true)
 }
@@ -88,7 +107,7 @@ func (s *streamReader) GetUInt32() (v uint32, err error) {
 }
 
 func (s *streamReader) GetUInt16() (v uint16, err error) {
-	bytes, err := s.GetNBytes(4)
+	bytes, err := s.GetNBytes(2)
 	if err != nil {
 		return 0, err
 	}
@@ -96,7 +115,7 @@ func (s *streamReader) GetUInt16() (v uint16, err error) {
 }
 
 func (s *streamReader) GetUInt8() (v uint8, err error) {
-	bytes, err := s.GetNBytes(4)
+	bytes, err := s.GetNBytes(1)
 	if err != nil {
 		return 0, err
 	}
@@ -179,7 +198,7 @@ func (s *streamReader) read(n int, isPeek bool) (res []byte, err error) {
 	res = make([]byte, n)
 	copy(res, s.data[s.mCurrent:s.mCurrent+n])
 	if !isPeek {
-		s.mCurrent += n
+		s.incPos(n)
 	}
 	return res, nil
 }

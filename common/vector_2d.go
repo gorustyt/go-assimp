@@ -14,3 +14,7 @@ func (ai *AiVector2D) Set(pX, pY float32) {
 	ai.X = pX
 	ai.Y = pY
 }
+
+func NewAiVector2D(X, Y float32) *AiVector2D {
+	return &AiVector2D{X: X, Y: Y}
+}

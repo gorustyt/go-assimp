@@ -6,59 +6,63 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+const (
+	AI_DEFAULT_MATERIAL_NAME = "DefaultMaterial"
+)
+
 var (
-	AI_MATKEY_NAME                    = newAiMaterialProperty("?mat.name", 0, 0)
-	AI_MATKEY_TWOSIDED                = newAiMaterialProperty("$mat.twosided", 0, 0)
-	AI_MATKEY_SHADING_MODEL           = newAiMaterialProperty("$mat.shadingm", 0, 0)
-	AI_MATKEY_ENABLE_WIREFRAME        = newAiMaterialProperty("$mat.wireframe", 0, 0)
-	AI_MATKEY_BLEND_FUNC              = newAiMaterialProperty("$mat.blend", 0, 0)
-	AI_MATKEY_OPACITY                 = newAiMaterialProperty("$mat.opacity", 0, 0)
-	AI_MATKEY_TRANSPARENCYFACTOR      = newAiMaterialProperty("$mat.transparencyfactor", 0, 0)
-	AI_MATKEY_BUMPSCALING             = newAiMaterialProperty("$mat.bumpscaling", 0, 0)
-	AI_MATKEY_SHININESS               = newAiMaterialProperty("$mat.shininess", 0, 0)
-	AI_MATKEY_REFLECTIVITY            = newAiMaterialProperty("$mat.reflectivity", 0, 0)
-	AI_MATKEY_SHININESS_STRENGTH      = newAiMaterialProperty("$mat.shinpercent", 0, 0)
-	AI_MATKEY_REFRACTI                = newAiMaterialProperty("$mat.refracti", 0, 0)
-	AI_MATKEY_COLOR_DIFFUSE           = newAiMaterialProperty("$clr.diffuse", 0, 0)
-	AI_MATKEY_COLOR_AMBIENT           = newAiMaterialProperty("$clr.ambient", 0, 0)
-	AI_MATKEY_COLOR_SPECULAR          = newAiMaterialProperty("$clr.specular", 0, 0)
-	AI_MATKEY_COLOR_EMISSIVE          = newAiMaterialProperty("$clr.emissive", 0, 0)
-	AI_MATKEY_COLOR_TRANSPARENT       = newAiMaterialProperty("$clr.transparent", 0, 0)
-	AI_MATKEY_COLOR_REFLECTIVE        = newAiMaterialProperty("$clr.reflective", 0, 0)
-	AI_MATKEY_GLOBAL_BACKGROUND_IMAGE = newAiMaterialProperty("?bg.global", 0, 0)
-	AI_MATKEY_GLOBAL_SHADERLANG       = newAiMaterialProperty("?sh.lang", 0, 0)
-	AI_MATKEY_SHADER_VERTEX           = newAiMaterialProperty("?sh.vs", 0, 0)
-	AI_MATKEY_SHADER_FRAGMENT         = newAiMaterialProperty("?sh.fs", 0, 0)
-	AI_MATKEY_SHADER_GEO              = newAiMaterialProperty("?sh.gs", 0, 0)
-	AI_MATKEY_SHADER_TESSELATION      = newAiMaterialProperty("?sh.ts", 0, 0)
-	AI_MATKEY_SHADER_PRIMITIVE        = newAiMaterialProperty("?sh.ps", 0, 0)
-	AI_MATKEY_SHADER_COMPUTE          = newAiMaterialProperty("?sh.cs", 0, 0)
+	AI_MATKEY_NAME                    = NewAiMaterialProperty("?mat.name", 0, 0)
+	AI_MATKEY_TWOSIDED                = NewAiMaterialProperty("$mat.twosided", 0, 0)
+	AI_MATKEY_SHADING_MODEL           = NewAiMaterialProperty("$mat.shadingm", 0, 0)
+	AI_MATKEY_ENABLE_WIREFRAME        = NewAiMaterialProperty("$mat.wireframe", 0, 0)
+	AI_MATKEY_BLEND_FUNC              = NewAiMaterialProperty("$mat.blend", 0, 0)
+	AI_MATKEY_OPACITY                 = NewAiMaterialProperty("$mat.opacity", 0, 0)
+	AI_MATKEY_TRANSPARENCYFACTOR      = NewAiMaterialProperty("$mat.transparencyfactor", 0, 0)
+	AI_MATKEY_BUMPSCALING             = NewAiMaterialProperty("$mat.bumpscaling", 0, 0)
+	AI_MATKEY_SHININESS               = NewAiMaterialProperty("$mat.shininess", 0, 0)
+	AI_MATKEY_REFLECTIVITY            = NewAiMaterialProperty("$mat.reflectivity", 0, 0)
+	AI_MATKEY_SHININESS_STRENGTH      = NewAiMaterialProperty("$mat.shinpercent", 0, 0)
+	AI_MATKEY_REFRACTI                = NewAiMaterialProperty("$mat.refracti", 0, 0)
+	AI_MATKEY_COLOR_DIFFUSE           = NewAiMaterialProperty("$clr.diffuse", 0, 0)
+	AI_MATKEY_COLOR_AMBIENT           = NewAiMaterialProperty("$clr.ambient", 0, 0)
+	AI_MATKEY_COLOR_SPECULAR          = NewAiMaterialProperty("$clr.specular", 0, 0)
+	AI_MATKEY_COLOR_EMISSIVE          = NewAiMaterialProperty("$clr.emissive", 0, 0)
+	AI_MATKEY_COLOR_TRANSPARENT       = NewAiMaterialProperty("$clr.transparent", 0, 0)
+	AI_MATKEY_COLOR_REFLECTIVE        = NewAiMaterialProperty("$clr.reflective", 0, 0)
+	AI_MATKEY_GLOBAL_BACKGROUND_IMAGE = NewAiMaterialProperty("?bg.global", 0, 0)
+	AI_MATKEY_GLOBAL_SHADERLANG       = NewAiMaterialProperty("?sh.lang", 0, 0)
+	AI_MATKEY_SHADER_VERTEX           = NewAiMaterialProperty("?sh.vs", 0, 0)
+	AI_MATKEY_SHADER_FRAGMENT         = NewAiMaterialProperty("?sh.fs", 0, 0)
+	AI_MATKEY_SHADER_GEO              = NewAiMaterialProperty("?sh.gs", 0, 0)
+	AI_MATKEY_SHADER_TESSELATION      = NewAiMaterialProperty("?sh.ts", 0, 0)
+	AI_MATKEY_SHADER_PRIMITIVE        = NewAiMaterialProperty("?sh.ps", 0, 0)
+	AI_MATKEY_SHADER_COMPUTE          = NewAiMaterialProperty("?sh.cs", 0, 0)
 
 	// ---------------------------------------------------------------------------
 	// PBR material support
 	// --------------------
 	// Properties defining PBR rendering techniques
 
-	AI_MATKEY_USE_COLOR_MAP = newAiMaterialProperty("$mat.useColorMap", 0, 0)
+	AI_MATKEY_USE_COLOR_MAP = NewAiMaterialProperty("$mat.useColorMap", 0, 0)
 
 	// Metallic/Roughness Workflow
 	// ---------------------------
 	// Base RGBA color factor. Will be multiplied by final base color texture values if extant
 	// Note: Importers may choose to copy this into AI_MATKEY_COLOR_DIFFUSE for compatibility
 	// with renderers and formats that do not support Metallic/Roughness PBR
-	AI_MATKEY_BASE_COLOR = newAiMaterialProperty("$clr.base", 0, 0)
+	AI_MATKEY_BASE_COLOR = NewAiMaterialProperty("$clr.base", 0, 0)
 	//AI_MATKEY_BASE_COLOR_TEXTURE =newAiMaterialProperty(AiTextureType_BASE_COLOR, 0)
-	AI_MATKEY_USE_METALLIC_MAP = newAiMaterialProperty("$mat.useMetallicMap", 0, 0)
+	AI_MATKEY_USE_METALLIC_MAP = NewAiMaterialProperty("$mat.useMetallicMap", 0, 0)
 	// Metallic factor. 0.0 = Full Dielectric, 1.0 = Full Metal
-	AI_MATKEY_METALLIC_FACTOR = newAiMaterialProperty("$mat.metallicFactor", 0, 0)
+	AI_MATKEY_METALLIC_FACTOR = NewAiMaterialProperty("$mat.metallicFactor", 0, 0)
 	//AI_MATKEY_METALLIC_TEXTURE=newAiMaterialProperty( AiTextureType_METALNESS, 0)
-	AI_MATKEY_USE_ROUGHNESS_MAP = newAiMaterialProperty("$mat.useRoughnessMap", 0, 0)
+	AI_MATKEY_USE_ROUGHNESS_MAP = NewAiMaterialProperty("$mat.useRoughnessMap", 0, 0)
 	// Roughness factor. 0.0 = Perfectly Smooth, 1.0 = Completely Rough
-	AI_MATKEY_ROUGHNESS_FACTOR = newAiMaterialProperty("$mat.roughnessFactor", 0, 0)
+	AI_MATKEY_ROUGHNESS_FACTOR = NewAiMaterialProperty("$mat.roughnessFactor", 0, 0)
 	//AI_MATKEY_ROUGHNESS_TEXTURE =newAiMaterialProperty(AiTextureType_DIFFUSE_ROUGHNESS, 0)
 	// Anisotropy factor. 0.0 = isotropic, 1.0 = anisotropy along tangent direction,
 	// -1.0 = anisotropy along bitangent direction
-	AI_MATKEY_ANISOTROPY_FACTOR = newAiMaterialProperty("$mat.anisotropyFactor", 0, 0)
+	AI_MATKEY_ANISOTROPY_FACTOR = NewAiMaterialProperty("$mat.anisotropyFactor", 0, 0)
 
 	// Specular/Glossiness Workflow
 	// ---------------------------
@@ -67,24 +71,24 @@ var (
 	// Specular Color.
 	// Note: Metallic/Roughness may also have a Specular Color
 	// AI_MATKEY_COLOR_SPECULAR
-	AI_MATKEY_SPECULAR_FACTOR = newAiMaterialProperty("$mat.specularFactor", 0, 0)
+	AI_MATKEY_SPECULAR_FACTOR = NewAiMaterialProperty("$mat.specularFactor", 0, 0)
 	// Glossiness factor. 0.0 = Completely Rough, 1.0 = Perfectly Smooth
-	AI_MATKEY_GLOSSINESS_FACTOR = newAiMaterialProperty("$mat.glossinessFactor", 0, 0)
+	AI_MATKEY_GLOSSINESS_FACTOR = NewAiMaterialProperty("$mat.glossinessFactor", 0, 0)
 
 	// Sheen
 	// -----
 	// Sheen base RGB color. Default {0,0,0}
-	AI_MATKEY_SHEEN_COLOR_FACTOR = newAiMaterialProperty("$clr.sheen.factor", 0, 0)
+	AI_MATKEY_SHEEN_COLOR_FACTOR = NewAiMaterialProperty("$clr.sheen.factor", 0, 0)
 	// Sheen Roughness Factor.
-	AI_MATKEY_SHEEN_ROUGHNESS_FACTOR = newAiMaterialProperty("$mat.sheen.roughnessFactor", 0, 0)
+	AI_MATKEY_SHEEN_ROUGHNESS_FACTOR = NewAiMaterialProperty("$mat.sheen.roughnessFactor", 0, 0)
 	//AI_MATKEY_SHEEN_COLOR_TEXTURE=newAiMaterialProperty( AiTextureType_SHEEN, 0)
 	//AI_MATKEY_SHEEN_ROUGHNESS_TEXTURE =newAiMaterialProperty(AiTextureType_SHEEN, 1)
 
 	// Clearcoat
 	// ---------
 	// Clearcoat layer intensity. 0.0 = none (disabled)
-	AI_MATKEY_CLEARCOAT_FACTOR           = newAiMaterialProperty("$mat.clearcoat.factor", 0, 0)
-	AI_MATKEY_CLEARCOAT_ROUGHNESS_FACTOR = newAiMaterialProperty("$mat.clearcoat.roughnessFactor", 0, 0)
+	AI_MATKEY_CLEARCOAT_FACTOR           = NewAiMaterialProperty("$mat.clearcoat.factor", 0, 0)
+	AI_MATKEY_CLEARCOAT_ROUGHNESS_FACTOR = NewAiMaterialProperty("$mat.clearcoat.roughnessFactor", 0, 0)
 	//AI_MATKEY_CLEARCOAT_TEXTURE =newAiMaterialProperty(AiTextureType_CLEARCOAT, 0)
 	//AI_MATKEY_CLEARCOAT_ROUGHNESS_TEXTURE =newAiMaterialProperty(AiTextureType_CLEARCOAT, 1)
 	//AI_MATKEY_CLEARCOAT_NORMAL_TEXTURE =newAiMaterialProperty(AiTextureType_CLEARCOAT, 2)
@@ -93,7 +97,7 @@ var (
 	// ------------
 	// https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_transmission
 	// Base percentage of light transmitted through the surface. 0.0 = Opaque, 1.0 = Fully transparent
-	AI_MATKEY_TRANSMISSION_FACTOR = newAiMaterialProperty("$mat.transmission.factor", 0, 0)
+	AI_MATKEY_TRANSMISSION_FACTOR = NewAiMaterialProperty("$mat.transmission.factor", 0, 0)
 	// Texture defining percentage of light transmitted through the surface.
 	// Multiplied by AI_MATKEY_TRANSMISSION_FACTOR
 	//AI_MATKEY_TRANSMISSION_TEXTURE =newAiMaterialProperty(AiTextureType_TRANSMISSION, 0)
@@ -102,20 +106,20 @@ var (
 	// ------------
 	// https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_volume
 	// The thickness of the volume beneath the surface. If the value is 0 the material is thin-walled. Otherwise the material is a volume boundary.
-	AI_MATKEY_VOLUME_THICKNESS_FACTOR = newAiMaterialProperty("$mat.volume.thicknessFactor", 0, 0)
+	AI_MATKEY_VOLUME_THICKNESS_FACTOR = NewAiMaterialProperty("$mat.volume.thicknessFactor", 0, 0)
 	// Texture that defines the thickness.
 	// Multiplied by AI_MATKEY_THICKNESS_FACTOR
 	//AI_MATKEY_VOLUME_THICKNESS_TEXTURE =newAiMaterialProperty(AiTextureType_TRANSMISSION, 1)
 	// Density of the medium given as the average distance that light travels in the medium before interacting with a particle.
-	AI_MATKEY_VOLUME_ATTENUATION_DISTANCE = newAiMaterialProperty("$mat.volume.attenuationDistance", 0, 0)
+	AI_MATKEY_VOLUME_ATTENUATION_DISTANCE = NewAiMaterialProperty("$mat.volume.attenuationDistance", 0, 0)
 	// The color that white light turns into due to absorption when reaching the attenuation distance.
-	AI_MATKEY_VOLUME_ATTENUATION_COLOR = newAiMaterialProperty("$mat.volume.attenuationColor", 0, 0)
+	AI_MATKEY_VOLUME_ATTENUATION_COLOR = NewAiMaterialProperty("$mat.volume.attenuationColor", 0, 0)
 
 	// Emissive
 	// --------
-	AI_MATKEY_USE_EMISSIVE_MAP   = newAiMaterialProperty("$mat.useEmissiveMap", 0, 0)
-	AI_MATKEY_EMISSIVE_INTENSITY = newAiMaterialProperty("$mat.emissiveIntensity", 0, 0)
-	AI_MATKEY_USE_AO_MAP         = newAiMaterialProperty("$mat.useAOMap", 0, 0)
+	AI_MATKEY_USE_EMISSIVE_MAP   = NewAiMaterialProperty("$mat.useEmissiveMap", 0, 0)
+	AI_MATKEY_EMISSIVE_INTENSITY = NewAiMaterialProperty("$mat.emissiveIntensity", 0, 0)
+	AI_MATKEY_USE_AO_MAP         = NewAiMaterialProperty("$mat.useAOMap", 0, 0)
 
 	// ---------------------------------------------------------------------------
 	// Pure key names for all texture-related properties
@@ -135,7 +139,7 @@ var (
 
 // ---------------------------------------------------------------------------
 func AI_MATKEY_TEXTURE(Type AiTextureType, N int) AiMaterialProperty {
-	return newAiMaterialProperty(_AI_MATKEY_TEXTURE_BASE, int(Type), N)
+	return NewAiMaterialProperty(_AI_MATKEY_TEXTURE_BASE, int(Type), N)
 }
 
 // For backward compatibility and simplicity
@@ -188,7 +192,7 @@ func AI_MATKEY_TEXTURE_REFLECTION(N int) AiMaterialProperty {
 
 // ---------------------------------------------------------------------------
 func AI_MATKEY_UVWSRC(Type AiTextureType, N int) AiMaterialProperty {
-	return newAiMaterialProperty(_AI_MATKEY_UVWSRC_BASE, int(Type), N)
+	return NewAiMaterialProperty(_AI_MATKEY_UVWSRC_BASE, int(Type), N)
 }
 
 // For backward compatibility and simplicity
@@ -240,7 +244,7 @@ func AI_MATKEY_UVWSRC_REFLECTION(N int) AiMaterialProperty {
 // ! @endcond
 // ---------------------------------------------------------------------------
 func AI_MATKEY_TEXOP(Type AiTextureType, N int) AiMaterialProperty {
-	return newAiMaterialProperty(_AI_MATKEY_TEXOP_BASE, int(Type), N)
+	return NewAiMaterialProperty(_AI_MATKEY_TEXOP_BASE, int(Type), N)
 }
 
 // For backward compatibility and simplicity
@@ -292,7 +296,7 @@ func AI_MATKEY_TEXOP_REFLECTION(N int) AiMaterialProperty {
 // ! @endcond
 // ---------------------------------------------------------------------------
 func AI_MATKEY_MAPPING(Type AiTextureType, N int) AiMaterialProperty {
-	return newAiMaterialProperty(_AI_MATKEY_MAPPING_BASE, int(Type), N)
+	return NewAiMaterialProperty(_AI_MATKEY_MAPPING_BASE, int(Type), N)
 }
 
 // For backward compatibility and simplicity
@@ -334,7 +338,7 @@ func AI_MATKEY_MAPPING_REFLECTION(N int) AiMaterialProperty {
 // ! @endcond
 // ---------------------------------------------------------------------------
 func AI_MATKEY_TEXBLEND(Type AiTextureType, N int) AiMaterialProperty {
-	return newAiMaterialProperty(_AI_MATKEY_TEXBLEND_BASE, int(Type), N)
+	return NewAiMaterialProperty(_AI_MATKEY_TEXBLEND_BASE, int(Type), N)
 }
 
 // For backward compatibility and simplicity
@@ -386,7 +390,7 @@ func AI_MATKEY_TEXBLEND_REFLECTION(N int) AiMaterialProperty {
 // ! @endcond
 // ---------------------------------------------------------------------------
 func AI_MATKEY_MAPPINGMODE_U(Type AiTextureType, N int) AiMaterialProperty {
-	return newAiMaterialProperty(_AI_MATKEY_MAPPINGMODE_U_BASE, int(Type), N)
+	return NewAiMaterialProperty(_AI_MATKEY_MAPPINGMODE_U_BASE, int(Type), N)
 }
 
 // For backward compatibility and simplicity
@@ -438,7 +442,7 @@ func AI_MATKEY_MAPPINGMODE_U_REFLECTION(N int) AiMaterialProperty {
 // ! @endcond
 // ---------------------------------------------------------------------------
 func AI_MATKEY_MAPPINGMODE_V(Type AiTextureType, N int) AiMaterialProperty {
-	return newAiMaterialProperty(_AI_MATKEY_MAPPINGMODE_V_BASE, int(Type), N)
+	return NewAiMaterialProperty(_AI_MATKEY_MAPPINGMODE_V_BASE, int(Type), N)
 }
 
 // For backward compatibility and simplicity
@@ -490,7 +494,7 @@ func AI_MATKEY_MAPPINGMODE_V_REFLECTION(N int) AiMaterialProperty {
 // ! @endcond
 // ---------------------------------------------------------------------------
 func AI_MATKEY_TEXMAP_AXIS(Type AiTextureType, N int) AiMaterialProperty {
-	return newAiMaterialProperty(_AI_MATKEY_TEXMAP_AXIS_BASE, int(Type), N)
+	return NewAiMaterialProperty(_AI_MATKEY_TEXMAP_AXIS_BASE, int(Type), N)
 }
 
 // For backward compatibility and simplicity
@@ -542,7 +546,7 @@ func AI_MATKEY_TEXMAP_AXIS_REFLECTION(N int) AiMaterialProperty {
 // ! @endcond
 // ---------------------------------------------------------------------------
 func AI_MATKEY_UVTRANSFORM(Type AiTextureType, N int) AiMaterialProperty {
-	return newAiMaterialProperty(_AI_MATKEY_UVTRANSFORM_BASE, int(Type), N)
+	return NewAiMaterialProperty(_AI_MATKEY_UVTRANSFORM_BASE, int(Type), N)
 }
 
 // For backward compatibility and simplicity
@@ -598,7 +602,7 @@ func AI_MATKEY_UVTRANSFORM_UNKNOWN(N int) AiMaterialProperty {
 // ! @endcond
 // ---------------------------------------------------------------------------
 func AI_MATKEY_TEXFLAGS(Type AiTextureType, N int) AiMaterialProperty {
-	return newAiMaterialProperty(_AI_MATKEY_TEXFLAGS_BASE, int(Type), N)
+	return NewAiMaterialProperty(_AI_MATKEY_TEXFLAGS_BASE, int(Type), N)
 }
 
 // For backward compatibility and simplicity
@@ -1046,7 +1050,7 @@ func (ai *AiMaterial) AddAiUVTransformPropertyVar(pro AiMaterialProperty, data A
 	pro.Data = bytesData
 	ai.AddProperty(pro)
 }
-func (ai *AiMaterial) AddAiColorDPropertyVar(pro AiMaterialProperty, data *common.AiColor3D) {
+func (ai *AiMaterial) AddAiColor3DPropertyVar(pro AiMaterialProperty, data *common.AiColor3D) {
 	pro = pro.ResetData()
 	pro.DataType = pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D
 	bytesData, err := proto.Marshal(data.ToPbMsg())
@@ -1138,7 +1142,7 @@ func (p AiMaterialProperty) Clone() AiMaterialProperty {
 	return n
 }
 
-func newAiMaterialProperty(key string, Type int, index int) AiMaterialProperty {
+func NewAiMaterialProperty(key string, Type int, index int) AiMaterialProperty {
 	return AiMaterialProperty{Key: key, Semantic: Type, Index: index}
 }
 

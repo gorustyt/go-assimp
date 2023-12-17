@@ -2,7 +2,6 @@ package BLEND
 
 import (
 	"fmt"
-	"reflect"
 )
 
 type CustomDataType int
@@ -59,134 +58,74 @@ const (
 	CD_NUMTYPES CustomDataType = 42
 )
 
-/**
- *   @brief  read/convert of Structure array to memory
- */
-func SetCustomPRead(pr PRead, pc PCreate) {
-	iPRead = pr
-	iPCreate = pc
-}
+var customDataTypeDescriptions = [CD_NUMTYPES]func() Converter{
+	func() Converter { return &MVert{ElemBase: &ElemBase{}} },
+	nil,
+	nil,
+	func() Converter { return &MEdge{ElemBase: &ElemBase{}} },
+	func() Converter { return &MFace{ElemBase: &ElemBase{}} },
+	func() Converter { return &MTFace{ElemBase: &ElemBase{}} },
+	nil,
+	nil,
+	nil,
+	nil,
 
-var (
-	iPRead   PRead   = defaultPRead
-	iPCreate PCreate = defaultPCreate
-)
+	nil,
+	nil,
+	nil,
+	nil,
+	nil,
+	func() Converter { return &MTexPoly{ElemBase: &ElemBase{}} },
+	func() Converter { return &MLoopUV{ElemBase: &ElemBase{}} },
+	func() Converter { return &MLoopCol{ElemBase: &ElemBase{}} },
+	nil,
+	nil,
 
-func read[T any](s *Structure, p []T, db *FileDatabase) error {
-	for i := 0; i < len(p); i++ {
-		err := s.Convert(p[i], db)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
+	nil,
+	nil,
+	nil,
+	nil,
+	nil,
+	func() Converter { return &MPoly{ElemBase: &ElemBase{}} },
+	func() Converter { return &MLoop{ElemBase: &ElemBase{}} },
+	nil,
+	nil,
+	nil,
 
-type PRead func(pOut []IElemBase, db *FileDatabase) error
-type PCreate func(cnt int) []IElemBase
+	nil,
+	nil,
+	nil,
+	nil,
+	nil,
+	nil,
+	nil,
+	nil,
+	nil,
+	nil,
 
-func defaultPRead(pOut []IElemBase, db *FileDatabase) error {
-	return read(db.dna.IndexByString(reflect.TypeOf(pOut[0]).Name()), pOut, db)
-}
+	nil,
+	nil}
 
-func defaultPCreate(cnt int) []IElemBase {
-	return make([]IElemBase, cnt)
-}
-
-/**
- *   @brief  helper macro to define Structure type specific CustomDataTypeDescription
- *   @note   IMPL_STRUCT_READ for same ty must be used earlier to implement the typespecific read function
- */
-
-func DECL_STRUCT_CUSTOMDATATYPEDESCRIPTION(ty IElemBase) *CustomDataTypeDescription {
-	return newCustomDataTypeDescription(iPRead, iPCreate)
-}
-
-func DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION() *CustomDataTypeDescription {
-	return newCustomDataTypeDescription(nil, nil)
-}
-
-/**
- *   @brief  descriptors for data pointed to from CustomDataLayer.data
- *   @note   some of the CustomData uses already well defined Structures
- *           other (like CD_ORCO, ...) uses arrays of rawtypes or even arrays of Structures
- *           use a special readfunction for that cases
- */
-var customDataTypeDescriptions = []*CustomDataTypeDescription{
-	DECL_STRUCT_CUSTOMDATATYPEDESCRIPTION(&MVert{ElemBase: &ElemBase{}}),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_STRUCT_CUSTOMDATATYPEDESCRIPTION(&MEdge{ElemBase: &ElemBase{}}),
-	DECL_STRUCT_CUSTOMDATATYPEDESCRIPTION(&MFace{ElemBase: &ElemBase{}}),
-	DECL_STRUCT_CUSTOMDATATYPEDESCRIPTION(&MTFace{ElemBase: &ElemBase{}}),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_STRUCT_CUSTOMDATATYPEDESCRIPTION(&MTexPoly{ElemBase: &ElemBase{}}),
-	DECL_STRUCT_CUSTOMDATATYPEDESCRIPTION(&MLoopUV{ElemBase: &ElemBase{}}),
-	DECL_STRUCT_CUSTOMDATATYPEDESCRIPTION(&MLoopCol{ElemBase: &ElemBase{}}),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_STRUCT_CUSTOMDATATYPEDESCRIPTION(&MPoly{ElemBase: &ElemBase{}}),
-	DECL_STRUCT_CUSTOMDATATYPEDESCRIPTION(&MLoop{ElemBase: &ElemBase{}}),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION(),
-	DECL_UNSUPPORTED_CUSTOMDATATYPEDESCRIPTION()}
-
-/**
- *   @brief  describes the size of data and the read function to be used for single CustomerData.type
- */
-type CustomDataTypeDescription struct {
-	Read   PRead   ///< function to read one CustomData type element
-	Create PCreate ///< function to allocate n type elements
-}
-
-func newCustomDataTypeDescription(read PRead, create PCreate) *CustomDataTypeDescription {
-	return &CustomDataTypeDescription{
-		Read:   read,
-		Create: create,
-	}
-}
 func isValidCustomDataType(cdtype int) bool {
 	return cdtype >= 0 && cdtype < int(CD_NUMTYPES)
 }
 
-func readCustomData(cdtype int, cnt int, db *FileDatabase) (out []IElemBase, err error) {
+func readCustomData(cdtype int, cnt int, db *FileDatabase, s *Structure) (out []IElemBase, err error) {
 	if !isValidCustomDataType(cdtype) {
 		return out, fmt.Errorf("CustomData.type %v out of index", cdtype)
 	}
 	cdtd := customDataTypeDescriptions[cdtype]
-	if cdtd.Read != nil && cdtd.Create != nil && cnt > 0 {
+	if cdtd != nil && cnt > 0 {
 		// allocate cnt elements and parse them from file
-		out = cdtd.Create(cnt)
-		return out, cdtd.Read(out, db)
+		for i := 0; i < cnt; i++ {
+			v := cdtd()
+			out = append(out, v)
+			err = v.Convert(db, s)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return out, nil
 	}
 	return out, nil
 }
@@ -200,7 +139,7 @@ func getCustomDataLayer(customdata *CustomData, cdtype CustomDataType, name stri
 	return nil
 }
 
-func getCustomDataLayerData(customdata *CustomData, cdtype CustomDataType, name string) []IElemBase {
+func getCustomDataLayerData(customdata *CustomData, cdtype CustomDataType, name string) IElemBase {
 	pLayer := getCustomDataLayer(customdata, cdtype, name)
 	if pLayer != nil && pLayer.data != nil {
 		return pLayer.data

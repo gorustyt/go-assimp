@@ -44,27 +44,12 @@ const (
 
 type AiMesh struct {
 	/**
-	 * Bitwise combination of the members of the #aiPrimitiveType enum.
+	 * Bitwise combination of the members of the #AiPrimitiveType enum.
 	 * This specifies which types of primitives are present in the mesh.
 	 * The "SortByPrimitiveType"-Step can be used to make sure the
 	 * output meshes consist of one primitive type each.
 	 */
 	PrimitiveTypes int
-
-	/**
-	 * The number of vertices in this mesh.
-	 * This is also the size of all of the per-vertex data arrays.
-	 * The maximum value for this member is #AI_MAX_VERTICES.
-	 */
-	NumVertices int
-
-	/**
-	 * The number of primitives (triangles, polygons, lines) in this  mesh.
-	 * This is also the size of the mFaces array.
-	 * The maximum value for this member is #AI_MAX_FACES.
-	 */
-	NumFaces int
-
 	/**
 	 * @brief Vertex positions.
 	 *
@@ -161,12 +146,6 @@ type AiMesh struct {
 	 * is NOT set each face references an unique set of vertices.
 	 */
 	Faces []*AiFace
-
-	/**
-	 * The number of bones this mesh contains. Can be 0, in which case the mBones array is nullptr.
-	 */
-	NumBones int
-
 	/**
 	 * @brief The bones of this mesh.
 	 *
@@ -214,7 +193,7 @@ type AiMesh struct {
 	 * - Collada
 	 * - gltf
 	 */
-	mAnimMeshes []*AiAnimMesh
+	AnimMeshes []*AiAnimMesh
 
 	/**
 	 *  Method of morphing when anim-meshes are specified.
@@ -450,12 +429,12 @@ func NewAiAnimMesh() *AiAnimMesh {
 }
 
 type AiFace struct {
-	//! Number of indices defining this face.
-	//! The maximum value for this member is #AI_MAX_FACE_INDICES.
-	NumIndices int
-
 	//! Pointer to the indices array. Size of the array is given in numIndices.
 	Indices []int
+}
+
+func NewAiFace() *AiFace {
+	return &AiFace{}
 }
 
 type AiVertexWeight struct {
@@ -593,3 +572,71 @@ type AiSkeletonBone struct {
 	/// Matrix that transforms the locale bone in bind pose.
 	LocalMatrix common.AiMatrix4x4
 }
+
+// ---------------------------------------------------------------------------
+/** @brief Enumerates the types of geometric primitives supported by Assimp.
+ *
+ *  @see aiFace Face data structure
+ *  @see aiProcess_SortByPType Per-primitive sorting of meshes
+ *  @see aiProcess_Triangulate Automatic triangulation
+ *  @see AI_CONFIG_PP_SBP_REMOVE Removal of specific primitive types.
+ */
+type AiPrimitiveType int
+
+const (
+	/**
+	 * @brief A point primitive.
+	 *
+	 * This is just a single vertex in the virtual world,
+	 * #aiFace contains just one index for such a primitive.
+	 */
+	AiPrimitiveType_POINT AiPrimitiveType = 0x1
+
+	/**
+	 * @brief A line primitive.
+	 *
+	 * This is a line defined through a start and an end position.
+	 * #aiFace contains exactly two indices for such a primitive.
+	 */
+	AiPrimitiveType_LINE AiPrimitiveType = 0x2
+
+	/**
+	 * @brief A triangular primitive.
+	 *
+	 * A triangle consists of three indices.
+	 */
+	AiPrimitiveType_TRIANGLE AiPrimitiveType = 0x4
+
+	/**
+	 * @brief A higher-level polygon with more than 3 edges.
+	 *
+	 * A triangle is a polygon, but polygon in this context means
+	 * "all polygons that are not triangles". The "Triangulate"-Step
+	 * is provided for your convenience, it splits all polygons in
+	 * triangles (which are much easier to handle).
+	 */
+	AiPrimitiveType_POLYGON AiPrimitiveType = 0x8
+
+	/**
+	 * @brief A flag to determine whether this triangles only mesh is NGON encoded.
+	 *
+	 * NGON encoding is a special encoding that tells whether 2 or more consecutive triangles
+	 * should be considered as a triangle fan. This is identified by looking at the first vertex index.
+	 * 2 consecutive triangles with the same 1st vertex index are part of the same
+	 * NGON.
+	 *
+	 * At the moment, only quads (concave or convex) are supported, meaning that polygons are 'seen' as
+	 * triangles, as usual after a triangulation pass.
+	 *
+	 * To get an NGON encoded mesh, please use the aiProcess_Triangulate post process.
+	 *
+	 * @see aiProcess_Triangulate
+	 * @link https://github.com/KhronosGroup/glTF/pull/1620
+	 */
+	AiPrimitiveType_NGONEncodingFlag AiPrimitiveType = 0x10
+
+	/**
+	 * This value is not used. It is just here to force the
+	 * compiler to map this enum to a 32 Bit integer.
+	 */
+) //! enum AiPrimitiveType

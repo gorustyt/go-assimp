@@ -179,6 +179,18 @@ type FileBlockHead struct {
 	num int32
 }
 
+func (bl *FileBlockHead) clone() *FileBlockHead {
+	return &FileBlockHead{
+		id:        bl.id,
+		size:      bl.size,
+		start:     bl.start,
+		dna_index: bl.dna_index,
+		address:   bl.address,
+		num:       bl.num,
+	}
+
+}
+
 // -------------------------------------------------------------------------------
 /** Utility to read all master file blocks in turn. */
 // -------------------------------------------------------------------------------
@@ -198,6 +210,7 @@ func (s *SectionParser) GetCurrent() *FileBlockHead {
 
 // Advance to the next section.
 func (s *SectionParser) Next() error {
+	s.SetCurPos(s.current.start + int(s.current.size))
 	tmp, err := s.GetNBytes(4)
 	if err != nil {
 		return err
@@ -211,7 +224,9 @@ func (s *SectionParser) Next() error {
 	} else {
 		s.current.id = string(tmp[:1])
 	}
-
+	if s.current.id == "SC" {
+		_ = s.current.id
+	}
 	s.current.size, err = s.GetInt32()
 	if err != nil {
 		return err

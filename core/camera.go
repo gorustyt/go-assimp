@@ -16,7 +16,7 @@ type AiCamera struct {
 	 *
 	 *  The default value is 0|0|0.
 	 */
-	Position common.AiVector3D
+	Position *common.AiVector3D
 
 	/** 'Up' - vector of the camera coordinate system relative to
 	 *  the coordinate space defined by the corresponding node.
@@ -26,7 +26,7 @@ type AiCamera struct {
 	 *  The default value is 0|1|0. The vector
 	 *  may be normalized, but it needn't.
 	 */
-	Up common.AiVector3D
+	Up *common.AiVector3D
 
 	/** 'LookAt' - vector of the camera coordinate system relative to
 	 *  the coordinate space defined by the corresponding node.
@@ -35,7 +35,7 @@ type AiCamera struct {
 	 *  The default value is 0|0|1. The vector
 	 *  may be normalized, but it needn't.
 	 */
-	LookAt common.AiVector3D
+	LookAt *common.AiVector3D
 
 	/** Horizontal field of view angle, in radians.
 	 *
@@ -81,4 +81,8 @@ type AiCamera struct {
 	 *  The default value is 0 (not orthographic).
 	 */
 	OrthographicWidth float32
+}
+
+func NewAiCamera() *AiCamera {
+	return &AiCamera{}
 }

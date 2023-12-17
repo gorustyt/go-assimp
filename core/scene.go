@@ -2,6 +2,15 @@ package core
 
 import "assimp/common"
 
+// -------------------------------------------------------------------------------
+/**
+ * Specifies that the scene data structure that was imported is not complete.
+ * This flag bypasses some internal validations and allows the import
+ * of animation skeletons, material libraries or camera animation paths
+ * using Assimp. Most applications won't support such data.
+ */
+var AI_SCENE_FLAGS_INCOMPLETE = 0x1
+
 type AiScene struct {
 	/** Any combination of the AI_SCENE_FLAGS_XXX flags. By default
 	 * this value is 0, no flags are set. Most applications will
@@ -130,4 +139,10 @@ type AiNode struct {
 	 * format. Importers that don't document any metadata don't write any.
 	 */
 	MetaData []*AiMetadata
+}
+
+func NewAiNode(name string) *AiNode {
+	return &AiNode{
+		Name: name,
+	}
 }

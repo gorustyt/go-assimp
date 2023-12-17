@@ -8,7 +8,7 @@ import (
 
 func main() {
 	im := driver.NewImporter()
-	p, err := im.ReadFile("./example_data/exmaple_data/BLEND/4Cubes4Mats_248.blend", 0)
+	p, err := im.ReadFile("./exmaple_data/BLEND/4Cubes4Mats_248.blend", 0)
 	if err != nil {
 		logger.Fatal("", zap.Error(err))
 	}

@@ -62,9 +62,9 @@ type Collection struct {
 // -------------------------------------------------------------------------------
 type MVert struct {
 	*ElemBase
-	co      [3]float64
-	no      [3]float64 // read as and divided through / 32767.f
-	flag    int8
+	co      [3]float32
+	no      [3]float32 // read as and divided through / 32767.f
+	flag    uint8
 	mat_nr  int32
 	bweight int32
 }
@@ -73,7 +73,7 @@ type MVert struct {
 type MEdge struct {
 	*ElemBase
 	v1, v2          int32
-	crease, bweight int8
+	crease, bweight uint8
 	flag            int16
 }
 
@@ -86,7 +86,7 @@ type MLoop struct {
 // -------------------------------------------------------------------------------
 type MLoopUV struct {
 	*ElemBase
-	uv   [2]float64
+	uv   [2]float32
 	flag int32
 }
 
@@ -100,7 +100,7 @@ type World struct {
 // Note that red and blue are not swapped, as with MCol
 type MLoopCol struct {
 	*ElemBase
-	r, g, b, a int8
+	r, g, b, a uint8
 }
 
 // -------------------------------------------------------------------------------
@@ -109,21 +109,21 @@ type MPoly struct {
 	loopstart int32
 	totloop   int32
 	mat_nr    int16
-	flag      int8
+	flag      uint8
 }
 
 // -------------------------------------------------------------------------------
 type MTexPoly struct {
 	*ElemBase
 	tpage           *Image
-	flag, transp    int8
+	flag, transp    uint8
 	mode, tile, pad int16
 }
 
 // -------------------------------------------------------------------------------
 type MCol struct {
 	*ElemBase
-	r, g, b, a int8
+	r, g, b, a uint8
 }
 
 // -------------------------------------------------------------------------------
@@ -131,7 +131,7 @@ type MFace struct {
 	*ElemBase
 	v1, v2, v3, v4 int32
 	mat_nr         int32
-	flag           int8
+	flag           uint8
 }
 
 // -------------------------------------------------------------------------------
@@ -148,8 +148,8 @@ type TFace struct {
 // -------------------------------------------------------------------------------
 type MTFace struct {
 	*ElemBase
-	uv     [4][2]float64
-	flag   int8
+	uv     [4][2]float32
+	flag   uint8
 	mode   int16
 	tile   int16
 	unwrap int16
@@ -160,7 +160,7 @@ type MTFace struct {
 type MDeformWeight struct {
 	*ElemBase
 	def_nr int32
-	weight float64
+	weight float32
 }
 
 // -------------------------------------------------------------------------------
@@ -183,71 +183,71 @@ type Material struct {
 	*ElemBase
 	id ID
 
-	r, g, b             float64
-	specr, specg, specb float64
+	r, g, b             float32
+	specr, specg, specb float32
 	har                 int16
-	ambr, ambg, ambb    float64
-	mirr, mirg, mirb    float64
-	emit                float64
-	ray_mirror          float64
-	alpha               float64
-	ref                 float64
-	translucency        float64
+	ambr, ambg, ambb    float32
+	mirr, mirg, mirb    float32
+	emit                float32
+	ray_mirror          float32
+	alpha               float32
+	ref                 float32
+	translucency        float32
 	mode                int32
-	roughness           float64
-	darkness            float64
-	refrac              float64
+	roughness           float32
+	darkness            float32
+	refrac              float32
 
-	amb              float64
-	ang              float64
-	spectra          float64
-	spec             float64
-	zoffs            float64
-	add              float64
-	fresnel_mir      float64
-	fresnel_mir_i    float64
-	fresnel_tra      float64
-	fresnel_tra_i    float64
-	filter           float64
-	tx_limit         float64
-	tx_falloff       float64
-	gloss_mir        float64
-	gloss_tra        float64
-	adapt_thresh_mir float64
-	adapt_thresh_tra float64
-	aniso_gloss_mir  float64
-	dist_mir         float64
-	hasize           float64
-	flaresize        float64
-	subsize          float64
-	flareboost       float64
-	strand_sta       float64
-	strand_end       float64
-	strand_ease      float64
-	strand_surfnor   float64
-	strand_min       float64
-	strand_widthfade float64
-	sbias            float64
-	lbias            float64
-	shad_alpha       float64
-	param            float64
-	rms              float64
-	rampfac_col      float64
-	rampfac_spec     float64
-	friction         float64
-	fh               float64
-	reflect          float64
-	fhdist           float64
-	xyfrict          float64
-	sss_radius       float64
-	sss_col          float64
-	sss_error        float64
-	sss_scale        float64
-	sss_ior          float64
-	sss_colfac       float64
-	sss_texfac       float64
-	sss_front        float64
-	sss_back         float64
+	amb              float32
+	ang              float32
+	spectra          float32
+	spec             float32
+	zoffs            float32
+	add              float32
+	fresnel_mir      float32
+	fresnel_mir_i    float32
+	fresnel_tra      float32
+	fresnel_tra_i    float32
+	filter           float32
+	tx_limit         float32
+	tx_falloff       float32
+	gloss_mir        float32
+	gloss_tra        float32
+	adapt_thresh_mir float32
+	adapt_thresh_tra float32
+	aniso_gloss_mir  float32
+	dist_mir         float32
+	hasize           float32
+	flaresize        float32
+	subsize          float32
+	flareboost       float32
+	strand_sta       float32
+	strand_end       float32
+	strand_ease      float32
+	strand_surfnor   float32
+	strand_min       float32
+	strand_widthfade float32
+	sbias            float32
+	lbias            float32
+	shad_alpha       float32
+	param            float32
+	rms              float32
+	rampfac_col      float32
+	rampfac_spec     float32
+	friction         float32
+	fh               float32
+	reflect          float32
+	fhdist           float32
+	xyfrict          float32
+	sss_radius       float32
+	sss_col          float32
+	sss_error        float32
+	sss_scale        float32
+	sss_ior          float32
+	sss_colfac       float32
+	sss_texfac       float32
+	sss_front        float32
+	sss_back         float32
 
 	material_type   int16
 	flag            int16
@@ -276,13 +276,13 @@ type Material struct {
 	index           int16
 	vcol_alpha      int16
 	pad4            int16
-	seed1           int8
-	seed2           int8
+	seed1           uint8
+	seed2           uint8
 
 	group *Group
 
-	diff_shader int32
-	spec_shader int32
+	diff_shader int16
+	spec_shader int16
 
 	mtex [18]*MTex
 }
@@ -312,7 +312,7 @@ type CustomDataLayer struct {
 	active_mask  int32
 	uid          int32
 	name         string
-	data         []IElemBase
+	data         IElemBase
 }
 
 /*
@@ -333,7 +333,7 @@ type CustomData struct {
 	typemap  [42]int32 // CD_NUMTYPES
 	totlayer int32
 	maxlayer int32
-	totsize  int
+	totsize  int32
 	/*
 	   pool *BLI_mempool
 	   external *CustomDataExternal
@@ -405,9 +405,9 @@ type Camera struct {
 	id ID
 
 	Type, flag       CameraType
-	lens             float64
-	sensor_x         float64
-	clipsta, clipend float64
+	lens             float32
+	sensor_x         float32
+	clipsta, clipend float32
 }
 
 // -------------------------------------------------------------------------------
@@ -443,17 +443,17 @@ type Lamp struct {
 	//int mode;
 
 	colormodel, totex int16
-	r, g, b, k        float64
+	r, g, b, k        float32
 	//float shdwr, shdwg, shdwb;
 
-	energy, dist, spotsize, spotblend float64
+	energy, dist, spotsize, spotblend float32
 	//float haint;
 
-	constant_coefficient  float64
-	linear_coefficient    float64
-	quadratic_coefficient float64
+	constant_coefficient  float32
+	linear_coefficient    float32
+	quadratic_coefficient float32
 
-	att1, att2 float64
+	att1, att2 float32
 	//struct CurveMapping *curfalloff;
 	falloff_type LampFalloffType
 
@@ -465,7 +465,7 @@ type Lamp struct {
 	//short ray_samp, ray_sampy, ray_sampz;
 	//short ray_samp_type;
 	area_shape                        int16
-	area_size, area_sizey, area_sizez float64
+	area_size, area_sizey, area_sizez float32
 	//float adapt_thresh;
 	//short ray_samp_method;
 
@@ -475,7 +475,7 @@ type Lamp struct {
 	//short skyblendtype;
 	//float horizon_brightness;
 	//float spread;
-	sun_brightness float64
+	sun_brightness float32
 	//float sun_size;
 	//float backscattered_light;
 	//float sun_intensity;
@@ -552,7 +552,7 @@ type ModifierData struct {
 // ------------------------------------------------------------------------------------------------
 type SharedModifierData struct {
 	*ElemBase
-	modifier ModifierData
+	modifier *ModifierData
 }
 
 // -------------------------------------------------------------------------------
@@ -593,7 +593,7 @@ type MirrorModifierData struct {
 	*ElemBase
 	SharedModifierData
 	axis, flag int16
-	tolerance  float64
+	tolerance  float32
 	mirror_ob  *Object
 }
 
@@ -618,8 +618,8 @@ type Object struct {
 	*ElemBase
 	id        ID
 	Type      ObjectType
-	obmat     [4][4]float64
-	parentinv [4][4]float64
+	obmat     [4][4]float32
+	parentinv [4][4]float32
 	parsubstr string
 
 	parent *Object
@@ -682,6 +682,40 @@ type Image struct {
 }
 
 type TexType int
+
+func (t TexType) GetTextureTypeDisplayString() string {
+	switch t {
+	case Type_CLOUDS:
+		return "Clouds"
+	case Type_WOOD:
+		return "Wood"
+	case Type_MARBLE:
+		return "Marble"
+	case Type_MAGIC:
+		return "Magic"
+	case Type_BLEND:
+		return "Blend"
+	case Type_STUCCI:
+		return "Stucci"
+	case Type_NOISE:
+		return "Noise"
+	case Type_PLUGIN:
+		return "Plugin"
+	case Type_MUSGRAVE:
+		return "Musgrave"
+	case Type_VORONOI:
+		return "Voronoi"
+	case Type_DISTNOISE:
+		return "DistortedNoise"
+	case Type_ENVMAP:
+		return "EnvMap"
+	case Type_IMAGE:
+		return "Image"
+	default:
+		break
+	}
+	return "<Unknown>"
+}
 
 const (
 	Type_CLOUDS       TexType = 1
@@ -846,23 +880,23 @@ type MTex struct {
 	uvname    string
 
 	projx, projy, projz MTexProjection
-	mapping             int8
-	ofs, size           [3]float64
-	rot                 float64
+	mapping             uint8
+	ofs, size           [3]float32
+	rot                 float32
 
 	texflag                       int32
 	colormodel, pmapto, pmaptoneg int16
 	//short normapspace, which_output;
 	//char brush_map_mode;
-	r, g, b, k float64
+	r, g, b, k float32
 	//float def_var, rt;
 
 	//float colfac, varfac;
 
-	norfac float64
+	norfac float32
 	//float dispfac, warpfac;
-	colspecfac, mirrfac, alphafac      float64
-	difffac, specfac, emitfac, hardfac float64
+	colspecfac, mirrfac, alphafac      float32
+	difffac, specfac, emitfac, hardfac float32
 	//float raymirrfac, translfac, ambfac;
 	//float colemitfac, colreflfac, coltransfac;
 	//float densfac, scatterfac, reflfac;

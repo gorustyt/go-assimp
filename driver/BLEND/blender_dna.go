@@ -130,7 +130,8 @@ func (d *DNAParser) Parse() error {
 		return err
 	}
 	for i := int32(0); i < end; i++ {
-		st := &Structure{}
+		st := NewStructure()
+
 		n, err := d.GetInt16()
 		if err != nil {
 			return err
@@ -139,6 +140,7 @@ func (d *DNAParser) Parse() error {
 			return fmt.Errorf("BlenderDNA: Invalid type index in structure name %v (there are only:%v  entries", n, len(types))
 		}
 		dna.indices[types[n].name] = len(dna.structures)
+		dna.structures = append(dna.structures, st)
 		st.name = types[n].name
 
 		n, err = d.GetInt16()
@@ -188,7 +190,7 @@ func (d *DNAParser) Parse() error {
 			// Also we need to alter the lookup name to include no array
 			// brackets anymore or size fixup won't work (if our size does
 			// not match the size read from the DNA).
-			if strings.HasPrefix(f.name, "]") {
+			if strings.HasSuffix(f.name, "]") {
 				index := strings.Index(f.name, "[")
 				if index == -1 {
 					return fmt.Errorf("BlenderDNA: Encountered invalid array declaration%v ", f.name)
@@ -200,31 +202,21 @@ func (d *DNAParser) Parse() error {
 
 				f.size *= f.array_sizes[0] * f.array_sizes[1]
 			}
-
+			if f.name == "Scene" {
+				f.name += ""
+			}
 			// maintain separate indexes
 			st.indices[f.name] = int32(len(st.fields)) - 1
 			offset += f.size
+			fields++
 		}
-		dna.structures = append(dna.structures)
 		st.size = offset
-		fields++
+
 	}
 	logger.DebugF("BlenderDNA: Got %v structures with totally %v fields", len(dna.structures), fields)
 	dna.AddPrimitiveStructures()
 	dna.RegisterConverters()
 	return nil
-}
-
-/**
-*   @brief  read CustomData's data to ptr to mem
-*   @param[out] out memory ptr to set
-*   @param[in]  cdtype  to read
-*   @param[in]  cnt cnt of elements to read
-*   @param[in]  db to read elements from
-*   @return true when ok
- */
-func (d *DNAParser) ReadCustomData(out *ElemBase, cdtype int, cnt int, db *FileDatabase) bool {
-	return true
 }
 
 // -------------------------------------------------------------------------------
@@ -323,6 +315,15 @@ func (d *DNA) Index(i int) *Structure {
 // ------------------------------------------------------------------------------------------------
 func (d *DNA) GetBlobToStructureConverter(structure *Structure, db *FileDatabase) DNAConverterFactory {
 	return d.converters[structure.name]
+}
+
+// --------------------------------------------------------------------------------
+func (s *Structure) Get(ss string) *Field {
+	v, ok := s.indices[ss]
+	if !ok {
+		return nil
+	}
+	return s.fields[v]
 }
 
 // --------------------------------------------------------------------------------
@@ -677,10 +678,6 @@ func (s *Structure) ReadFieldArray(out []any, name string, db *FileDatabase) err
 			return err
 		}
 	}
-	for ; i < len(out); i++ {
-		//TODO
-	}
-
 	// and recover the previous stream position
 	db.stats().fields_read++
 	return nil
@@ -747,8 +744,8 @@ func (s *Structure) ReadCustomDataPtr(cdtype int, name string, db *FileDatabase)
 			return out, err
 		}
 		db.SetCurPos(block.start + int(ptrval.val-block.address.val))
-		// read block->num instances of given type to out
-		out, err = readCustomData(cdtype, int(block.num), db)
+		// read block.num instances of given type to out
+		out, err = readCustomData(cdtype, int(block.num), db, s)
 		if err != nil {
 			return out, err
 		}
@@ -769,12 +766,31 @@ func (s *Structure) ReadCustomDataPtr(cdtype int, name string, db *FileDatabase)
 
 func (s *Structure) Convert(out any, db *FileDatabase) error {
 	switch v := out.(type) {
-	case IElemBase:
-
+	case **CustomDataLayer:
+		var c CustomDataLayer
+		err := c.Convert(db, s)
+		if err != nil {
+			return err
+		}
+		*v = &c
+		return nil
 	case *Pointer:
 		return s.ConvertPointer(v, db)
+	case *int64, *uint64:
+	case *int32, *uint, *uint32:
+		return s.ConvertInt(v, db)
+	case *uint16, *int16:
+		return s.ConvertInt16(v, db)
+	case *int8:
+		return s.ConvertInt8(v, db)
+	case *uint8:
+		return s.ConvertUInt8(v, db)
+	case *float32:
+		return s.ConvertFloat32(v, db)
+	case *float64:
+		return s.ConvertFloat64(v, db)
 	}
-	return nil
+	return errors.New("not impl")
 }
 
 // --------------------------------------------------------------------------------
@@ -838,14 +854,14 @@ func (s *Structure) ConvertInt16(dest any, db *FileDatabase) error {
 		if f > 1.0 {
 			f = 1.0
 		}
-		//db.reader->IncPtr(-4);
+		//db.reader.IncPtr(-4);
 		return ConvertValue(dest, f*32767.)
 	} else if s.name == "double" {
 		f, err := db.GetFloat64()
 		if err != nil {
 			return err
 		}
-		//db.reader->IncPtr(-8);
+		//db.reader.IncPtr(-8);
 		return ConvertValue(dest, f*32767.)
 	}
 	return s.ConvertDispatcher(dest, db)
@@ -910,12 +926,12 @@ func (s *Structure) ConvertFloat32(dest any, db *FileDatabase) error {
 func (s *Structure) ConvertPointer(dest *Pointer, db *FileDatabase) (err error) {
 	if db.i64bit {
 		dest.val, err = db.GetUInt64()
-		//db.reader->IncPtr(-8);
+		//db.reader.IncPtr(-8);
 		return err
 	}
 	v, err := db.GetUInt32()
 	dest.val = uint64(v)
-	//db.reader->IncPtr(-4);
+	//db.reader.IncPtr(-4);
 	return err
 }
 

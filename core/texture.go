@@ -37,7 +37,7 @@ type AiTexture struct {
 	 * E.g. 'dds\\0', 'pcx\\0', 'jpg\\0'.  All characters are lower-case.
 	 * The fourth character will always be '\\0'.
 	 */
-	AchFormatHint []byte // 8 for string + 1 for terminator.
+	AchFormatHint []uint8 // 8 for string + 1 for terminator.
 
 	/** Data of the texture.
 	 *

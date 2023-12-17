@@ -56,7 +56,7 @@ type AiLight struct {
 	 *
 	 *  The position is undefined for directional lights.
 	 */
-	Position common.AiVector3D
+	Position *common.AiVector3D
 
 	/** Direction of the light source in space. Relative to the
 	 *  transformation of the node corresponding to the light.
@@ -64,7 +64,7 @@ type AiLight struct {
 	 *  The direction is undefined for point lights. The vector
 	 *  may be normalized, but it needn't.
 	 */
-	Direction common.AiVector3D
+	Direction *common.AiVector3D
 
 	/** Up direction of the light source in space. Relative to the
 	 *  transformation of the node corresponding to the light.
@@ -72,7 +72,7 @@ type AiLight struct {
 	 *  The direction is undefined for point lights. The vector
 	 *  may be normalized, but it needn't.
 	 */
-	Up common.AiVector3D
+	Up *common.AiVector3D
 
 	/** Constant light attenuation factor.
 	 *
@@ -108,7 +108,7 @@ type AiLight struct {
 	 *  This member corresponds to the att2 variable in the equation.
 	 *  Naturally undefined for directional lights.
 	 */
-	mAttenuationQuadratic float32
+	AttenuationQuadratic float32
 
 	/** Diffuse color of the light source
 	 *
@@ -142,7 +142,7 @@ type AiLight struct {
 	 *  angle. The angle is given in radians. It is 2PI for point
 	 *  lights and undefined for directional lights.
 	 */
-	AngleInnerCon float32
+	AngleInnerCone float32
 
 	/** Outer angle of a spot light's light cone.
 	 *
@@ -158,4 +158,8 @@ type AiLight struct {
 
 	/** Size of area light source. */
 	Size *common.AiVector2D
+}
+
+func NewAiLight() *AiLight {
+	return &AiLight{}
 }

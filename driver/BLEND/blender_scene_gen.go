@@ -19,19 +19,34 @@ func (dest *Object) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	err = s.ReadFieldArray2(dest.obmat, "obmat", db)
+	tmp := make([][]float32, 4)
+	for i := range tmp {
+		tmp[i] = make([]float32, 4)
+	}
+	err = s.ReadFieldArray2(SliceToAny2(tmp), "obmat", db)
 	if err != nil {
 		return err
 	}
-	err = s.ReadFieldArray2(dest.parentinv, "parentinv", db)
+	for i, v := range tmp {
+		copy(dest.obmat[i][:], v)
+	}
+	tmp = make([][]float32, 4)
+	for i := range tmp {
+		tmp[i] = make([]float32, 4)
+	}
+	err = s.ReadFieldArray2(SliceToAny2(tmp), "parentinv", db)
 	if err != nil {
 		return err
 	}
-	err = s.ReadFieldArray(dest.parsubstr, "parsubstr", db)
+	for i, v := range tmp {
+		copy(dest.parentinv[i][:], v)
+	}
+	tmp2 := make([]uint8, 32)
+	err = s.ReadFieldArray(SliceToAny(tmp2), "parsubstr", db)
 	if err != nil {
 		return err
 	}
-
+	dest.parsubstr = string(tmp2)
 	out, err := s.ReadFieldPtr("*parent", db)
 	if err != nil {
 		return err
@@ -166,7 +181,23 @@ func (dest *Collection) Convert(db *FileDatabase, s *Structure) (err error) {
 	return db.Discard(int(s.size))
 }
 
-//--------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------
+func SliceToAny[T any](in []T) (out []any) {
+	for _, v := range in {
+		out = append(out, &v)
+	}
+	return out
+}
+
+func SliceToAny2[T any](in [][]T) (out [][]any) {
+	for i, v := range in {
+		for j, v1 := range v {
+			out[i][j] = &v1
+		}
+
+	}
+	return out
+}
 
 func (dest *MTex) Convert(db *FileDatabase, s *Structure) (err error) {
 
@@ -198,10 +229,12 @@ func (dest *MTex) Convert(db *FileDatabase, s *Structure) (err error) {
 		return err
 	}
 	dest.tex = value.(*Tex)
-	err = s.ReadFieldArray(dest.uvname, "uvname", db)
+	tmp := make([]uint8, 32)
+	err = s.ReadFieldArray(SliceToAny(tmp), "uvname", db)
 	if err != nil {
 		return err
 	}
+	dest.uvname = string(tmp)
 	err = s.ReadField(&temp, "projx", db)
 	if err != nil {
 		return err
@@ -230,13 +263,21 @@ func (dest *MTex) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	err = s.ReadFieldArray(dest.ofs, "ofs", db)
+	tmp1 := dest.ofs[:]
+	err = s.ReadFieldArray(SliceToAny[float32](tmp1), "ofs", db)
 	if err != nil {
 		return err
 	}
-	err = s.ReadFieldArray(dest.size, "size", db)
+	for i := range dest.ofs {
+		dest.size[i] = tmp1[i]
+	}
+	tmp1 = dest.size[:]
+	err = s.ReadFieldArray(SliceToAny[float32](tmp1), "size", db)
 	if err != nil {
 		return err
+	}
+	for i := range dest.size {
+		dest.size[i] = tmp1[i]
 	}
 	err = s.ReadField(&dest.rot, "rot", db)
 	if err != nil {
@@ -313,14 +354,25 @@ func (dest *MTex) Convert(db *FileDatabase, s *Structure) (err error) {
 //--------------------------------------------------------------------------------
 
 func (dest *TFace) Convert(db *FileDatabase, s *Structure) (err error) {
-
-	err = s.ReadFieldArray2(dest.uv, "uv", db)
+	tmp := make([][]float64, 4)
+	for i := range tmp {
+		tmp[i] = make([]float64, 2)
+	}
+	err = s.ReadFieldArray2(SliceToAny2(tmp), "uv", db)
 	if err != nil {
 		return err
 	}
-	err = s.ReadFieldArray(dest.col, "col", db)
+	for i := range tmp {
+		copy(dest.uv[i][:], tmp[i])
+	}
+
+	tmp1 := dest.col[:]
+	err = s.ReadFieldArray(SliceToAny(tmp1), "col", db)
 	if err != nil {
 		return err
+	}
+	for i := range tmp {
+		dest.col[i] = tmp1[i]
 	}
 	err = s.ReadField(&dest.flag, "flag", db)
 	if err != nil {
@@ -617,10 +669,16 @@ func (dest *Base) Convert(
 //--------------------------------------------------------------------------------
 
 func (dest *MTFace) Convert(db *FileDatabase, s *Structure) (err error) {
-
-	err = s.ReadFieldArray2(dest.uv, "uv", db)
+	tmp := make([][]float32, 4)
+	for i := range tmp {
+		tmp[i] = make([]float32, 2)
+	}
+	err = s.ReadFieldArray2(SliceToAny2(tmp), "uv", db)
 	if err != nil {
 		return err
+	}
+	for i := range tmp {
+		copy(dest.uv[i][:], tmp[i])
 	}
 	err = s.ReadField(&dest.flag, "flag", db)
 	if err != nil {
@@ -1317,14 +1375,21 @@ func (dest *MLoopCol) Convert(db *FileDatabase, s *Structure) (err error) {
 
 func (dest *MVert) Convert(
 	db *FileDatabase, s *Structure) (err error) {
-
-	err = s.ReadFieldArray(dest.co, "co", db)
+	tmp := dest.co[:]
+	err = s.ReadFieldArray(SliceToAny(tmp), "co", db)
 	if err != nil {
 		return err
 	}
-	err = s.ReadFieldArray(dest.no, "no", db)
+	for i := range dest.co {
+		dest.co[i] = tmp[i]
+	}
+	tmp = dest.no[:]
+	err = s.ReadFieldArray(SliceToAny(tmp), "no", db)
 	if err != nil {
 		return err
+	}
+	for i := range dest.no {
+		dest.no[i] = tmp[i]
 	}
 	err = s.ReadField(&dest.flag, "flag", db)
 	if err != nil {
@@ -1373,10 +1438,13 @@ func (dest *MEdge) Convert(db *FileDatabase, s *Structure) (err error) {
 //--------------------------------------------------------------------------------
 
 func (dest *MLoopUV) Convert(db *FileDatabase, s *Structure) (err error) {
-
-	err = s.ReadFieldArray(dest.uv, "uv", db)
+	tmp := dest.uv[:]
+	err = s.ReadFieldArray(SliceToAny(tmp), "uv", db)
 	if err != nil {
 		return err
+	}
+	for i, v := range tmp {
+		dest.uv[i] = v
 	}
 	err = s.ReadField(&dest.flag, "flag", db)
 	if err != nil {
@@ -1470,19 +1538,21 @@ func (dest *ModifierData) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	err = s.ReadFieldArray(dest.name, "name", db)
+	tmp := make([]uint8, 32)
+	err = s.ReadFieldArray(SliceToAny(tmp), "name", db)
 	if err != nil {
 		return err
 	}
-
+	dest.name = string(tmp)
 	return db.Discard(int(s.size))
 }
 
 //--------------------------------------------------------------------------------
 
 func (dest *ID) Convert(db *FileDatabase, s *Structure) (err error) {
-
-	err = s.ReadFieldArray(dest.name, "name", db)
+	tmp := make([]uint8, 1024)
+	err = s.ReadFieldArray(SliceToAny(tmp), "name", db)
+	dest.name = string(tmp)
 	if err != nil {
 		return err
 	}
@@ -1586,14 +1656,18 @@ func (dest *Library) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	err = s.ReadFieldArray(dest.name, "name", db)
+	tmp := make([]uint8, 240)
+	err = s.ReadFieldArray(SliceToAny(tmp), "name", db)
 	if err != nil {
 		return err
 	}
-	err = s.ReadFieldArray(dest.filename, "filename", db)
+	dest.name = string(tmp)
+	tmp = make([]uint8, 240)
+	err = s.ReadFieldArray(SliceToAny(tmp), "filename", db)
 	if err != nil {
 		return err
 	}
+	dest.filename = string(tmp)
 	value, err := s.ReadFieldPtr("*parent", db)
 	if err != nil {
 		return err
@@ -1721,10 +1795,12 @@ func (dest *Image) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	err = s.ReadFieldArray(dest.name, "name", db)
+	tmp := make([]uint8, 240)
+	err = s.ReadFieldArray(SliceToAny(tmp), "name", db)
 	if err != nil {
 		return err
 	}
+	dest.name = string(tmp)
 	err = s.ReadField(&dest.ok, "ok", db)
 	if err != nil {
 		return err
@@ -1813,9 +1889,13 @@ func (dest *Image) Convert(db *FileDatabase, s *Structure) (err error) {
 //--------------------------------------------------------------------------------
 
 func (dest *CustomData) Convert(db *FileDatabase, s *Structure) (err error) {
-	err = s.ReadFieldArray(dest.typemap, "typemap", db)
+	tmp := dest.typemap[:]
+	err = s.ReadFieldArray(SliceToAny(tmp), "typemap", db)
 	if err != nil {
 		return err
+	}
+	for i, v := range tmp {
+		dest.typemap[i] = v
 	}
 	err = s.ReadField(&dest.totlayer, "totlayer", db)
 	if err != nil {
@@ -1829,7 +1909,7 @@ func (dest *CustomData) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	err = s.ReadFieldArray(dest.layers, "*layers", db)
+	err = s.ReadFieldArray(SliceToAny(dest.layers), "*layers", db)
 	if err != nil {
 		return err
 	}
@@ -1873,10 +1953,12 @@ func (dest *CustomDataLayer) Convert(
 	if err != nil {
 		return err
 	}
-	err = s.ReadFieldArray(dest.name, "name", db)
+	tmp := make([]uint8, 64)
+	err = s.ReadFieldArray(SliceToAny(tmp), "name", db)
 	if err != nil {
 		return err
 	}
+	dest.name = string(tmp)
 	dest.data, err = s.ReadCustomDataPtr(int(dest.Type), "*data", db)
 	if err != nil {
 		return err

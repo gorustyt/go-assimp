@@ -14,7 +14,7 @@ func NewBlenderBMeshConverter(mesh *Mesh) *BlenderBMeshConverter {
 }
 
 // ------------------------------------------------------------------------------------------------
-func (b *BlenderBMeshConverter) AddTFace(uv1, uv2, uv3, uv4 []float64) {
+func (b *BlenderBMeshConverter) AddTFace(uv1, uv2, uv3, uv4 []float32) {
 	var mtface MTFace
 	copy(mtface.uv[0][:], uv1[:2])
 	copy(mtface.uv[1][:], uv2[:2])
@@ -24,7 +24,7 @@ func (b *BlenderBMeshConverter) AddTFace(uv1, uv2, uv3, uv4 []float64) {
 		copy(mtface.uv[3][:], uv4[:2])
 	}
 
-	b.triMesh.mtface = append(b.triMesh.mtface, mtface)
+	b.triMesh.mtface = append(b.triMesh.mtface, &mtface)
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -37,7 +37,7 @@ func (b *BlenderBMeshConverter) AddFace(v1, v2, v3, v4 int32) {
 	face.flag = 0
 	// TODO - Work out how materials work
 	face.mat_nr = 0
-	b.triMesh.mface = append(b.triMesh.mface, face)
+	b.triMesh.mface = append(b.triMesh.mface, &face)
 	b.triMesh.totface = int32(len(b.triMesh.mface))
 }
 
@@ -58,7 +58,7 @@ func (b *BlenderBMeshConverter) ConvertPolyToFaces(poly *MPoly) {
 				logger.FatalF("BMesh uv loop array has incorrect size")
 			}
 			loopUV := b.BMesh.mloopuv[poly.loopstart:]
-			var tmp1 [2]float64
+			var tmp1 [2]float32
 			if poly.totloop == 4 {
 				tmp1 = loopUV[3].uv
 			}

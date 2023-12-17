@@ -513,6 +513,7 @@ func (b *BlenderImporter) ResolveImage(out *core.AiMaterial, mat *Material, tex 
 
 	out.AddStringPropertyVar(core.AI_MATKEY_TEXTURE(texture_type, int(conv_data.next_texture[texture_type])), name)
 	conv_data.next_texture[texture_type]++
+	return nil
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -1092,8 +1093,6 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 					temp[it].TextureCoords[i] = make([]*common.AiVector3D, len(temp[it].Vertices))
 				}
 			}
-			temp[it].NumVertices = 0
-			temp[it].NumFaces = len(temp[it].Vertices)
 		}
 
 		for i := 0; i < int(mesh.totface); i++ {
@@ -1101,12 +1100,11 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 			out := temp[mat_num_to_mesh_idx[int(mesh.mface[i].mat_nr)]]
 			f := core.NewAiFace()
 			out.Faces = append(out.Faces, f)
-			vo := out.TextureCoords[0][len(out.Vertices)]
+			vo1:=common.NewAiVector3D()
+			out.TextureCoords[0]=append(out.TextureCoords[0],vo1)
 			for j := 0; j < len(f.Indices); j++ {
-				vo.X = v.uv[j][0]
-				vo.Y = v.uv[j][1]
-				vo++
-				out.NumVertices++
+				vo1.X = v.uv[j][0]
+				vo1.Y = v.uv[j][1]
 			}
 		}
 
@@ -1119,13 +1117,12 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 			itMatTexUvMapping ,ok:= matTexUvMappings[uint32(v.mat_nr)]
 			if !ok {
 				// old behavior
-				vo := out.TextureCoords[0][len(out.Vertices)]
+				vo1:=common.NewAiVector3D()
+				out.TextureCoords[0]=append(out.TextureCoords[0],vo1)
 				for j := 0; j < len(f.Indices); j++ {
 					uv := mesh.mloopuv[int(v.loopstart)+j]
-					vo.X = uv.uv[0]
-					vo.Y = uv.uv[1]
-					vo++
-					out.NumVertices++
+					vo1.X = uv.uv[0]
+					vo1.Y = uv.uv[1]
 				}
 			} else {
 				// create textureCoords for every mapped tex

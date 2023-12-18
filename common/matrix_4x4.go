@@ -9,6 +9,14 @@ type AiMatrix4x4 struct {
 	D1, D2, D3, D4 float32
 }
 
+func NewAiMatrix4x4Identify() *AiMatrix4x4 {
+	ai := &AiMatrix4x4{}
+	ai.A1 = 1.0
+	ai.B2 = 1.0
+	ai.C3 = 1.0
+	ai.D4 = 1.0
+	return ai
+}
 func NewAiMatrix4x4FromValues(_a1, _a2, _a3, _a4, _b1, _b2, _b3, _b4,
 	_c1, _c2, _c3, _c4,
 	_d1, _d2, _d3, _d4 float32) *AiMatrix4x4 {

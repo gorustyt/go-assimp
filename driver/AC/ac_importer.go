@@ -212,10 +212,10 @@ func (ac *AC3DImporter) ConvertMaterial(object *Object,
 		}
 	}
 
-	matDest.AddAiColorDPropertyVar(core.AI_MATKEY_COLOR_DIFFUSE, matSrc.rgb)
-	matDest.AddAiColorDPropertyVar(core.AI_MATKEY_COLOR_AMBIENT, matSrc.amb)
-	matDest.AddAiColorDPropertyVar(core.AI_MATKEY_COLOR_EMISSIVE, matSrc.emis)
-	matDest.AddAiColorDPropertyVar(core.AI_MATKEY_COLOR_SPECULAR, matSrc.spec)
+	matDest.AddAiColor3DPropertyVar(core.AI_MATKEY_COLOR_DIFFUSE, matSrc.rgb)
+	matDest.AddAiColor3DPropertyVar(core.AI_MATKEY_COLOR_AMBIENT, matSrc.amb)
+	matDest.AddAiColor3DPropertyVar(core.AI_MATKEY_COLOR_EMISSIVE, matSrc.emis)
+	matDest.AddAiColor3DPropertyVar(core.AI_MATKEY_COLOR_SPECULAR, matSrc.spec)
 	n := int64(-1)
 	if matSrc.shin != 0 {
 		n = int64(core.AiShadingMode_Phong)
@@ -245,18 +245,17 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 			logger.InfoF("AC3D: No surfaces defined in object definition a point list is returned")
 			var mesh core.AiMesh
 			*meshes = append(*meshes, &mesh)
-			mesh.NumVertices = len(object.vertices)
-			mesh.NumFaces = mesh.NumVertices
-			mesh.Faces = make([]*core.AiFace, mesh.NumFaces)
+			numVertices := len(object.vertices)
+			numFaces := numVertices
+			mesh.Faces = make([]*core.AiFace, numFaces)
 			for i := range mesh.Faces {
 				mesh.Faces[i] = &core.AiFace{}
 			}
-			mesh.Vertices = make([]*common.AiVector3D, mesh.NumVertices)
+			mesh.Vertices = make([]*common.AiVector3D, numVertices)
 			faces := 0
 			verts := 0
-			for i := 0; i < mesh.NumVertices; i++ {
+			for i := 0; i < numVertices; i++ {
 				mesh.Vertices[verts] = object.vertices[i]
-				mesh.Faces[faces].NumIndices = 1
 				mesh.Faces[faces].Indices = make([]int, 1)
 				mesh.Faces[faces].Indices[0] = i
 				i++
@@ -339,32 +338,32 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 				*outMaterials = append(*outMaterials, &tmpMaterial)
 				ac.ConvertMaterial(object, (*materials)[mat], &tmpMaterial)
 				// allocate storage for vertices and normals
-				mesh.NumFaces = citv.First
-				if mesh.NumFaces == 0 {
+				numFaces := citv.First
+				if numFaces == 0 {
 					logger.FatalF("AC3D: No faces")
-				} else if mesh.NumFaces*int(unsafe.Sizeof(core.AiFace{})) > 256*1024*1024 {
+				} else if numFaces*int(unsafe.Sizeof(core.AiFace{})) > 256*1024*1024 {
 					logger.FatalF("AC3D: Too many faces, would run out of memory")
 				}
 
-				mesh.Faces = make([]*core.AiFace, mesh.NumFaces)
+				mesh.Faces = make([]*core.AiFace, numFaces)
 				for i := range mesh.Faces {
 					mesh.Faces[i] = &core.AiFace{}
 				}
 				faces := 0
 				vertices := 0
-				mesh.NumVertices = citv.Second
-				if mesh.NumVertices == 0 {
+				numVertices := citv.Second
+				if numVertices == 0 {
 					logger.FatalF("AC3D: No vertices")
-				} else if mesh.NumVertices*4*3 > 256*1024*1024 {
+				} else if numVertices*4*3 > 256*1024*1024 {
 					logger.FatalF("AC3D: Too many vertices, would run out of memory")
 				}
-				mesh.Vertices = make([]*common.AiVector3D, mesh.NumVertices)
+				mesh.Vertices = make([]*common.AiVector3D, numVertices)
 				cur := 0
 				// allocate UV coordinates, but only if the texture name for the
 				// surface is not empty
 				uv := 0
 				if len(object.textures) != 0 {
-					mesh.TextureCoords[0] = make([]*common.AiVector3D, mesh.NumVertices)
+					mesh.TextureCoords[0] = make([]*common.AiVector3D, len(mesh.Vertices))
 					mesh.NumUVComponents[0] = 2
 				}
 				uvs := mesh.TextureCoords[0]
@@ -378,15 +377,14 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 						if Type == Polygon {
 							face := mesh.Faces[faces]
 							faces++
-							face.NumIndices = len(src.entries)
-							if 0 != face.NumIndices {
-								face.Indices = make([]int, face.NumIndices)
-								for i := 0; i < face.NumIndices; i++ {
+							if 0 != len(src.entries) {
+								face.Indices = make([]int, len(src.entries))
+								for i := 0; i < len(face.Indices); i++ {
 									entry := src.entries[i]
 									face.Indices[i] = cur
 									cur++
 									// copy vertex positions
-									if (vertices - len(mesh.Vertices)) >= mesh.NumVertices {
+									if (vertices - len(mesh.Vertices)) >= len(mesh.Vertices) {
 										logger.FatalF("AC3D: Invalid number of vertices")
 									}
 									mesh.Vertices[vertices] = object.vertices[entry.First].Add(object.translation)
@@ -408,9 +406,6 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 								if object.vertices[entry1.First] == object.vertices[entry2.First] ||
 									object.vertices[entry1.First] == object.vertices[entry3.First] ||
 									object.vertices[entry2.First] == object.vertices[entry3.First] {
-									mesh.NumFaces--
-									mesh.NumVertices -= 3
-
 									cit++
 									mat++
 									continue
@@ -418,8 +413,7 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 
 								face := mesh.Faces[faces]
 								faces++
-								face.NumIndices = 3
-								face.Indices = make([]int, face.NumIndices)
+								face.Indices = make([]int, 3)
 								face.Indices[0] = cur
 								cur++
 								face.Indices[1] = cur
@@ -449,7 +443,7 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 									uvs[uv].Y = entry1.Second.Y
 									uv++
 								}
-								if vertices-len(mesh.Vertices) >= mesh.NumVertices {
+								if vertices-len(mesh.Vertices) >= len(mesh.Vertices) {
 									logger.FatalF("AC3D: Invalid number of vertices")
 								}
 								mesh.Vertices[vertices] = object.vertices[entry3.First].Add(object.translation)
@@ -469,7 +463,6 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 							for m := 0; m < tmp; m++ {
 								face := mesh.Faces[faces]
 								faces++
-								face.NumIndices = 2
 								face.Indices = make([]int, 2)
 								face.Indices[0] = cur
 								cur++

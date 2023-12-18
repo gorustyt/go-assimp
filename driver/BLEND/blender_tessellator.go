@@ -72,14 +72,14 @@ func (f *BlenderTessellatorP2T) FindLLSQPlane(points []*PointP2T) *PlaneP2T {
 // ------------------------------------------------------------------------------------------------
 // Adapted from: http://missingbytes.blogspot.co.uk/2012/06/fitting-plane-to-point-cloud.html
 func (f *BlenderTessellatorP2T) GetEigenVectorFromLargestEigenValue(mtx *common.AiMatrix3x3) *common.AiVector3D {
-	//scale := f.FindLargestMatrixElem( mtx );
-	//mc := f.ScaleMatrix( mtx, 1.0 / scale );
-	//mc = mc * mc * mc;
+	scale := f.FindLargestMatrixElem(mtx)
+	mc := f.ScaleMatrix(mtx, 1.0/scale)
+	mc = mc.MulMatrix3x3(mc).MulMatrix3x3(mc)
 
 	v := common.NewAiVector3D1(1.0)
 	lastV := v
 	for i := 0; i < 100; i++ {
-		//v = mc * v;
+		v = mc.MulVector3d(v)
 		v.Normalize()
 		if (v.Sub(lastV)).SquareLength() < 1e-16 {
 			break
@@ -90,7 +90,7 @@ func (f *BlenderTessellatorP2T) GetEigenVectorFromLargestEigenValue(mtx *common.
 }
 
 // ------------------------------------------------------------------------------------------------
-func (f *BlenderTessellatorP2T) p2tMax(a, b float64) float64 {
+func (f *BlenderTessellatorP2T) p2tMax(a, b float32) float32 {
 	if a > b {
 		return a
 	}
@@ -99,32 +99,30 @@ func (f *BlenderTessellatorP2T) p2tMax(a, b float64) float64 {
 
 // ------------------------------------------------------------------------------------------------
 // Adapted from: http://missingbytes.blogspot.co.uk/2012/06/fitting-plane-to-point-cloud.html
-func (f *BlenderTessellatorP2T) FindLargestMatrixElem(mtx *common.AiMatrix3x3) float64 {
-	// result := 0.0;
-	//
-	//for  x := 0; x < 3; x ++{
-	//for  y := 0; y < 3;y  ++{
-	//result = f.p2tMax( math.Abs( mtx[ x ][ y ] ), result );
-	//}
-	//}
+func (f *BlenderTessellatorP2T) FindLargestMatrixElem(mtx *common.AiMatrix3x3) float32 {
+	result := float32(0.0)
 
-	//return result;
-	return 0
+	for x := 0; x < 3; x++ {
+		for y := 0; y < 3; y++ {
+			result = f.p2tMax(float32(math.Abs(float64(mtx.Index(x, y)))), result)
+		}
+	}
+
+	return result
 }
 
 // ------------------------------------------------------------------------------------------------
 // Apparently Assimp doesn't have matrix scaling
-func (f *BlenderTessellatorP2T) ScaleMatrix(mtx *common.AiMatrix3x3, scale float64) *common.AiMatrix3x3 {
-	//var result common.AiMatrix3x3
-	//
-	//for x := 0; x < 3; x ++{
-	//for  y := 0; y < 3; y ++{
-	//result[ x ][ y ] = mtx.Index[ x ][ y ] * scale;
-	//}
-	//}
+func (f *BlenderTessellatorP2T) ScaleMatrix(mtx *common.AiMatrix3x3, scale float32) *common.AiMatrix3x3 {
+	var result common.AiMatrix3x3
 
-	//return &result;
-	return nil
+	for x := 0; x < 3; x++ {
+		for y := 0; y < 3; y++ {
+			result.SetByIndex(x, y, mtx.Index(x, y)*scale)
+		}
+	}
+
+	return &result
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -180,20 +178,19 @@ func (f *BlenderTessellatorP2T) TransformAndFlattenVectices(transform *common.Ai
 
 // ------------------------------------------------------------------------------------------------
 func (f *BlenderTessellatorP2T) ReferencePoints(points []*PointP2T, pointRefs []*poly2tri.Point) {
-	//pointRefs.resize( len(points) );
-	//for  i := 0; i < len(points) ; i++{
-	//pointRefs[ i ] = points[ i ].point2D;
-	//}
+	for i := 0; i < len(points); i++ {
+		pointRefs[i] = points[i].point2D
+	}
 }
 
 // ------------------------------------------------------------------------------------------------
 func (f *BlenderTessellatorP2T) GetActualPointStructure(point *poly2tri.Point) *PointP2T {
-
-	//PointP2T& pointStruct = *reinterpret_cast< PointP2T* >( reinterpret_cast< char* >( &point ) - pointOffset );
-	//if ( pointStruct.magic != static_cast<int>( BLEND_TESS_MAGIC ) ) {
+	//PointP2T& pointStruct = *reinterpret_cast< PointP2T* >( reinterpret_cast< char* >( &point ) - f.pointOffset );
+	//if ( pointStruct.magic != BLEND_TESS_MAGIC {
 	//logger.FatalF( "Point returned by poly2tri was probably not one of ours. This indicates we need a new way to store vertex information" );
 	//}
 	//return pointStruct;
+	panic("BlenderTessellatorP2T")
 	return nil
 }
 
@@ -235,7 +232,6 @@ func (f *BlenderTessellatorP2T) AssertVertexCount(vertexCount int32) {
 
 // ------------------------------------------------------------------------------------------------
 func (f *BlenderTessellatorP2T) Copy3DVertices(polyLoop []*MLoop, vertexCount int32, vertices []*MVert, points []*PointP2T) {
-	//points.resize( vertexCount );
 	for i := int32(0); i < vertexCount; i++ {
 		loop := polyLoop[i]
 		vert := vertices[loop.v]

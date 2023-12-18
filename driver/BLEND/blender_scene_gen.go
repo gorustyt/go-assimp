@@ -1,16 +1,27 @@
 package BLEND
 
-import "assimp/common"
+import (
+	"assimp/common"
+	"errors"
+)
 
-//--------------------------------------------------------------------------------
-
+// --------------------------------------------------------------------------------
+func IsPtrError(err error, fn func()) error {
+	if err != nil && !errors.Is(err, ErrorPtrZero) {
+		return err
+	}
+	if err == nil {
+		fn()
+	}
+	return nil
+}
 func (dest *Object) Convert(db *FileDatabase, s *Structure) (err error) {
 
 	err = s.ReadField(&dest.id, "id", db)
 	if err != nil {
 		return err
 	}
-	temp := 0
+	temp := int32(0)
 	err = s.ReadField(&temp, "type", db)
 	if err != nil {
 		return err
@@ -48,51 +59,59 @@ func (dest *Object) Convert(db *FileDatabase, s *Structure) (err error) {
 	}
 	dest.parsubstr = string(tmp2)
 	out, err := s.ReadFieldPtr("*parent", db)
-	if err != nil {
+	if err := IsPtrError(err, func() {
+		dest.parent = out.(*Object)
+	}); err != nil {
 		return err
 	}
-	dest.parent = out.(*Object)
-	if err != nil {
-		return err
-	}
-
 	value, err := s.ReadFieldPtr("*track", db)
-	if err != nil {
+	if err := IsPtrError(err, func() {
+		dest.track = value.(*Object)
+	}); err != nil {
 		return err
 	}
-
-	dest.track = value.(*Object)
 
 	value, err = s.ReadFieldPtr("*proxy", db)
-	if err != nil {
+	if err := IsPtrError(err, func() {
+		dest.proxy = value.(*Object)
+	}); err != nil {
 		return err
 	}
-	dest.proxy = value.(*Object)
+
 	value, err = s.ReadFieldPtr("*proxy_from", db)
-	if err != nil {
+	if err := IsPtrError(err, func() {
+		dest.proxy_from = value.(*Object)
+	}); err != nil {
 		return err
 	}
-	dest.proxy_from = value.(*Object)
+
 	value, err = s.ReadFieldPtr("*proxy_group", db)
-	if err != nil {
+	if err := IsPtrError(err, func() {
+		dest.proxy_group = value.(*Object)
+	}); err != nil {
 		return err
 	}
-	dest.proxy_group = value.(*Object)
+
 	value, err = s.ReadFieldPtr("*dup_group", db)
-	if err != nil {
+	if err := IsPtrError(err, func() {
+		dest.dup_group = value.(*Group)
+	}); err != nil {
 		return err
 	}
-	dest.dup_group = value.(*Group)
+
 	value, err = s.ReadFieldPtr("*data", db)
-	if err != nil {
+	if err := IsPtrError(err, func() {
+		dest.data = value.(IElemBase)
+	}); err != nil {
 		return err
 	}
-	dest.data = value.(IElemBase)
+
 	err = s.ReadField(&dest.modifiers, "modifiers", db)
-	if err != nil {
+	if err := IsPtrError(err, func() {
+		dest.modifiers = value.(*ListBase)
+	}); err != nil {
 		return err
 	}
-	dest.modifiers = value.(*ListBase)
 	return db.Discard(int(s.size))
 }
 
@@ -183,18 +202,19 @@ func (dest *Collection) Convert(db *FileDatabase, s *Structure) (err error) {
 
 // --------------------------------------------------------------------------------
 func SliceToAny[T any](in []T) (out []any) {
-	for _, v := range in {
-		out = append(out, &v)
+	for i := range in {
+		out = append(out, &in[i])
 	}
 	return out
 }
 
 func SliceToAny2[T any](in [][]T) (out [][]any) {
+	out = make([][]any, len(in))
 	for i, v := range in {
-		for j, v1 := range v {
-			out[i][j] = &v1
+		out[i] = make([]any, len(v))
+		for j := range v {
+			out[i][j] = &in[i][j]
 		}
-
 	}
 	return out
 }
@@ -210,7 +230,7 @@ func (dest *MTex) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	temp := 0
+	temp := int32(0)
 	err = s.ReadField(&temp, "blendtype", db)
 	if err != nil {
 		return err
@@ -462,7 +482,7 @@ func (dest *Lamp) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	temp := 0
+	temp := int32(0)
 	err = s.ReadField(&temp, "type", db)
 	if err != nil {
 		return err
@@ -648,6 +668,9 @@ func (dest *Base) Convert(
 		// was already cached. In this case, we don't need to resolve
 		// it again.
 		value, err = s.ReadFieldPtr("*next", db, true)
+		if errors.Is(err, ErrorPtrZero) {
+			break
+		}
 		if err != nil {
 			return err
 		}
@@ -1688,7 +1711,7 @@ func (dest *Tex) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	temp := 0
+	temp := int32(0)
 	err = s.ReadField(&temp, "type", db)
 	if err != nil {
 		return err
@@ -1713,7 +1736,7 @@ func (dest *Camera) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	temp := 0
+	temp := int32(0)
 	err = s.ReadField(&temp, "type", db)
 	if err != nil {
 		return err
@@ -1959,11 +1982,14 @@ func (dest *CustomDataLayer) Convert(
 		return err
 	}
 	dest.name = string(tmp)
-	dest.data, err = s.ReadCustomDataPtr(int(dest.Type), "*data", db)
+	datas, err := s.ReadCustomDataPtr(int(dest.Type), "*data", db)
 	if err != nil {
 		return err
 	}
-
+	if len(datas) > 0 {
+		panic("not equal 0!")
+		dest.data = datas[0]
+	}
 	return db.Discard(int(s.size))
 }
 

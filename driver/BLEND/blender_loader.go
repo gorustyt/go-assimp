@@ -77,7 +77,6 @@ func (b *BlenderImporter) ParseMagic() error {
 }
 
 func (b *BlenderImporter) CanRead(checkSig bool) bool {
-	b.
 	return b.ParseMagic() == nil
 }
 
@@ -147,7 +146,7 @@ func (b *BlenderImporter) ExtractScene(out *Scene, file *FileDatabase) error {
 		return errors.New("there is not a single `Scene` record to load")
 	}
 	file.SetCurPos(block.start)
-	err := ss.Convert(out, file)
+	err := out.Convert(file, ss)
 	if err != nil {
 		return err
 	}
@@ -161,7 +160,7 @@ func (b *BlenderImporter) ExtractScene(out *Scene, file *FileDatabase) error {
 }
 
 // ------------------------------------------------------------------------------------------------
-func (b *BlenderImporter) ParseSubCollection(in *Scene, root *core.AiNode, collection *Collection, conv_data *ConversionData) {
+func (b *BlenderImporter) ParseSubCollection(in *Scene, root *core.AiNode, collection *Collection, conv_data *ConversionData) error {
 	//*Object
 	var root_objects = common.NewQueue[*Object]()
 	// Count number of objects
@@ -181,7 +180,11 @@ func (b *BlenderImporter) ParseSubCollection(in *Scene, root *core.AiNode, colle
 	root.Children = make([]*core.AiNode, root_objects.Size()+root_children.Size())
 
 	for i := 0; i < root_objects.Size(); i++ {
-		root.Children[i] = b.ConvertNode(in, root_objects.Index(i), conv_data, common.AiMatrix4x4())
+		var err error
+		root.Children[i], err = b.ConvertNode(in, root_objects.Index(i), conv_data, common.NewAiMatrix4x4Identify())
+		if err != nil {
+			return err
+		}
 		root.Children[i].Parent = root
 	}
 
@@ -189,12 +192,16 @@ func (b *BlenderImporter) ParseSubCollection(in *Scene, root *core.AiNode, colle
 	iterator := root_objects.Size()
 	for cur := collection.children.first.(*CollectionChild); cur != nil; cur = cur.next {
 		if cur.collection != nil {
-			root.Children[iterator] = make([]*core.AiNode, cur.collection.id.name+2) // skip over the name prefix 'OB'
+			root.Children[iterator] = core.NewAiNode(cur.collection.id.name[:2]) // skip over the name prefix 'OB'
 			root.Children[iterator].Parent = root
-			b.ParseSubCollection(in, root.Children[iterator], cur.collection, conv_data)
+			err := b.ParseSubCollection(in, root.Children[iterator], cur.collection, conv_data)
+			if err != nil {
+				return err
+			}
 		}
 		iterator += 1
 	}
+	return nil
 }
 
 func (b *BlenderImporter) ConvertBlendFile(out *core.AiScene, in *Scene, file *FileDatabase) error {
@@ -204,7 +211,10 @@ func (b *BlenderImporter) ConvertBlendFile(out *core.AiScene, in *Scene, file *F
 	// Iterate over all objects directly under master_collection,
 	// If in.master_collection == null, then we're parsing something older.
 	if in.master_collection != nil {
-		b.ParseSubCollection(in, root, in.master_collection, conv)
+		err := b.ParseSubCollection(in, root, in.master_collection, conv)
+		if err != nil {
+			return err
+		}
 	} else {
 		no_parents := common.NewQueue[*Object]()
 		for cur := in.base.first.(*Base); cur != nil; cur = cur.next {
@@ -212,14 +222,14 @@ func (b *BlenderImporter) ConvertBlendFile(out *core.AiScene, in *Scene, file *F
 				if cur.object.parent == nil {
 					no_parents.PushBack(cur.object)
 				} else {
-					conv.objects=append(conv.objects,cur.object)
+					conv.objects = append(conv.objects, cur.object)
 				}
 			}
 		}
 		for cur := in.basact; cur != nil; cur = cur.next {
 			if cur.object != nil {
 				if cur.object.parent != nil {
-					conv.objects=append(conv.objects,cur.object )
+					conv.objects = append(conv.objects, cur.object)
 				}
 			}
 		}
@@ -230,13 +240,19 @@ func (b *BlenderImporter) ConvertBlendFile(out *core.AiScene, in *Scene, file *F
 
 		root.Children = make([]*core.AiNode, no_parents.Size())
 		for i := 0; i < len(root.Children); i++ {
-			root.Children[i] = b.ConvertNode(in, no_parents.Index(i), conv, common.AiMatrix4x4())
+			var err error
+			root.Children[i], err = b.ConvertNode(in, no_parents.Index(i), conv, common.NewAiMatrix4x4Identify())
+			if err != nil {
+				return err
+			}
 			root.Children[i].Parent = root
 		}
 	}
 
-	b.BuildMaterials(conv)
-
+	err := b.BuildMaterials(conv)
+	if err != nil {
+		return err
+	}
 	if len(conv.meshes) > 0 {
 		out.Meshes = make([]*core.AiMesh, len(conv.meshes))
 		copy(out.Meshes, conv.meshes)
@@ -278,7 +294,7 @@ func (b *BlenderImporter) ConvertBlendFile(out *core.AiScene, in *Scene, file *F
 }
 
 // ------------------------------------------------------------------------------------------------
-func (b *BlenderImporter) ConvertNode(in *Scene, obj *Object, conv_data *ConversionData, parentTransform *common.AiMatrix4x4) (*core.AiNode,error) {
+func (b *BlenderImporter) ConvertNode(in *Scene, obj *Object, conv_data *ConversionData, parentTransform *common.AiMatrix4x4) (*core.AiNode, error) {
 	children := common.NewQueue[*Object]()
 	for it := 0; it < len(conv_data.objects); it++ {
 		object := conv_data.objects[it]
@@ -307,8 +323,14 @@ func (b *BlenderImporter) ConvertNode(in *Scene, obj *Object, conv_data *Convers
 		case Type_MESH:
 			old := len(conv_data.meshes)
 
-			b.CheckActualType(obj.data, "Mesh")
-			b.ConvertMesh(in, obj, obj.data.(*Mesh), conv_data, conv_data.meshes)
+			err := b.CheckActualType(obj.data, "Mesh")
+			if err != nil {
+				return nil, err
+			}
+			err = b.ConvertMesh(in, obj, obj.data.(*Mesh), conv_data, conv_data.meshes)
+			if err != nil {
+				return nil, err
+			}
 			if len(conv_data.meshes) > old {
 				node.Meshes = make([]int, len(conv_data.meshes)-old)
 				for i := 0; i < len(node.Meshes); i++ {
@@ -317,16 +339,22 @@ func (b *BlenderImporter) ConvertNode(in *Scene, obj *Object, conv_data *Convers
 			}
 			break
 		case Type_LAMP:
-			b.CheckActualType(obj.data, "Lamp")
+			err := b.CheckActualType(obj.data, "Lamp")
+			if err != nil {
+				return nil, err
+			}
 			mesh := b.ConvertLight(in, obj, obj.data.(*Lamp), conv_data)
-			if mesh {
+			if mesh != nil {
 				conv_data.lights = append(conv_data.lights, mesh)
 			}
 			break
 		case Type_CAMERA:
-			b.CheckActualType(obj.data, "Camera")
+			err := b.CheckActualType(obj.data, "Camera")
+			if err != nil {
+				return nil, err
+			}
 			mesh := b.ConvertCamera(in, obj, obj.data.(*Camera), conv_data)
-			if mesh {
+			if mesh != nil {
 				conv_data.cameras = append(conv_data.cameras, mesh)
 			}
 			break
@@ -373,15 +401,19 @@ func (b *BlenderImporter) ConvertNode(in *Scene, obj *Object, conv_data *Convers
 		nd := 0
 		for i := 0; i < children.Size(); i++ {
 			nobj := children.Index(i)
-			node.Children[nd] = b.ConvertNode(in, nobj, conv_data, node.Transformation.MulAiMatrix4x4(parentTransform))
+			var err error
+			node.Children[nd], err = b.ConvertNode(in, nobj, conv_data, node.Transformation.MulAiMatrix4x4(parentTransform))
+			if err != nil {
+				return nil, err
+			}
 			node.Children[nd].Parent = node
 			nd++
 		}
 	}
 
 	// apply modifiers
-	err:=b.modifier_cache.ApplyModifiers(*node, conv_data, in, obj)
-	return node,err
+	err := b.modifier_cache.ApplyModifiers(*node, conv_data, in, obj)
+	return node, err
 }
 
 func (b *BlenderImporter) ParseBlendFile(file *FileDatabase) error {
@@ -562,7 +594,10 @@ func (b *BlenderImporter) ResolveTexture(out *core.AiMaterial, mat *Material, te
 		if rtex.ima == nil {
 			return errors.New("A texture claims to be an Image, but no image reference is given")
 		}
-		b.ResolveImage(out, mat, tex, rtex.ima, conv_data)
+		err := b.ResolveImage(out, mat, tex, rtex.ima, conv_data)
+		if err != nil {
+			return err
+		}
 		break
 
 	default:
@@ -735,10 +770,12 @@ func (b *BlenderImporter) AddBlendParams(result *core.AiMaterial, source *Materi
 	result.AddFloat32PropertyVar(core.NewAiMaterialProperty("$mat.blend.mirror.glossAnisotropic", 0, 0), mirrorGlossAnisotropic)
 }
 
-func (b *BlenderImporter) BuildMaterials(conv_data *ConversionData) {
+func (b *BlenderImporter) BuildMaterials(conv_data *ConversionData) error {
 
-	b.BuildDefaultMaterial(conv_data)
-
+	err := b.BuildDefaultMaterial(conv_data)
+	if err != nil {
+		return err
+	}
 	for i := 0; i < conv_data.materials_raw.Size(); i++ {
 		mat := conv_data.materials_raw.Index(i)
 		// reset per material global counters
@@ -794,24 +831,28 @@ func (b *BlenderImporter) BuildMaterials(conv_data *ConversionData) {
 				continue
 			}
 
-			b.ResolveTexture(mout, mat, mat.mtex[i], conv_data)
+			err = b.ResolveTexture(&mout, mat, mat.mtex[i], conv_data)
+			if err != nil {
+				return err
+			}
 		}
 
-		b.AddBlendParams(mout, mat)
-	}
-}
-
-// ------------------------------------------------------------------------------------------------
-func (b *BlenderImporter) CheckActualType(dt *ElemBase, check string) error {
-	if dt.dna_type != check {
-		return fmt.Errorf("Expected object at%v  to be of type `%v`, but it claims to be a `%v`instead", dt, check,
-			dt.dna_type)
+		b.AddBlendParams(&mout, mat)
 	}
 	return nil
 }
 
 // ------------------------------------------------------------------------------------------------
-func (b *BlenderImporter) NotSupportedObjectType(obj *Object, Type *uint8) {
+func (b *BlenderImporter) CheckActualType(dt IElemBase, check string) error {
+	if dt.GetDnaType() != check {
+		return fmt.Errorf("Expected object at%v  to be of type `%v`, but it claims to be a `%v`instead", dt, check,
+			dt.GetDnaType())
+	}
+	return nil
+}
+
+// ------------------------------------------------------------------------------------------------
+func (b *BlenderImporter) NotSupportedObjectType(obj *Object, Type string) {
 	logger.WarnF("Object `%v` - type is unsupported: `%V`, skipping", obj.id.name, Type)
 }
 
@@ -1100,8 +1141,8 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 			out := temp[mat_num_to_mesh_idx[int(mesh.mface[i].mat_nr)]]
 			f := core.NewAiFace()
 			out.Faces = append(out.Faces, f)
-			vo1:=common.NewAiVector3D()
-			out.TextureCoords[0]=append(out.TextureCoords[0],vo1)
+			vo1 := common.NewAiVector3D()
+			out.TextureCoords[0] = append(out.TextureCoords[0], vo1)
 			for j := 0; j < len(f.Indices); j++ {
 				vo1.X = v.uv[j][0]
 				vo1.Y = v.uv[j][1]
@@ -1114,11 +1155,11 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 
 			f := core.NewAiFace()
 			out.Faces = append(out.Faces, f)
-			itMatTexUvMapping ,ok:= matTexUvMappings[uint32(v.mat_nr)]
+			itMatTexUvMapping, ok := matTexUvMappings[uint32(v.mat_nr)]
 			if !ok {
 				// old behavior
-				vo1:=common.NewAiVector3D()
-				out.TextureCoords[0]=append(out.TextureCoords[0],vo1)
+				vo1 := common.NewAiVector3D()
+				out.TextureCoords[0] = append(out.TextureCoords[0], vo1)
 				for j := 0; j < len(f.Indices); j++ {
 					uv := mesh.mloopuv[int(v.loopstart)+j]
 					vo1.X = uv.uv[0]
@@ -1127,19 +1168,19 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 			} else {
 				// create textureCoords for every mapped tex
 				for m := 0; m < len(itMatTexUvMapping); m++ {
-					tm := itMatTexUvMapping[uint32(m)]
-					vo := &out.TextureCoords[m][len(out.Vertices)]
+					tm := matTexUvMappings[uint32(m)]
+					vo1 := common.NewAiVector3D()
+					out.TextureCoords[0] = append(out.TextureCoords[0], vo1)
 					j := 0
 					for ; j < len(f.Indices); j++ {
-						uv := tm[int(v.loopstart)+j]
-						vo.X = uv.uv[0]
-						vo.Y = uv.uv[1]
-						vo++
+						uv := tm[uint32(int(v.loopstart)+j)]
+						vo1.X = uv.uv[0]
+						vo1.Y = uv.uv[1]
 					}
 					// only update written mNumVertices in last loop
 					// TODO why must the numVertices be incremented here?
-					if m == itMatTexUvMapping.second.size()-1 {
-						out.NumVertices += j
+					if m == len(itMatTexUvMapping)-1 {
+						//TODO out.NumVertices += j
 					}
 				}
 			}
@@ -1160,8 +1201,6 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 			}
 
 			temp[it].TextureCoords[0] = make([]*common.AiVector3D, len(temp[it].Vertices))
-			temp[it].NumVertices = 0
-			temp[it].NumFaces = temp[it].NumVertices
 		}
 
 		for i := 0; i < int(mesh.totface); i++ {
@@ -1170,8 +1209,8 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 			out := temp[mat_num_to_mesh_idx[int(mesh.mface[i].mat_nr)]]
 			f := core.NewAiFace()
 			out.Faces = append(out.Faces, f)
-			vo1:=common.NewAiVector3D()
-			out.TextureCoords[0]=append(out.TextureCoords[0],vo1)
+			vo1 := common.NewAiVector3D()
+			out.TextureCoords[0] = append(out.TextureCoords[0], vo1)
 			for j := 0; j < len(f.Indices); j++ {
 				vo1.X = float32(v.uv[j][0])
 				vo1.Y = float32(v.uv[j][1])
@@ -1192,9 +1231,7 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 				return errors.New("invalid ")
 			}
 
-			temp[it].Colors[0] = common.NewAiColor4D[temp[it].NumVertices]
-			temp[it].NumVertices = 0
-			temp[it].NumFaces = temp[it].NumVertices
+			temp[it].Colors[0] = make([]*common.AiColor4D, len(temp[it].Vertices))
 		}
 
 		for i := 0; i < int(mesh.totface); i++ {
@@ -1202,8 +1239,8 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 			out := temp[mat_num_to_mesh_idx[int(mesh.mface[i].mat_nr)]]
 			f := core.NewAiFace()
 			out.Faces = append(out.Faces, f)
-			vo:=common.NewAiColor4D0()
-			out.Colors[0]=append(out.Colors[0],vo)
+			vo := common.NewAiColor4D0()
+			out.Colors[0] = append(out.Colors[0], vo)
 			for n := 0; n < len(f.Indices); n++ {
 				col := mesh.mcol[(i<<2)+n]
 				vo.R = float32(col.r)
@@ -1220,8 +1257,8 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 			out := temp[mat_num_to_mesh_idx[int(v.mat_nr)]]
 			f := core.NewAiFace()
 			out.Faces = append(out.Faces, f)
-			vo:=common.NewAiColor4D0()
-			out.Colors[0]=append(out.Colors[0],vo)
+			vo := common.NewAiColor4D0()
+			out.Colors[0] = append(out.Colors[0], vo)
 			scaleZeroToOne := float32(1. / 255.)
 			for j := 0; j < len(f.Indices); j++ {
 				col := mesh.mloopcol[int(v.loopstart)+j]

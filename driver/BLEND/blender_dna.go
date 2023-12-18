@@ -202,13 +202,12 @@ func (d *DNAParser) Parse() error {
 
 				f.size *= f.array_sizes[0] * f.array_sizes[1]
 			}
-			if f.name == "Scene" {
-				f.name += ""
-			}
 			// maintain separate indexes
 			st.indices[f.name] = int32(len(st.fields)) - 1
 			offset += f.size
 			fields++
+
+			fmt.Printf("f.name:%v offset:%v\n", f.name, offset)
 		}
 		st.size = offset
 
@@ -231,12 +230,13 @@ func ExtractArraySize(s string) (array_sizes [2]int32) {
 	array_sizes[1] = 1
 	array_sizes[0] = array_sizes[1]
 	index := strings.Index(s, "[")
-	if index+1 == len(s) {
+	if index == -1 {
 		return
 	}
 	array_sizes[0] = common.Strtoul10(s[index+1:])
+	s = s[index+1:]
 	index = strings.Index(s, "[")
-	if index+1 == len(s) {
+	if index == -1 {
 		return
 	}
 	array_sizes[1] = common.Strtoul10(s[index+1:])
@@ -348,6 +348,10 @@ func (s *Structure) IndexByString(ss string) *Field {
 
 func (s *Structure) ReadField(out any, name string, db *FileDatabase) error {
 	f := s.IndexByString(name)
+	if f == nil {
+		logger.WarnF("Structure :%v not found filed name:%v", s.name, name)
+		return nil
+	}
 	oldPos := db.GetCurPos()
 	defer db.SetCurPos(oldPos)
 	err := db.Discard(int(f.offset))
@@ -366,9 +370,11 @@ func (s *Structure) ReadField(out any, name string, db *FileDatabase) error {
 	return nil
 }
 
+var emptyElem = (IElemBase)(&ElemBase{})
+
 // --------------------------------------------------------------------------------
 func (s *Structure) ReadFieldPtr(name string, db *FileDatabase, non_recursives ...bool) (out any, err error) {
-	return s.readFieldPtr((IElemBase)(nil), name, db, non_recursives...)
+	return s.readFieldPtr(emptyElem, name, db, non_recursives...)
 }
 func (s *Structure) ReadFieldFileOffsetPtr(name string, db *FileDatabase, non_recursives ...bool) (out any, err error) {
 	return s.readFieldPtr((*FileOffset)(nil), name, db, non_recursives...)
@@ -379,6 +385,11 @@ func (s *Structure) readFieldPtr(in any, name string, db *FileDatabase, non_recu
 		non_recursive = non_recursives[0]
 	}
 	old := db.GetCurPos()
+	if !non_recursive {
+		// and recover the previous stream position
+		defer db.SetCurPos(old)
+	}
+
 	var ptrval Pointer
 
 	f := s.IndexByString(name)
@@ -392,7 +403,7 @@ func (s *Structure) readFieldPtr(in any, name string, db *FileDatabase, non_recu
 	if err != nil {
 		return out, err
 	}
-	err = s.Convert(ptrval, db)
+	err = s.Convert(&ptrval, db)
 	if err != nil {
 		return out, err
 	}
@@ -400,18 +411,17 @@ func (s *Structure) readFieldPtr(in any, name string, db *FileDatabase, non_recu
 	// because the `Pointer` argument triggers a special implementation.
 
 	// resolve the pointer and load the corresponding structure
-	out, err = s.ResolvePointer(in, &ptrval, db, f, non_recursive)
-
-	if !non_recursive {
-		// and recover the previous stream position
-		db.SetCurPos(old)
+	out, err = s.ResolvePointer(in, &ptrval, db, f, non_recursives...)
+	if err != nil {
+		return nil, err
 	}
+
 	db.stats().fields_read++
 	return out, nil
 }
 
 func (s *Structure) ReadFieldPtrArray(count int, name string, db *FileDatabase) (out []any, err error) {
-	return s.readFieldPtrArray((IElemBase)(nil), count, name, db)
+	return s.readFieldPtrArray(emptyElem, count, name, db)
 }
 
 func (s *Structure) ReadFieldFileOffsetPtrArray(count int, name string, db *FileDatabase) (out []any, err error) {
@@ -519,7 +529,7 @@ func (s *Structure) readFieldPtrArray(in any, count int, name string, db *FileDa
 func (st *Structure) ResolvePointer(in any, ptrval *Pointer, db *FileDatabase, f *Field, non_recursiveds ...bool) (out any, err error) {
 	switch v := in.(type) {
 	case IElemBase:
-		return st.ResolvePointerObject(v, ptrval, db, f)
+		return st.ResolvePointerObject(v, ptrval, db, f, non_recursiveds...)
 	case *FileOffset:
 		return v, st.ResolvePointerFileOffset(v, ptrval, db, f)
 	default:
@@ -598,15 +608,19 @@ func (st *Structure) resolvePointer(out IElemBase, ptrval *Pointer, db *FileData
 	return false, nil
 }
 
+var (
+	ErrorPtrZero = errors.New("error pt zero")
+)
+
 // --------------------------------------------------------------------------------
 func (st *Structure) ResolvePointerObject(in IElemBase,
 	ptrval *Pointer,
 	db *FileDatabase,
-	f *Field) (out IElemBase, err error) {
+	f *Field, non_recursiveds ...bool) (out IElemBase, err error) {
 	// Special case when the data type needs to be determined at runtime.
 	// Less secure than in the `strongly-typed` case.
 	if ptrval.val == 0 {
-		return in, err
+		return in, ErrorPtrZero
 	}
 
 	// find the file block the pointer is pointing to
@@ -623,7 +637,6 @@ func (st *Structure) ResolvePointerObject(in IElemBase,
 		return out, nil
 	}
 	pold := db.GetCurPos()
-	defer db.SetCurPos(pold)
 	// seek to this location, but save the previous stream pointer.
 	db.SetCurPos(block.start + int(ptrval.val-block.address.val))
 	// FIXME: basically, this could cause problems with 64 bit pointers on 32 bit systems.
@@ -644,22 +657,28 @@ func (st *Structure) ResolvePointerObject(in IElemBase,
 	// cache the object immediately to prevent infinite recursion in a
 	// circular list with a single element (i.e. a self-referencing element).
 	db.cache().set(s, ptrval, oc)
-	// and do the actual conversion
-	err = oc.Convert(db, s)
-	if err != nil {
-		return oc, err
-	}
-	// store a pointer to the name string of the actual type
-	// in the object itself. This allows the conversion code
-	// to perform additional type checking.
+	if len(non_recursiveds) == 0 || len(non_recursiveds) > 0 && !non_recursiveds[0] {
+		// and do the actual conversion
+		err = oc.Convert(db, s)
+		if err != nil {
+			return oc, err
+		}
+		// store a pointer to the name string of the actual type
+		// in the object itself. This allows the conversion code
+		// to perform additional type checking.
 
-	out.SetDnaType(s.name)
+		oc.SetDnaType(s.name)
+		db.SetCurPos(pold)
+	} else {
+
+	}
 	db.stats().pointers_resolved++
 	return oc, err
 }
 
-func (s *Structure) ReadFieldArray(out []any, name string, db *FileDatabase) error {
-	f := s.IndexByString(name)
+func (st *Structure) ReadFieldArray(out []any, name string, db *FileDatabase) error {
+	f := st.IndexByString(name)
+	s := db.dna.IndexByString(f.Type)
 	oldPos := db.GetCurPos()
 	defer db.SetCurPos(oldPos)
 	err := db.Discard(int(f.offset))
@@ -668,7 +687,7 @@ func (s *Structure) ReadFieldArray(out []any, name string, db *FileDatabase) err
 	}
 	// is the input actually an array?
 	if f.flags&FieldFlag_Array == 0 {
-		return fmt.Errorf("field `%v ` of structure `%v ` ought to be an array of size %v", name, s.name, len(out))
+		return fmt.Errorf("field `%v ` of structure `%v ` ought to be an array of size %v", name, st.name, len(out))
 	}
 	// find the structure definition pertaining to this field
 	i := 0
@@ -686,6 +705,7 @@ func (s *Structure) ReadFieldArray(out []any, name string, db *FileDatabase) err
 func (s *Structure) ReadFieldArray2(out [][]any, name string, db *FileDatabase) error {
 	M, N := len(out), len(out[0])
 	f := s.IndexByString(name)
+	ss := db.dna.IndexByString(f.Type)
 	oldPos := db.GetCurPos()
 	defer db.SetCurPos(oldPos)
 	err := db.Discard(int(f.offset))
@@ -701,7 +721,7 @@ func (s *Structure) ReadFieldArray2(out [][]any, name string, db *FileDatabase) 
 	for ; i < math.Min(float64(f.array_sizes[0]), float64(M)); i++ {
 		j := 0.0
 		for ; j < math.Min(float64(f.array_sizes[1]), float64(N)); j++ {
-			err := s.Convert(out[int(i)][int(j)], db)
+			err := ss.Convert(out[int(i)][int(j)], db)
 			if err != nil {
 				return err
 			}
@@ -789,6 +809,17 @@ func (s *Structure) Convert(out any, db *FileDatabase) error {
 		return s.ConvertFloat32(v, db)
 	case *float64:
 		return s.ConvertFloat64(v, db)
+	default:
+		fa := db.dna.GetBlobToStructureConverter(s, db)
+		if fa != nil {
+			oc := fa()
+			err := oc.Convert(db, s)
+			if err != nil {
+				return err
+			}
+			reflect.ValueOf(out).Elem().Set(reflect.ValueOf(oc).Elem())
+			return nil
+		}
 	}
 	return errors.New("not impl")
 }

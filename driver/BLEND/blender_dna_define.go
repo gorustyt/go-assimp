@@ -36,7 +36,7 @@ type FileDatabase struct {
 
 func NewFileDatabase(reader reader.StreamReader) *FileDatabase {
 	f := &FileDatabase{_stats: &Statistics{}, StreamReader: reader}
-
+	f._cache = NewObjectCache(f)
 	return f
 }
 
@@ -147,7 +147,7 @@ type Structure struct {
 }
 
 func NewStructure() *Structure {
-	return &Structure{indices: map[string]int32{}}
+	return &Structure{indices: map[string]int32{}, cache_idx: -1}
 }
 
 // -------------------------------------------------------------------------------

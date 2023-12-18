@@ -22,7 +22,7 @@ func NewVertex() *Vertex {
 /** Extract a particular vertex from a mesh and interleave all components */
 
 func (v *Vertex) VertexFromAiMesh(msh *AiMesh, idx int) {
-	common.AiAssert(idx < msh.NumVertices)
+	common.AiAssert(idx < len(msh.Vertices))
 	v.position = msh.Vertices[idx]
 
 	if msh.HasNormals() {

@@ -216,20 +216,20 @@ type AiMesh struct {
 // !        scene flags are set, this will always be true
 // ! @return true, if positions are stored, false if not.
 func (ai *AiMesh) HasPositions() bool {
-	return ai.Vertices != nil && ai.NumVertices > 0
+	return ai.Vertices != nil && len(ai.Vertices) > 0
 }
 
 // ! @brief Check whether the mesh contains faces. If no special scene flags
 // !        are set this should always return true
 // ! @return true, if faces are stored, false if not.
 func (ai *AiMesh) HasFaces() bool {
-	return ai.Faces != nil && ai.NumFaces > 0
+	return ai.Faces != nil && len(ai.Faces) > 0
 }
 
 // ! @brief Check whether the mesh contains normal vectors
 // ! @return true, if normals are stored, false if not.
 func (ai *AiMesh) HasNormals() bool {
-	return ai.Normals != nil && ai.NumVertices > 0
+	return ai.Normals != nil && len(ai.Normals) > 0
 }
 
 // ! @brief Check whether the mesh contains tangent and bitangent vectors.
@@ -239,7 +239,7 @@ func (ai *AiMesh) HasNormals() bool {
 // ! implies that the second is there, too.
 // ! @return true, if tangents and bi-tangents are stored, false if not.
 func (ai *AiMesh) HasTangentsAndBitangents() bool {
-	return ai.Tangents != nil && ai.Bitangents != nil && ai.NumVertices > 0
+	return ai.Tangents != nil && ai.Bitangents != nil && len(ai.Vertices) > 0
 }
 
 // ! @brief Check whether the mesh contains a vertex color set
@@ -249,7 +249,7 @@ func (ai *AiMesh) HasVertexColors(index int) bool {
 	if index >= AI_MAX_NUMBER_OF_COLOR_SETS {
 		return false
 	}
-	return ai.Colors[index] != nil && ai.NumVertices > 0
+	return ai.Colors[index] != nil && len(ai.Vertices) > 0
 }
 
 // ! @brief Check whether the mesh contains a texture coordinate set
@@ -259,7 +259,7 @@ func (ai *AiMesh) HasTextureCoords(index int) bool {
 	if index >= AI_MAX_NUMBER_OF_TEXTURECOORDS {
 		return false
 	}
-	return (ai.TextureCoords[index] != nil && ai.NumVertices > 0)
+	return (ai.TextureCoords[index] != nil && len(ai.Vertices) > 0)
 }
 
 // ! @brief Get the number of UV channels the mesh contains.
@@ -286,7 +286,7 @@ func (ai *AiMesh) GetNumColorChannels() int {
 // ! @brief Check whether the mesh contains bones.
 // ! @return true, if bones are stored.
 func (ai *AiMesh) HasBones() bool {
-	return ai.Bones != nil && ai.NumBones > 0
+	return ai.Bones != nil && len(ai.Bones) > 0
 }
 
 // ! @brief  Check whether the mesh contains a texture coordinate set name

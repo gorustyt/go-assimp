@@ -206,8 +206,6 @@ func (d *DNAParser) Parse() error {
 			st.indices[f.name] = int32(len(st.fields)) - 1
 			offset += f.size
 			fields++
-
-			fmt.Printf("f.name:%v offset:%v\n", f.name, offset)
 		}
 		st.size = offset
 
@@ -370,14 +368,19 @@ func (s *Structure) ReadField(out any, name string, db *FileDatabase) error {
 	return nil
 }
 
+var emptyElemSlice = []IElemBase{emptyElem}
 var emptyElem = (IElemBase)(&ElemBase{})
+var emptyFileSet = &FileOffset{}
 
 // --------------------------------------------------------------------------------
+func (s *Structure) ReadFieldPtrPtr(name string, db *FileDatabase, non_recursives ...bool) (out any, err error) {
+	return s.readFieldPtr(emptyElemSlice, name, db, non_recursives...)
+}
 func (s *Structure) ReadFieldPtr(name string, db *FileDatabase, non_recursives ...bool) (out any, err error) {
 	return s.readFieldPtr(emptyElem, name, db, non_recursives...)
 }
 func (s *Structure) ReadFieldFileOffsetPtr(name string, db *FileDatabase, non_recursives ...bool) (out any, err error) {
-	return s.readFieldPtr((*FileOffset)(nil), name, db, non_recursives...)
+	return s.readFieldPtr(emptyFileSet, name, db, non_recursives...)
 }
 func (s *Structure) readFieldPtr(in any, name string, db *FileDatabase, non_recursives ...bool) (out any, err error) {
 	non_recursive := false
@@ -393,7 +396,10 @@ func (s *Structure) readFieldPtr(in any, name string, db *FileDatabase, non_recu
 	var ptrval Pointer
 
 	f := s.IndexByString(name)
-
+	if f == nil {
+		logger.WarnF("readFieldPtr Structure:%v not found name :%v", s.name, name)
+		return
+	}
 	// sanity check, should never happen if the genblenddna script is right
 	if (f.flags & FieldFlag_Pointer) == 0 {
 		return out, fmt.Errorf("field `%v` of structure `%v` ought to be a pointer", name, s.name)
@@ -436,6 +442,9 @@ func (s *Structure) ReadFieldPtrSlice(name string, db *FileDatabase) (out []any,
 
 	var ptrval Pointer
 	f := s.IndexByString(name)
+	if f == nil {
+		return out, nil
+	}
 	err = db.Discard(int(f.offset))
 	if err != nil {
 		return out, err
@@ -463,7 +472,7 @@ func (s *Structure) ReadFieldPtrSlice(name string, db *FileDatabase) (out []any,
 		for i := int32(0); i < block.num; i++ {
 			// allocate the object hull
 			// continue conversion after allocating the required storage
-			fa := db.dna.GetBlobToStructureConverter(s, db)
+			fa := db.dna.GetBlobToStructureConverter(ss, db)
 			if fa == nil {
 				// this might happen if DNA::RegisterConverters hasn't been called so far
 				// or if the target type is not contained in `our` DNA.
@@ -528,6 +537,8 @@ func (s *Structure) readFieldPtrArray(in any, count int, name string, db *FileDa
 
 func (st *Structure) ResolvePointer(in any, ptrval *Pointer, db *FileDatabase, f *Field, non_recursiveds ...bool) (out any, err error) {
 	switch v := in.(type) {
+	case []IElemBase:
+		return st.ResolvePointerSlice(v, ptrval, db, f)
 	case IElemBase:
 		return st.ResolvePointerObject(v, ptrval, db, f, non_recursiveds...)
 	case *FileOffset:
@@ -537,6 +548,49 @@ func (st *Structure) ResolvePointer(in any, ptrval *Pointer, db *FileDatabase, f
 	}
 }
 
+func (st *Structure) ResolvePointerSlice(in []IElemBase, ptrval *Pointer, db *FileDatabase, f *Field) (out any, err error) {
+	// This is a function overload, not a template specialization. According to
+	// the partial ordering rules, it should be selected by the compiler
+	// for array-of-pointer inputs, i.e. Object::mats.
+
+	if ptrval.val == 0 {
+		return out, ErrorPtrZero
+	}
+
+	// find the file block the pointer is pointing to
+	block, err := st.LocateFileBlockForAddress(ptrval, db)
+	if err != nil {
+		return nil, err
+	}
+	tmp := 4
+	if db.i64bit {
+		tmp = 8
+	}
+	num := int(block.size) / (tmp)
+
+	// keep the old stream position
+	pold := db.GetCurPos()
+	db.SetCurPos(block.start + int(ptrval.val-block.address.val))
+
+	var res []any
+	// allocate raw storage for the array
+	for i := 0; i < num; i++ {
+		var val Pointer
+		err = st.Convert(&val, db)
+		if err != nil {
+			return res, err
+		}
+		// and resolve the pointees
+		out, err = st.ResolvePointer(in[i], &val, db, f)
+		if err != nil {
+			return res, err
+		}
+		res = append(res, out)
+	}
+
+	db.SetCurPos(pold)
+	return res, nil
+}
 func (st *Structure) ResolvePointerFileOffset(out *FileOffset, ptrval *Pointer, db *FileDatabase,
 	f *Field) error {
 	// Currently used exclusively by PackedFile::data to represent
@@ -678,6 +732,10 @@ func (st *Structure) ResolvePointerObject(in IElemBase,
 
 func (st *Structure) ReadFieldArray(out []any, name string, db *FileDatabase) error {
 	f := st.IndexByString(name)
+	if f == nil {
+		logger.WarnF("Structure:%v ReadFieldArray not found name:%v", st.name, name)
+		return nil
+	}
 	s := db.dna.IndexByString(f.Type)
 	oldPos := db.GetCurPos()
 	defer db.SetCurPos(oldPos)
@@ -765,7 +823,7 @@ func (s *Structure) ReadCustomDataPtr(cdtype int, name string, db *FileDatabase)
 		}
 		db.SetCurPos(block.start + int(ptrval.val-block.address.val))
 		// read block.num instances of given type to out
-		out, err = readCustomData(cdtype, int(block.num), db, s)
+		out, err = readCustomData(cdtype, int(block.num), db)
 		if err != nil {
 			return out, err
 		}

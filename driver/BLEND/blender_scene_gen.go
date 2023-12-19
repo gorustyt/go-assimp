@@ -2,6 +2,7 @@ package BLEND
 
 import (
 	"assimp/common"
+	"assimp/common/logger"
 	"errors"
 )
 
@@ -15,6 +16,7 @@ func IsPtrError(err error, fn func()) error {
 	}
 	return nil
 }
+
 func (dest *Object) Convert(db *FileDatabase, s *Structure) (err error) {
 
 	err = s.ReadField(&dest.id, "id", db)
@@ -726,7 +728,14 @@ func (dest *MTFace) Convert(db *FileDatabase, s *Structure) (err error) {
 // --------------------------------------------------------------------------------
 func SliceToT[T any](out []any) (value []T) {
 	for _, v := range out {
-		value = append(value, v.(T))
+		va, ok := v.(T)
+		if ok {
+			value = append(value, va)
+		} else {
+			var tmp T
+			value = append(value, tmp)
+		}
+
 	}
 	return value
 }
@@ -1313,28 +1322,37 @@ func (dest *Mesh) Convert(db *FileDatabase, s *Structure) (err error) {
 		return err
 	}
 	dest.mcol = SliceToT[*MCol](value1)
-	value1, err = s.ReadFieldPtrSlice("**mat", db)
+	value2, err := s.ReadFieldPtrPtr("**mat", db)
+	if err := IsPtrError(err, func() {
+		tmp := value2.([]any)
+		for _, v := range tmp {
+			dest.mat = append(dest.mat, v.(*Material))
+		}
+	}); err != nil {
+		return err
+	}
+	dest.vdata = &CustomData{}
+	err = s.ReadField(dest.vdata, "vdata", db)
 	if err != nil {
 		return err
 	}
-	dest.mat = SliceToT[*Material](value1)
-	err = s.ReadField(&dest.vdata, "vdata", db)
+	dest.edata = &CustomData{}
+	err = s.ReadField(dest.edata, "edata", db)
 	if err != nil {
 		return err
 	}
-	err = s.ReadField(&dest.edata, "edata", db)
+	dest.fdata = &CustomData{}
+	err = s.ReadField(dest.fdata, "fdata", db)
 	if err != nil {
 		return err
 	}
-	err = s.ReadField(&dest.fdata, "fdata", db)
+	dest.pdata = &CustomData{}
+	err = s.ReadField(dest.pdata, "pdata", db)
 	if err != nil {
 		return err
 	}
-	err = s.ReadField(&dest.pdata, "pdata", db)
-	if err != nil {
-		return err
-	}
-	err = s.ReadField(&dest.ldata, "ldata", db)
+	dest.ldata = &CustomData{}
+	err = s.ReadField(dest.ldata, "ldata", db)
 	if err != nil {
 		return err
 	}
@@ -1662,7 +1680,10 @@ func (dest *Scene) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	dest.master_collection = value.(*Collection)
+	if value != nil {
+		dest.master_collection = value.(*Collection)
+	}
+
 	err = s.ReadField(&dest.base, "base", db)
 	if err != nil {
 		return err
@@ -1932,11 +1953,11 @@ func (dest *CustomData) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	err = s.ReadFieldArray(SliceToAny(dest.layers), "*layers", db)
+	out, err := s.ReadFieldPtrSlice("*layers", db)
 	if err != nil {
 		return err
 	}
-
+	dest.layers = SliceToT[*CustomDataLayer](out)
 	return db.Discard(int(s.size))
 }
 
@@ -1944,10 +1965,12 @@ func (dest *CustomData) Convert(db *FileDatabase, s *Structure) (err error) {
 
 func (dest *CustomDataLayer) Convert(
 	db *FileDatabase, s *Structure) (err error) {
-	err = s.ReadField(&dest.Type, "type", db)
+	var tmp1 int32
+	err = s.ReadField(&tmp1, "type", db)
 	if err != nil {
 		return err
 	}
+	dest.Type = CustomDataType(tmp1)
 	err = s.ReadField(&dest.offset, "offset", db)
 	if err != nil {
 		return err
@@ -1987,7 +2010,7 @@ func (dest *CustomDataLayer) Convert(
 		return err
 	}
 	if len(datas) > 0 {
-		panic("not equal 0!")
+		logger.Warn("CustomDataLayer find cnt:%v, default get index 0")
 		dest.data = datas[0]
 	}
 	return db.Discard(int(s.size))

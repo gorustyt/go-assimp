@@ -1,0 +1,4 @@
+syntax = "proto3";
+option go_package = "common/pb_msg";
+package pb_msg;
+

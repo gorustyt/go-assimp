@@ -1,6 +1,9 @@
 package core
 
-import "assimp/common"
+import (
+	"assimp/common"
+	"assimp/common/pb_msg"
+)
 
 // -------------------------------------------------------------------------------
 /**
@@ -17,7 +20,7 @@ type AiScene struct {
 	 * want to reject all scenes with the AI_SCENE_FLAGS_INCOMPLETE
 	 * bit set.
 	 */
-	Flags int
+	Flags uint32
 
 	/** The root node of the hierarchy.
 	 *
@@ -89,6 +92,38 @@ type AiScene struct {
 	Skeletons []*AiSkeleton
 }
 
+func (ai *AiScene) ToPbMsg() *pb_msg.AiScene {
+	r := &pb_msg.AiScene{}
+	r.Flags = ai.Flags
+	r.RootNode = ai.RootNode.ToPbMsg()
+	for _, v := range ai.Meshes {
+		r.Meshes = append(r.Meshes, v.ToPbMsg())
+	}
+	for _, v := range ai.Materials {
+		r.Materials = append(r.Materials, v.ToPbMsg())
+	}
+	for _, v := range ai.Animations {
+		r.Animations = append(r.Animations, v.ToPbMsg())
+	}
+	for _, v := range ai.Textures {
+		r.Textures = append(r.Textures, v.ToPbMsg())
+	}
+	for _, v := range ai.Lights {
+		r.Lights = append(r.Lights, v.ToPbMsg())
+	}
+	for _, v := range ai.Cameras {
+		r.Cameras = append(r.Cameras, v.ToPbMsg())
+	}
+	for _, v := range ai.MetaData {
+		r.MetaData = append(r.MetaData, v.ToPbMsg())
+	}
+	r.Name = ai.Name
+	for _, v := range ai.Skeletons {
+		r.Skeletons = append(r.Skeletons, v.ToPbMsg())
+	}
+	return r
+}
+
 // -------------------------------------------------------------------------------
 /**
  * A node in the imported hierarchy.
@@ -132,7 +167,7 @@ type AiNode struct {
 	/** The meshes of this node. Each entry is an index into the
 	 * mesh list of the #aiScene.
 	 */
-	Meshes []int
+	Meshes []int32
 	/** Metadata associated with this node or nullptr if there is no metadata.
 	 *  Whether any metadata is generated depends on the source file format. See the
 	 * @link importer_notes @endlink page for more information on every source file
@@ -141,8 +176,29 @@ type AiNode struct {
 	MetaData []*AiMetadata
 }
 
+func (node *AiNode) ToPbMsg() *pb_msg.AiNode {
+	r := pb_msg.AiNode{}
+	r.Name = node.Name
+	/** The transformation relative to the node's parent. */
+	r.Transformation = node.Transformation.ToPbMsg()
+	/** Parent node. nullptr if this node is the root node. */
+	r.Parent = node.Parent.ToPbMsg()
+	/** The child nodes of this node. nullptr if mNumChildren is 0. */
+	for _, v := range node.Children {
+		r.Children = append(r.Children, v.ToPbMsg())
+	}
+	/** The meshes of this node. Each entry is an index into the
+	 * mesh list of the #aiScene.
+	 */
+	r.Meshes = node.Meshes
+	for _, v := range node.MetaData {
+		r.MetaData = append(r.MetaData, v.ToPbMsg())
+	}
+	return &r
+}
 func NewAiNode(name string) *AiNode {
 	return &AiNode{
-		Name: name,
+		Name:           name,
+		Transformation: &common.AiMatrix4x4{},
 	}
 }

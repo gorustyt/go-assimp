@@ -1,6 +1,9 @@
 package core
 
-import "assimp/common"
+import (
+	"assimp/common"
+	"assimp/common/pb_msg"
+)
 
 type AiAnimBehaviour int
 
@@ -29,34 +32,37 @@ type AiAnimation struct {
 	Name string
 
 	/** Duration of the animation in ticks.  */
-	Duration float32
+	Duration float64
 
 	/** Ticks per second. 0 if not specified in the imported file */
-	TicksPerSecond float32
-
-	/** The number of bone animation channels. Each channel affects
-	 *  a single node. */
-	NumChannels int
-
+	TicksPerSecond float64
 	/** The node animation channels. Each channel affects a single node.
 	 *  The array is mNumChannels in size. */
-	mChannels []*AiNodeAnim
-
-	/** The number of mesh animation channels. Each channel affects
-	 *  a single mesh and defines vertex-based animation. */
-	NumMeshChannels int
+	Channels []*AiNodeAnim
 
 	/** The mesh animation channels. Each channel affects a single mesh.
 	 *  The array is mNumMeshChannels in size. */
 	MeshChannels []*AiMeshAnim
-
-	/** The number of mesh animation channels. Each channel affects
-	 *  a single mesh and defines morphing animation. */
-	NumMorphMeshChannels int
-
 	/** The morph mesh animation channels. Each channel affects a single mesh.
 	 *  The array is mNumMorphMeshChannels in size. */
 	MorphMeshChannels []*AiMeshMorphAnim
+}
+
+func (ai *AiAnimation) ToPbMsg() *pb_msg.AiAnimation {
+	r := &pb_msg.AiAnimation{}
+	r.Name = ai.Name
+	r.Duration = ai.Duration
+	r.TicksPerSecond = ai.TicksPerSecond
+	for _, v := range ai.Channels {
+		r.Channels = append(r.Channels, v.ToPbMsg())
+	}
+	for _, v := range ai.MeshChannels {
+		r.MeshChannels = append(r.MeshChannels, v.ToPbMsg())
+	}
+	for _, v := range ai.MorphMeshChannels {
+		r.MorphMeshChannels = append(r.MorphMeshChannels, v.ToPbMsg())
+	}
+	return r
 }
 
 type AiMeshMorphAnim struct {
@@ -65,27 +71,37 @@ type AiMeshMorphAnim struct {
 	 *  the name can basically serve as wildcard to select a group
 	 *  of meshes with similar animation setup)*/
 	Name string
-
-	/** Size of the #mKeys array. Must be 1, at least. */
-	NumKeys int
-
 	/** Key frames of the animation. May not be nullptr. */
-	mKeys []*AiMeshMorphKey
+	Keys []*AiMeshMorphKey
+}
+
+func (ai *AiMeshMorphAnim) ToPbMsg() *pb_msg.AiMeshMorphAnim {
+	r := &pb_msg.AiMeshMorphAnim{}
+	r.Name = ai.Name
+	for _, v := range ai.Keys {
+		r.Keys = append(r.Keys, v.ToPbMsg())
+	}
+	return r
 }
 
 type AiMeshMorphKey struct {
 	/** The time of this key */
-	Time float32
+	Time float64
 
 	/** The values and weights at the time of this key
 	 *   - mValues: index of attachment mesh to apply weight at the same position in mWeights
 	 *   - mWeights: weight to apply to the blend shape index at the same position in mValues
 	 */
-	Values  []int
-	Weights []float32
+	Values  []uint32
+	Weights []float64
+}
 
-	/** The number of values and weights */
-	NumValuesAndWeights int
+func (ai *AiMeshMorphKey) ToPbMsg() *pb_msg.AiMeshMorphKey {
+	r := &pb_msg.AiMeshMorphKey{}
+	r.Time = ai.Time
+	r.Values = ai.Values
+	r.Weights = ai.Weights
+	return r
 }
 
 /** Describes the animation of a single node. The name specifies the
@@ -108,19 +124,12 @@ type AiNodeAnim struct {
 	 *  must exist and it must be unique.*/
 	NodeName string
 
-	/** The number of position keys */
-	NumPositionKeys int
-
 	/** The position keys of this animation channel. Positions are
 	 * specified as 3D vector. The array is mNumPositionKeys in size.
 	 *
 	 * If there are position keys, there will also be at least one
 	 * scaling and one rotation key.*/
 	PositionKeys []*AiVectorKey
-
-	/** The number of rotation keys */
-	NumRotationKeys int
-
 	/** The rotation keys of this animation channel. Rotations are
 	 *  given as quaternions,  which are 4D vectors. The array is
 	 *  mNumRotationKeys in size.
@@ -128,10 +137,6 @@ type AiNodeAnim struct {
 	 * If there are rotation keys, there will also be at least one
 	 * scaling and one position key. */
 	RotationKeys []*AiQuatKey
-
-	/** The number of scaling keys */
-	NumScalingKeys int
-
 	/** The scaling keys of this animation channel. Scalings are
 	 *  specified as 3D vector. The array is mNumScalingKeys in size.
 	 *
@@ -154,6 +159,25 @@ type AiNodeAnim struct {
 	PostState AiAnimBehaviour
 }
 
+func (ai *AiNodeAnim) ToPbMsg() *pb_msg.AiNodeAnim {
+	r := &pb_msg.AiNodeAnim{}
+	r.NodeName = ai.NodeName
+
+	for _, v := range ai.PositionKeys {
+		r.PositionKeys = append(r.PositionKeys, v.ToPbMsg())
+	}
+	for _, v := range ai.RotationKeys {
+		r.RotationKeys = append(r.RotationKeys, v.ToPbMsg())
+	}
+
+	for _, v := range ai.ScalingKeys {
+		r.ScalingKeys = append(r.ScalingKeys, v.ToPbMsg())
+	}
+	r.PreState = int32(ai.PreState)
+	r.PostState = int32(ai.PostState)
+	return r
+}
+
 /** Describes vertex-based animations for a single mesh or a group of
  *  meshes. Meshes carry the animation data for each frame in their
  *  aiMesh::mAnimMeshes array. The purpose of aiMeshAnim is to
@@ -167,24 +191,39 @@ type AiMeshAnim struct {
 	 *  of meshes with similar animation setup)*/
 	Name string
 
-	/** Size of the #mKeys array. Must be 1, at least. */
-	NumKeys int
-
 	/** Key frames of the animation. May not be nullptr. */
 	Keys []*AiMeshKey
+}
+
+func (ai *AiMeshAnim) ToPbMsg() *pb_msg.AiMeshAnim {
+	r := &pb_msg.AiMeshAnim{
+		Name: ai.Name,
+	}
+	for _, v := range ai.Keys {
+		r.Keys = append(r.Keys, v.ToPbMsg())
+	}
+	return r
 }
 
 /** Binds a anim-mesh to a specific point in time. */
 
 type AiMeshKey struct {
 	/** The time of this key */
-	Time float32
+	Time float64
 
 	/** Index into the aiMesh::mAnimMeshes array of the
 	 *  mesh corresponding to the #aiMeshAnim hosting this
 	 *  key frame. The referenced anim mesh is evaluated
 	 *  according to the rules defined in the docs for #aiAnimMesh.*/
-	Value int
+	Value uint32
+}
+
+func (ai *AiMeshKey) ToPbMsg() *pb_msg.AiMeshKey {
+	r := &pb_msg.AiMeshKey{
+		Time:  ai.Time,
+		Value: ai.Value,
+	}
+	return r
 }
 
 /** A time-value pair specifying a certain 3D vector for the given time. */
@@ -197,10 +236,20 @@ type AiVectorKey struct {
 	Value common.AiVector3D
 }
 
+func (ai *AiVectorKey) ToPbMsg() *pb_msg.AiVectorKey {
+	r := &pb_msg.AiVectorKey{}
+	return r
+}
+
 type AiQuatKey struct {
 	/** The time of this key */
 	Time float32
 
 	/** The value of this key */
 	Value common.AiQuaternion
+}
+
+func (ai *AiQuatKey) ToPbMsg() *pb_msg.AiQuatKey {
+	r := &pb_msg.AiQuatKey{}
+	return r
 }

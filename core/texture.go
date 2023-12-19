@@ -1,6 +1,6 @@
 package core
 
-const ()
+import "assimp/common/pb_msg"
 
 type AiTexture struct {
 	/** Width of the texture, in pixels
@@ -9,14 +9,14 @@ type AiTexture struct {
 	 * like JPEG. In this case mWidth specifies the size of the
 	 * memory area pcData is pointing to, in bytes.
 	 */
-	Width int
+	Width uint32
 
 	/** Height of the texture, in pixels
 	 *
 	 * If this value is zero, pcData points to an compressed texture
 	 * in any format (e.g. JPEG).
 	 */
-	Height int
+	Height uint32
 
 	/** A hint from the loader to make it easier for applications
 	 *  to determine the type of embedded textures.
@@ -57,6 +57,17 @@ type AiTexture struct {
 	Filename string
 }
 
+func (ai *AiTexture) ToPbMsg() *pb_msg.AiTexture {
+	r := &pb_msg.AiTexture{}
+	r.Width = ai.Width
+	r.Height = ai.Height
+	r.AchFormatHint = ai.AchFormatHint
+	for _, v := range ai.PcData {
+		r.PcData = append(r.PcData, v.ToPbMsg())
+	}
+	r.Filename = ai.Filename
+	return r
+}
 func NewAiTexture() *AiTexture {
 	return &AiTexture{
 		AchFormatHint: make([]byte, HINTMAXTEXTURELEN),
@@ -65,4 +76,13 @@ func NewAiTexture() *AiTexture {
 
 type AiTexel struct {
 	B, G, R, A uint8
+}
+
+func (ai *AiTexel) ToPbMsg() *pb_msg.AiTexel {
+	return &pb_msg.AiTexel{
+		B: uint32(ai.B),
+		G: uint32(ai.G),
+		R: uint32(ai.R),
+		A: uint32(ai.A),
+	}
 }

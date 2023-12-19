@@ -256,8 +256,8 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 			verts := 0
 			for i := 0; i < numVertices; i++ {
 				mesh.Vertices[verts] = object.vertices[i]
-				mesh.Faces[faces].Indices = make([]int, 1)
-				mesh.Faces[faces].Indices[0] = i
+				mesh.Faces[faces].Indices = make([]uint32, 1)
+				mesh.Faces[faces].Indices[0] = uint32(i)
 				i++
 				faces++
 				verts++
@@ -319,7 +319,7 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 					needMat[idx].Second += len(v.entries)
 				}
 			}
-			node.Meshes = make([]int, len(node.Meshes))
+			node.Meshes = make([]int32, len(node.Meshes))
 			mat := 0
 			oldm := len(*meshes)
 			cit := 0
@@ -333,7 +333,7 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 				}
 				var mesh core.AiMesh
 				*meshes = append(*meshes, &mesh)
-				mesh.MaterialIndex = len(*outMaterials)
+				mesh.MaterialIndex = int32(len(*outMaterials))
 				var tmpMaterial core.AiMaterial
 				*outMaterials = append(*outMaterials, &tmpMaterial)
 				ac.ConvertMaterial(object, (*materials)[mat], &tmpMaterial)
@@ -378,10 +378,10 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 							face := mesh.Faces[faces]
 							faces++
 							if 0 != len(src.entries) {
-								face.Indices = make([]int, len(src.entries))
+								face.Indices = make([]uint32, len(src.entries))
 								for i := 0; i < len(face.Indices); i++ {
 									entry := src.entries[i]
-									face.Indices[i] = cur
+									face.Indices[i] = uint32(cur)
 									cur++
 									// copy vertex positions
 									if (vertices - len(mesh.Vertices)) >= len(mesh.Vertices) {
@@ -413,12 +413,12 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 
 								face := mesh.Faces[faces]
 								faces++
-								face.Indices = make([]int, 3)
-								face.Indices[0] = cur
+								face.Indices = make([]uint32, 3)
+								face.Indices[0] = uint32(cur)
 								cur++
-								face.Indices[1] = cur
+								face.Indices[1] = uint32(cur)
 								cur++
-								face.Indices[2] = cur
+								face.Indices[2] = uint32(cur)
 								cur++
 								if (i & 1) == 0 {
 									mesh.Vertices[vertices] = object.vertices[entry1.First].Add(object.translation)
@@ -463,10 +463,10 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 							for m := 0; m < tmp; m++ {
 								face := mesh.Faces[faces]
 								faces++
-								face.Indices = make([]int, 2)
-								face.Indices[0] = cur
+								face.Indices = make([]uint32, 2)
+								face.Indices[0] = uint32(cur)
 								cur++
-								face.Indices[1] = cur
+								face.Indices[1] = uint32(cur)
 								cur++
 
 								// copy vertex positions

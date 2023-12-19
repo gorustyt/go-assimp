@@ -1,5 +1,7 @@
 package core
 
+import "assimp/common/pb_msg"
+
 type AiMetadataType int
 
 const (
@@ -23,15 +25,21 @@ const (
  */
 
 type AiMetadata struct {
-	/** Length of the mKeys and mValues arrays, respectively */
-	mNumProperties int
-
 	/** Arrays of keys, may not be NULL. Entries in this array may not be NULL as well. */
 	Keys []string
 
 	/** Arrays of values, may not be NULL. Entries in this array may be NULL if the
 	 * corresponding property key has no assigned value. */
 	Values []*AiMetadataEntry
+}
+
+func (ai *AiMetadata) ToPbMsg() *pb_msg.AiMetadata {
+	r := pb_msg.AiMetadata{}
+	r.Keys = ai.Keys
+	for _, v := range ai.Values {
+		r.Values = append(r.Values, v.ToPbMsg())
+	}
+	return &r
 }
 
 /**
@@ -42,5 +50,12 @@ type AiMetadata struct {
 
 type AiMetadataEntry struct {
 	Type AiMetadataType
-	Data any
+	Data []byte
+}
+
+func (ai *AiMetadataEntry) ToPbMsg() *pb_msg.AiMetadataEntry {
+	r := pb_msg.AiMetadataEntry{}
+	r.Type = int32(ai.Type)
+	r.Data = ai.Data
+	return &r
 }

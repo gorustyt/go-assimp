@@ -152,7 +152,7 @@ func (b *BlenderImporter) ExtractScene(out *Scene, file *FileDatabase) error {
 	}
 
 	logger.InfoF(
-		"(Stats) Fields read:%v, pointers resolved:%v, cache hits: %v, cached objects: ", file.stats().fields_read,
+		"(Stats) Fields read:%v, pointers resolved:%v, cache hits: %v, cached objects:%v ", file.stats().fields_read,
 		file.stats().pointers_resolved,
 		file.stats().cache_hits,
 		file.stats().cached_objects)
@@ -288,7 +288,7 @@ func (b *BlenderImporter) ConvertBlendFile(out *core.AiScene, in *Scene, file *F
 	// can consist of thousands of cameras or lights with
 	// not a single mesh between them.
 	if len(out.Meshes) == 0 {
-		out.Flags |= core.AI_SCENE_FLAGS_INCOMPLETE
+		out.Flags |= uint32(core.AI_SCENE_FLAGS_INCOMPLETE)
 	}
 	return nil
 }
@@ -332,9 +332,9 @@ func (b *BlenderImporter) ConvertNode(in *Scene, obj *Object, conv_data *Convers
 				return nil, err
 			}
 			if len(conv_data.meshes) > old {
-				node.Meshes = make([]int, len(conv_data.meshes)-old)
+				node.Meshes = make([]int32, len(conv_data.meshes)-old)
 				for i := 0; i < len(node.Meshes); i++ {
-					node.Meshes[i] = i + old
+					node.Meshes[i] = int32(i + old)
 				}
 			}
 			break
@@ -490,11 +490,11 @@ func (b *BlenderImporter) ResolveImage(out *core.AiMaterial, mat *Material, tex 
 		curTex.AchFormatHint[3] = '\x00'
 
 		// tex.mHeight = 0;
-		curTex.Width = int(img.packedfile.size)
+		curTex.Width = uint32(img.packedfile.size)
 		ch := make([]byte, curTex.Width)
 
 		conv_data.db.SetCurPos(img.packedfile.data.val)
-		ch, err := conv_data.db.GetNBytes(curTex.Width)
+		ch, err := conv_data.db.GetNBytes(int(curTex.Width))
 		if err != nil {
 			return err
 		}
@@ -644,7 +644,7 @@ func (b *BlenderImporter) BuildDefaultMaterial(conv_data *ConversionData) error 
 				conv_data.materials_raw.PushBack(p)
 				logger.Info("Adding default material")
 			}
-			mesh.MaterialIndex = index
+			mesh.MaterialIndex = int32(index)
 		}
 	}
 	return nil
@@ -949,9 +949,9 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 				return v1 == v2
 			})
 			if has != -1 {
-				out.MaterialIndex = has
+				out.MaterialIndex = int32(has)
 			} else {
-				out.MaterialIndex = conv_data.materials_raw.Size()
+				out.MaterialIndex = int32(conv_data.materials_raw.Size())
 				conv_data.materials_raw.PushBack(mat)
 			}
 		} else {
@@ -971,7 +971,7 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 		if mf.v4 != 0 {
 			tmp = 4
 		}
-		f.Indices = make([]int, tmp)
+		f.Indices = make([]uint32, tmp)
 
 		vo, vn := getVoVn(out)
 		// XXX we can't fold this easily, because we are restricted
@@ -990,7 +990,7 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 		vn.X = v.no[0]
 		vn.Y = v.no[1]
 		vn.Z = v.no[2]
-		f.Indices[0] = len(out.Vertices)
+		f.Indices[0] = uint32(len(out.Vertices))
 		vo, vn = getVoVn(out)
 
 		//  if (f.mNumIndices >= 2) {
@@ -1004,7 +1004,7 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 		vn.X = v.no[0]
 		vn.Y = v.no[1]
 		vn.Z = v.no[2]
-		f.Indices[1] = len(out.Vertices)
+		f.Indices[1] = uint32(len(out.Vertices))
 
 		vo, vn = getVoVn(out)
 		if mf.v3 >= mesh.totvert {
@@ -1018,7 +1018,7 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 		vn.X = v.no[0]
 		vn.Y = v.no[1]
 		vn.Z = v.no[2]
-		f.Indices[2] = len(out.Vertices)
+		f.Indices[2] = uint32(len(out.Vertices))
 
 		vo, vn = getVoVn(out)
 
@@ -1034,12 +1034,12 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 			vn.X = v.no[0]
 			vn.Y = v.no[1]
 			vn.Z = v.no[2]
-			f.Indices[3] = len(out.Vertices)
+			f.Indices[3] = uint32(len(out.Vertices))
 			vo, vn = getVoVn(out)
 
-			out.PrimitiveTypes |= int(core.AiPrimitiveType_POLYGON)
+			out.PrimitiveTypes |= uint32(core.AiPrimitiveType_POLYGON)
 		} else {
-			out.PrimitiveTypes |= int(core.AiPrimitiveType_TRIANGLE)
+			out.PrimitiveTypes |= uint32(core.AiPrimitiveType_TRIANGLE)
 		}
 
 		//  }
@@ -1054,7 +1054,7 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 		out := temp[mat_num_to_mesh_idx[int(mf.mat_nr)]]
 		var f = core.NewAiFace()
 		out.Faces = append(out.Faces, f)
-		f.Indices = make([]int, mf.totloop)
+		f.Indices = make([]uint32, mf.totloop)
 		vo, vn := getVoVn(out)
 		// XXX we can't fold this easily, because we are restricted
 		// to the member names from the BLEND file (v1,v2,v3,v4)
@@ -1076,13 +1076,13 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 			vn.X = v.no[0]
 			vn.Y = v.no[1]
 			vn.Z = v.no[2]
-			f.Indices[j] = len(out.Vertices)
+			f.Indices[j] = uint32(len(out.Vertices))
 			vo, vn = getVoVn(out)
 		}
 		if mf.totloop == 3 {
-			out.PrimitiveTypes |= int(core.AiPrimitiveType_TRIANGLE)
+			out.PrimitiveTypes |= uint32(core.AiPrimitiveType_TRIANGLE)
 		} else {
-			out.PrimitiveTypes |= int(core.AiPrimitiveType_POLYGON)
+			out.PrimitiveTypes |= uint32(core.AiPrimitiveType_POLYGON)
 		}
 	}
 

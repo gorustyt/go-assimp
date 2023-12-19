@@ -1,0 +1,55 @@
+syntax = "proto3";
+option go_package = "common/pb_msg";
+package pb_msg;
+import "common/pb_msg/common.proto";
+
+// ---------------------------------------------------------------------------
+/** @brief An AnimMesh is an attachment to an #aiMesh stores per-vertex
+ *  animations for a particular frame.
+ *
+ *  You may think of an #aiAnimMesh as a `patch` for the host mesh, which
+ *  replaces only certain vertex data streams at a particular time.
+ *  Each mesh stores n attached attached meshes (#aiMesh::mAnimMeshes).
+ *  The actual relationship between the time line and anim meshes is
+ *  established by #aiMeshAnim, which references singular mesh attachments
+ *  by their ID and binds them to a time offset.
+*/
+message AiAnimMesh {
+  /**Anim Mesh name */
+  string Name=1;
+
+  /** Replacement for aiMesh::mVertices. If this array is non-nullptr,
+     *  it *must* contain mNumVertices entries. The corresponding
+     *  array in the host mesh must be non-nullptr as well - animation
+     *  meshes may neither add or nor remove vertex components (if
+     *  a replacement array is nullptr and the corresponding source
+     *  array is not, the source data is taken instead)*/
+ repeated  AiVector3D  Vertices=2;
+
+  /** Replacement for aiMesh::mNormals.  */
+ repeated AiVector3D  Normals=3;
+
+  /** Replacement for aiMesh::mTangents. */
+  repeated AiVector3D Tangents=4;
+
+  /** Replacement for aiMesh::mBitangents. */
+  repeated AiVector3D  Bitangents=5;
+
+  /** Replacement for aiMesh::mColors */
+
+ repeated ColorsArray Colors=6;
+ message ColorsArray{
+  repeated AiColor4D  Colors=1;
+ }
+  /** Replacement for aiMesh::mTextureCoords */
+  repeated TextureCoordsArray TextureCoords=7;
+  message TextureCoordsArray{
+   repeated AiVector3D TextureCoords=1;
+  }
+ /**
+    * Weight of the AnimMesh.
+    */
+  float Weight=9;
+
+}
+

@@ -1,6 +1,9 @@
 package common
 
-import "math"
+import (
+	"assimp/common/pb_msg"
+	"math"
+)
 
 type AiMatrix4x4 struct {
 	A1, A2, A3, A4 float32
@@ -9,6 +12,15 @@ type AiMatrix4x4 struct {
 	D1, D2, D3, D4 float32
 }
 
+func (ai *AiMatrix4x4) ToPbMsg() *pb_msg.AiMatrix4X4 {
+	r := &pb_msg.AiMatrix4X4{
+		A1: ai.A1, A2: ai.A2, A3: ai.A3, A4: ai.A4,
+		B1: ai.B1, B2: ai.B2, B3: ai.B3, B4: ai.B4,
+		C1: ai.C1, C2: ai.C2, C3: ai.C3, C4: ai.C4,
+		D1: ai.D1, D2: ai.D2, D3: ai.D3, D4: ai.D4,
+	}
+	return r
+}
 func NewAiMatrix4x4Identify() *AiMatrix4x4 {
 	ai := &AiMatrix4x4{}
 	ai.A1 = 1.0

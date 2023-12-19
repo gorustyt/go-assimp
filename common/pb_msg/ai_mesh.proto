@@ -1,0 +1,222 @@
+syntax = "proto3";
+option go_package = "common/pb_msg";
+package pb_msg;
+import "common/pb_msg/common.proto";
+import "common/pb_msg/ai_bone.proto";
+import "common/pb_msg/ai_animesh.proto";
+// ---------------------------------------------------------------------------
+/** @brief A mesh represents a geometry or model with a single material.
+ *
+ * It usually consists of a number of vertices and a series of primitives/faces
+ * referencing the vertices. In addition there might be a series of bones, each
+ * of them addressing a number of vertices with a certain weight. Vertex data
+ * is presented in channels with each channel containing a single per-vertex
+ * information such as a set of texture coordinates or a normal vector.
+ * If a data pointer is non-null, the corresponding data stream is present.
+ * From C++-programs you can also use the comfort functions Has*() to
+ * test for the presence of various data streams.
+ *
+ * A Mesh uses only a single material which is referenced by a material ID.
+ * @note The mPositions member is usually not optional. However, vertex positions
+ * *could* be missing if the #AI_SCENE_FLAGS_INCOMPLETE flag is set in
+ * @code
+ * aiScene::mFlags
+ * @endcode
+ */
+message AiMesh {
+  /**
+ * Bitwise combination of the members of the #aiPrimitiveType enum.
+ * This specifies which types of primitives are present in the mesh.
+ * The "SortByPrimitiveType"-Step can be used to make sure the
+ * output meshes consist of one primitive type each.
+ */
+  uint32 PrimitiveTypes = 1;
+  /**
+ * @brief Vertex positions.
+ *
+ * This array is always present in a mesh. The array is
+ * mNumVertices in size.
+ */
+  repeated AiVector3D Vertices = 2;
+
+  /**
+ * @brief Vertex normals.
+ *
+ * The array contains normalized vectors, nullptr if not present.
+ * The array is mNumVertices in size. Normals are undefined for
+ * point and line primitives. A mesh consisting of points and
+ * lines only may not have normal vectors. Meshes with mixed
+ * primitive types (i.e. lines and triangles) may have normals,
+ * but the normals for vertices that are only referenced by
+ * point or line primitives are undefined and set to QNaN (WARN:
+ * qNaN compares to inequal to *everything*, even to qNaN itself.
+ * Using code like this to check whether a field is qnan is:
+ * @code
+ * #define IS_QNAN(f) (f != f)
+ * @endcode
+ * still dangerous because even 1.f == 1.f could evaluate to false! (
+ * remember the subtleties of IEEE754 artithmetics). Use stuff like
+ * @c fpclassify instead.
+ * @note Normal vectors computed by Assimp are always unit-length.
+ * However, this needn't apply for normals that have been taken
+ * directly from the model file.
+ */
+  repeated AiVector3D Normals = 3;
+
+  /**
+ * @brief Vertex tangents.
+ *
+ * The tangent of a vertex points in the direction of the positive
+ * X texture axis. The array contains normalized vectors, nullptr if
+ * not present. The array is mNumVertices in size. A mesh consisting
+ * of points and lines only may not have normal vectors. Meshes with
+ * mixed primitive types (i.e. lines and triangles) may have
+ * normals, but the normals for vertices that are only referenced by
+ * point or line primitives are undefined and set to qNaN.  See
+ * the #mNormals member for a detailed discussion of qNaNs.
+ * @note If the mesh contains tangents, it automatically also
+ * contains bitangents.
+ */
+  repeated AiVector3D Tangents = 4;
+
+  /**
+ * @brief Vertex bitangents.
+ *
+ * The bitangent of a vertex points in the direction of the positive
+ * Y texture axis. The array contains normalized vectors, nullptr if not
+ * present. The array is mNumVertices in size.
+ * @note If the mesh contains tangents, it automatically also contains
+ * bitangents.
+ */
+  repeated AiVector3D Bitangents = 5;
+
+  /**
+ * @brief Vertex color sets.
+ *
+ * A mesh may contain 0 to #AI_MAX_NUMBER_OF_COLOR_SETS vertex
+ * colors per vertex. nullptr if not present. Each array is
+ * mNumVertices in size if present.
+ */
+  repeated ColorsArray Colors = 6;
+  message ColorsArray{
+    repeated AiColor4D Colors = 1;
+  }
+  /**
+ * @brief Vertex texture coordinates, also known as UV channels.
+ *
+ * A mesh may contain 0 to AI_MAX_NUMBER_OF_TEXTURECOORDS per
+ * vertex. nullptr if not present. The array is mNumVertices in size.
+ */
+  message TextureCoordsArray {
+    repeated AiVector3D TextureCoords = 1;
+  }
+  repeated TextureCoordsArray TextureCoords = 7;
+
+  /**
+ * @brief Specifies the number of components for a given UV channel.
+ *
+ * Up to three channels are supported (UVW, for accessing volume
+ * or cube maps). If the value is 2 for a given channel n, the
+ * component p.z of mTextureCoords[n][p] is set to 0.0f.
+ * If the value is 1 for a given channel, p.y is set to 0.0f, too.
+ * @note 4D coordinates are not supported
+ */
+  repeated uint32 NumUVComponents = 8;
+
+  /**
+ * @brief The faces the mesh is constructed from.
+ *
+ * Each face refers to a number of vertices by their indices.
+ * This array is always present in a mesh, its size is given
+ *  in mNumFaces. If the #AI_SCENE_FLAGS_NON_VERBOSE_FORMAT
+ * is NOT set each face references an unique set of vertices.
+ */
+  repeated AiFace Faces = 9;
+  /**
+ * @brief The bones of this mesh.
+ *
+ * A bone consists of a name by which it can be found in the
+ * frame hierarchy and a set of vertex weights.
+ */
+  repeated AiBone  Bones = 10;
+
+  /**
+ * @brief The material used by this mesh.
+ *
+ * A mesh uses only a single material. If an imported model uses
+ * multiple materials, the import splits up the mesh. Use this value
+ * as index into the scene's material list.
+ */
+  int32 MaterialIndex = 12;
+
+  /**
+ *  Name of the mesh. Meshes can be named, but this is not a
+ *  requirement and leaving this field empty is totally fine.
+ *  There are mainly three uses for mesh names:
+ *   - some formats name nodes and meshes independently.
+ *   - importers tend to split meshes up to meet the
+ *      one-material-per-mesh requirement. Assigning
+ *      the same (dummy) name to each of the result meshes
+ *      aids the caller at recovering the original mesh
+ *      partitioning.
+ *   - Vertex animations refer to meshes by their names.
+ */
+  string  Name = 13;
+  /**
+ * Attachment meshes for this mesh, for vertex-based animation.
+ * Attachment meshes carry replacement data for some of the
+ * mesh'es vertex components (usually positions, normals).
+ * Currently known to work with loaders:
+ * - Collada
+ * - gltf
+ */
+  repeated AiAnimMesh AnimMeshes = 14;
+
+  /**
+ *  Method of morphing when anim-meshes are specified.
+ *  @see aiMorphingMethod to learn more about the provided morphing targets.
+ */
+  int32 Method = 15;
+
+  /**
+ *  The bounding box.
+ */
+  AiAABB AABB = 16;
+
+  /**
+ * Vertex UV stream names. Pointer to array of size AI_MAX_NUMBER_OF_TEXTURECOORDS
+ */
+  repeated string TextureCoordsNames = 17;
+}
+
+// ---------------------------------------------------------------------------
+/**
+ * @brief A single face in a mesh, referring to multiple vertices.
+ *
+ * If mNumIndices is 3, we call the face 'triangle', for mNumIndices > 3
+ * it's called 'polygon' (hey, that's just a definition!).
+ * <br>
+ * aiMesh::mPrimitiveTypes can be queried to quickly examine which types of
+ * primitive are actually present in a mesh. The #aiProcess_SortByPType flag
+ * executes a special post-processing algorithm which splits meshes with
+ * *different* primitive types mixed up (e.g. lines and triangles) in several
+ * 'clean' sub-meshes. Furthermore there is a configuration option (
+ * #AI_CONFIG_PP_SBP_REMOVE) to force #aiProcess_SortByPType to remove
+ * specific kinds of primitives from the imported scene, completely and forever.
+ * In many cases you'll probably want to set this setting to
+ * @code
+ * aiPrimitiveType_LINE|aiPrimitiveType_POINT
+ * @endcode
+ * Together with the #aiProcess_Triangulate flag you can then be sure that
+ * #aiFace::mNumIndices is always 3.
+ * @note Take a look at the @link data Data Structures page @endlink for
+ * more information on the layout and winding order of a face.
+ */
+    message AiFace {
+//! Number of indices defining this face.
+//! The maximum value for this member is #AI_MAX_FACE_INDICES.
+    uint32 NumIndices=1;
+
+//! Pointer to the indices array. Size of the array is given in numIndices.
+       repeated uint32 Indices=2;
+    }

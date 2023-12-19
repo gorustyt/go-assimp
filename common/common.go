@@ -1,12 +1,22 @@
 package common
 
 import (
+	"assimp/common/pb_msg"
 	"encoding/binary"
 	"unsafe"
 )
 
 type AiQuaternion struct {
-	W, X, Y, Z float32
+	W, X, Y, Z float64
+}
+
+func (ai *AiQuaternion) ToPbMsg() *pb_msg.AiQuaternion {
+	return &pb_msg.AiQuaternion{
+		W: ai.W,
+		X: ai.X,
+		Y: ai.Y,
+		Z: ai.Z,
+	}
 }
 
 type AiPropertyStore struct {

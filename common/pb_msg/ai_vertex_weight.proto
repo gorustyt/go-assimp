@@ -1,0 +1,14 @@
+syntax = "proto3";
+option go_package = "common/pb_msg";
+package pb_msg;
+
+/** @brief A single influence of a bone on a vertex.
+ */
+message AiVertexWeight {
+  //! Index of the vertex which is influenced by the bone.
+  uint32 VertexId=1;
+
+  //! The strength of the influence in the range (0...1).
+  //! The influence from all bones at one vertex amounts to 1.
+  float Weight=2;
+}

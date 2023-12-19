@@ -1027,7 +1027,16 @@ type AiMaterial struct {
 	/** List of all material properties loaded. */
 	Properties []AiMaterialProperty
 	/** Storage allocated */
-	NumAllocated int
+	NumAllocated int32
+}
+
+func (ai *AiMaterial) ToPbMsg() *pb_msg.AiMaterial {
+	r := &pb_msg.AiMaterial{}
+	r.NumAllocated = ai.NumAllocated
+	for _, v := range ai.Properties {
+		r.Properties = append(r.Properties, v.ToPbMsg())
+	}
+	return r
 }
 
 func (ai *AiMaterial) AddFloat32PropertyVar(pro AiMaterialProperty, data ...float32) {
@@ -1113,12 +1122,12 @@ type AiMaterialProperty struct {
 	 * For non-texture properties, this member is always 0
 	 * (or, better-said, #AiTextureType_NONE).
 	 */
-	Semantic int
+	Semantic uint32
 
 	/** Textures: Specifies the index of the texture.
 	 *  For non-texture properties, this member is always 0.
 	 */
-	Index int
+	Index uint32
 	/** Type information for the property.
 	 *
 	 * Defines the data layout inside the data buffer. This is used
@@ -1130,6 +1139,15 @@ type AiMaterialProperty struct {
 	Data     []byte
 }
 
+func (p AiMaterialProperty) ToPbMsg() *pb_msg.AiMaterialProperty {
+	r := &pb_msg.AiMaterialProperty{}
+	r.Key = p.Key
+	r.Semantic = p.Semantic
+	r.Index = p.Index
+	r.Type = p.DataType
+	r.Data = p.Data
+	return r
+}
 func (p AiMaterialProperty) ResetData() AiMaterialProperty {
 	n := p
 	n.Data = n.Data[:0]
@@ -1143,7 +1161,7 @@ func (p AiMaterialProperty) Clone() AiMaterialProperty {
 }
 
 func NewAiMaterialProperty(key string, Type int, index int) AiMaterialProperty {
-	return AiMaterialProperty{Key: key, Semantic: Type, Index: index}
+	return AiMaterialProperty{Key: key, Semantic: uint32(Type), Index: uint32(index)}
 }
 
 // ---------------------------------------------------------------------------

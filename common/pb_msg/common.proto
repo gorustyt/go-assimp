@@ -33,3 +33,38 @@ message AiColor4D {
   float A=4;
 }
 
+message AiMatrix4x4{
+  float A1=1;
+  float  a2=2;
+  float    a3=3;
+  float  a4=4;
+  float   b1=5;
+  float    b2=6;
+  float       b3=7;
+  float  b4=8;
+  float   c1=9;
+  float       c2=10;
+  float   c3=11;
+  float       c4=12;
+  float d1=13;
+  float   d2=14;
+  float       d3=15;
+  float  d4=16;
+}
+
+    message AiQuaternion {
+  double W=1;
+      double      X=2;
+      double         Y=3;
+      double   Z=4;
+    };
+
+
+// ---------------------------------------------------------------------------
+/**
+ *  An axis-aligned bounding box.
+ */
+    message AiAABB {
+ AiVector3D Min=1;;
+  AiVector3D Max=2;;
+    }

@@ -2,9 +2,10 @@ package BLEND
 
 import (
 	"fmt"
+	"reflect"
 )
 
-type CustomDataType int
+type CustomDataType int32
 
 const (
 	CD_AUTO_FROM_NAME CustomDataType = -1
@@ -110,7 +111,7 @@ func isValidCustomDataType(cdtype int) bool {
 	return cdtype >= 0 && cdtype < int(CD_NUMTYPES)
 }
 
-func readCustomData(cdtype int, cnt int, db *FileDatabase, s *Structure) (out []IElemBase, err error) {
+func readCustomData(cdtype int, cnt int, db *FileDatabase) (out []IElemBase, err error) {
 	if !isValidCustomDataType(cdtype) {
 		return out, fmt.Errorf("CustomData.type %v out of index", cdtype)
 	}
@@ -120,7 +121,8 @@ func readCustomData(cdtype int, cnt int, db *FileDatabase, s *Structure) (out []
 		for i := 0; i < cnt; i++ {
 			v := cdtd()
 			out = append(out, v)
-			err = v.Convert(db, s)
+			ss := db.dna.IndexByString(reflect.TypeOf(v).Elem().Name())
+			err = v.Convert(db, ss)
 			if err != nil {
 				return nil, err
 			}

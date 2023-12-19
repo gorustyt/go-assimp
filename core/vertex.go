@@ -34,7 +34,7 @@ func (v *Vertex) VertexFromAiMesh(msh *AiMesh, idx int) {
 		v.bitangent = msh.Bitangents[idx]
 	}
 
-	for i := 0; msh.HasTextureCoords(i); i++ {
+	for i := 0; msh.HasTextureCoords(uint32(i)); i++ {
 		v.texcoords[i] = msh.TextureCoords[i][idx]
 	}
 
@@ -46,7 +46,7 @@ func (v *Vertex) VertexFromAiMesh(msh *AiMesh, idx int) {
 // ----------------------------------------------------------------------------
 /** Extract a particular vertex from a anim mesh and interleave all components */
 func (v *Vertex) VertexFromAiAnimMesh(msh *AiAnimMesh, idx int) {
-	common.AiAssert(idx < msh.NumVertices)
+	common.AiAssert(idx < len(msh.Vertices))
 	if msh.HasPositions() {
 		v.position = msh.Vertices[idx]
 	}
@@ -60,7 +60,7 @@ func (v *Vertex) VertexFromAiAnimMesh(msh *AiAnimMesh, idx int) {
 		v.bitangent = msh.Bitangents[idx]
 	}
 
-	for i := 0; msh.HasTextureCoords(i); i++ {
+	for i := 0; msh.HasTextureCoords(uint32(i)); i++ {
 		v.texcoords[i] = msh.TextureCoords[i][idx]
 	}
 

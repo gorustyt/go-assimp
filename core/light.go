@@ -1,6 +1,9 @@
 package core
 
-import "assimp/common"
+import (
+	"assimp/common"
+	"assimp/common/pb_msg"
+)
 
 type AiLightSourceType int
 
@@ -160,6 +163,24 @@ type AiLight struct {
 	Size *common.AiVector2D
 }
 
+func (ai *AiLight) ToPbMsg() *pb_msg.AiLight {
+	r := &pb_msg.AiLight{}
+	r.Name = ai.Name
+	r.Type = int32(ai.Type)
+	r.Position = ai.Position.ToPbMsg()
+	r.Direction = ai.Direction.ToPbMsg()
+	r.Up = ai.Up.ToPbMsg()
+	r.AttenuationConstant = ai.AttenuationConstant
+	r.AttenuationLinear = ai.AttenuationLinear
+	r.AttenuationQuadratic = ai.AttenuationQuadratic
+	r.ColorDiffuse = ai.ColorDiffuse.ToPbMsg()
+	r.ColorSpecular = ai.ColorSpecular.ToPbMsg()
+	r.ColorAmbient = ai.ColorAmbient.ToPbMsg()
+	r.AngleInnerCone = ai.AngleInnerCone
+	r.AngleOuterCone = ai.AngleOuterCone
+	r.Size = ai.Size.ToPbMsg()
+	return r
+}
 func NewAiLight() *AiLight {
 	return &AiLight{}
 }

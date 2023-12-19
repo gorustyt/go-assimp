@@ -4,7 +4,7 @@ var (
 	//Supported number of texture coord sets (UV(W) channels) per mesh
 	AI_MAX_NUMBER_OF_COLOR_SETS = 0x8
 	//Supported number of vertex color sets per mesh.
-	AI_MAX_NUMBER_OF_TEXTURECOORDS = 0x8
+	AI_MAX_NUMBER_OF_TEXTURECOORDS uint32 = 0x8
 	//Maximum number of faces per mesh.
 	AI_MAX_FACES = 0x7fffffff
 	//Maximum number of vertices per mesh

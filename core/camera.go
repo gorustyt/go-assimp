@@ -1,6 +1,9 @@
 package core
 
-import "assimp/common"
+import (
+	"assimp/common"
+	"assimp/common/pb_msg"
+)
 
 type AiCamera struct {
 	/** The name of the camera.
@@ -83,6 +86,19 @@ type AiCamera struct {
 	OrthographicWidth float32
 }
 
+func (ai *AiCamera) ToPbMsg() *pb_msg.AiCamera {
+	r := &pb_msg.AiCamera{}
+	r.Name = ai.Name
+	r.Position = ai.Position.ToPbMsg()
+	r.Up = ai.Up.ToPbMsg()
+	r.LookAt = ai.LookAt.ToPbMsg()
+	r.HorizontalFOV = ai.HorizontalFOV
+	r.ClipPlaneNear = ai.ClipPlaneNear
+	r.ClipPlaneFar = ai.ClipPlaneFar
+	r.Aspect = ai.Aspect
+	r.OrthographicWidth = ai.OrthographicWidth
+	return r
+}
 func NewAiCamera() *AiCamera {
 	return &AiCamera{}
 }

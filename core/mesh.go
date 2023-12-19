@@ -1,6 +1,9 @@
 package core
 
-import "assimp/common"
+import (
+	"assimp/common"
+	"assimp/common/pb_msg"
+)
 
 type AiMorphingMethod int
 
@@ -49,7 +52,7 @@ type AiMesh struct {
 	 * The "SortByPrimitiveType"-Step can be used to make sure the
 	 * output meshes consist of one primitive type each.
 	 */
-	PrimitiveTypes int
+	PrimitiveTypes uint32
 	/**
 	 * @brief Vertex positions.
 	 *
@@ -135,7 +138,7 @@ type AiMesh struct {
 	 * If the value is 1 for a given channel, p.y is set to 0.0f, too.
 	 * @note 4D coordinates are not supported
 	 */
-	NumUVComponents []int
+	NumUVComponents []uint32
 
 	/**
 	 * @brief The faces the mesh is constructed from.
@@ -161,7 +164,7 @@ type AiMesh struct {
 	 * multiple materials, the import splits up the mesh. Use this value
 	 * as index into the scene's material list.
 	 */
-	MaterialIndex int
+	MaterialIndex int32
 
 	/**
 	 *  Name of the mesh. Meshes can be named, but this is not a
@@ -176,15 +179,6 @@ type AiMesh struct {
 	 *   - Vertex animations refer to meshes by their names.
 	 */
 	Name string
-
-	/**
-	 * The number of attachment meshes.
-	 * Currently known to work with loaders:
-	 * - Collada
-	 * - gltf
-	 */
-	NumAnimMeshes int
-
 	/**
 	 * Attachment meshes for this mesh, for vertex-based animation.
 	 * Attachment meshes carry replacement data for some of the
@@ -210,6 +204,60 @@ type AiMesh struct {
 	 * Vertex UV stream names. Pointer to array of size AI_MAX_NUMBER_OF_TEXTURECOORDS
 	 */
 	TextureCoordsNames []string
+}
+
+func (ai *AiMesh) ToPbMsg() *pb_msg.AiMesh {
+	r := pb_msg.AiMesh{}
+	r.PrimitiveTypes = ai.PrimitiveTypes
+	for _, v := range ai.Vertices {
+		r.Vertices = append(r.Vertices, v.ToPbMsg())
+	}
+
+	for _, v := range ai.Normals {
+		r.Normals = append(r.Normals, v.ToPbMsg())
+	}
+
+	for _, v := range ai.Tangents {
+		r.Tangents = append(r.Tangents, v.ToPbMsg())
+	}
+
+	for _, v := range ai.Bitangents {
+		r.Bitangents = append(r.Bitangents, v.ToPbMsg())
+	}
+	for _, v := range ai.Colors {
+		var tmp pb_msg.AiMesh_ColorsArray
+		for _, v1 := range v {
+			tmp.Colors = append(tmp.Colors, v1.ToPbMsg())
+		}
+		r.Colors = append(r.Colors, &tmp)
+	}
+
+	for _, v := range ai.TextureCoords {
+		var tmp pb_msg.AiMesh_TextureCoordsArray
+		for _, v1 := range v {
+			tmp.TextureCoords = append(tmp.TextureCoords, v1.ToPbMsg())
+		}
+		r.TextureCoords = append(r.TextureCoords, &tmp)
+	}
+	r.NumUVComponents = ai.NumUVComponents
+
+	for _, v := range ai.Faces {
+		r.Faces = append(r.Faces, v.ToPbMsg())
+	}
+
+	for _, v := range ai.Bones {
+		r.Bones = append(r.Bones, v.ToPbMsg())
+	}
+	r.MaterialIndex = ai.MaterialIndex
+	r.Name = ai.Name
+
+	for _, v := range ai.AnimMeshes {
+		r.AnimMeshes = append(r.AnimMeshes, v.ToPbMsg())
+	}
+	r.Method = int32(ai.Method)
+	r.AABB = ai.AABB.ToPbMsg()
+	r.TextureCoordsNames = ai.TextureCoordsNames
+	return &r
 }
 
 // ! @brief Check whether the mesh contains positions. Provided no special
@@ -255,7 +303,7 @@ func (ai *AiMesh) HasVertexColors(index int) bool {
 // ! @brief Check whether the mesh contains a texture coordinate set
 // ! @param index    Index of the texture coordinates set
 // ! @return true, if texture coordinates are stored, false if not.
-func (ai *AiMesh) HasTextureCoords(index int) bool {
+func (ai *AiMesh) HasTextureCoords(index uint32) bool {
 	if index >= AI_MAX_NUMBER_OF_TEXTURECOORDS {
 		return false
 	}
@@ -265,12 +313,12 @@ func (ai *AiMesh) HasTextureCoords(index int) bool {
 // ! @brief Get the number of UV channels the mesh contains.
 // ! @return the number of stored uv-channels.
 func (ai *AiMesh) GetNumUVChannels() int {
-	var n int
+	var n uint32
 	for n < AI_MAX_NUMBER_OF_TEXTURECOORDS && ai.TextureCoords[n] != nil {
 		n++
 	}
 
-	return n
+	return int(n)
 }
 
 // ! @brief Get the number of vertex color channels the mesh contains.
@@ -292,7 +340,7 @@ func (ai *AiMesh) HasBones() bool {
 // ! @brief  Check whether the mesh contains a texture coordinate set name
 // ! @param pIndex Index of the texture coordinates set
 // ! @return true, if texture coordinates for the index exists.
-func (ai *AiMesh) HasTextureCoordsName(pIndex int) bool {
+func (ai *AiMesh) HasTextureCoordsName(pIndex uint32) bool {
 	if ai.TextureCoordsNames == nil || pIndex >= AI_MAX_NUMBER_OF_TEXTURECOORDS {
 		return false
 	}
@@ -302,7 +350,7 @@ func (ai *AiMesh) HasTextureCoordsName(pIndex int) bool {
 // ! @brief  Get a texture coordinate set name
 // ! @param  pIndex Index of the texture coordinates set
 // ! @return The texture coordinate name.
-func (ai *AiMesh) GetTextureCoordsName(index int) string {
+func (ai *AiMesh) GetTextureCoordsName(index uint32) string {
 	if ai.TextureCoordsNames == nil || index >= AI_MAX_NUMBER_OF_TEXTURECOORDS {
 		return ""
 	}
@@ -311,7 +359,7 @@ func (ai *AiMesh) GetTextureCoordsName(index int) string {
 }
 func NewAiMesh() *AiMesh {
 	return &AiMesh{
-		NumUVComponents: make([]int, AI_MAX_NUMBER_OF_TEXTURECOORDS),
+		NumUVComponents: make([]uint32, AI_MAX_NUMBER_OF_TEXTURECOORDS),
 		Colors:          make([][]*common.AiColor4D, AI_MAX_NUMBER_OF_COLOR_SETS),
 	}
 }
@@ -354,23 +402,56 @@ type AiAnimMesh struct {
 
 	/** Replacement for aiMesh::mTextureCoords */
 	TextureCoords [][]*common.AiVector3D
-
-	/** The number of vertices in the aiAnimMesh, and thus the length of all
-	 * the member arrays.
-	 *
-	 * This has always the same value as the mNumVertices property in the
-	 * corresponding aiMesh. It is duplicated here merely to make the length
-	 * of the member arrays accessible even if the aiMesh is not known, e.g.
-	 * from language bindings.
-	 */
-	NumVertices int
-
 	/**
 	 * Weight of the AnimMesh.
 	 */
 	Weight float32
 }
 
+func (ai *AiAnimMesh) ToPbMsg() *pb_msg.AiAnimMesh {
+	r := &pb_msg.AiAnimMesh{}
+	/**Anim Mesh name */
+	r.Name = ai.Name
+
+	/** Replacement for aiMesh::mVertices. If this array is non-nullptr,
+	 *  it *must* contain mNumVertices entries. The corresponding
+	 *  array in the host mesh must be non-nullptr as well - animation
+	 *  meshes may neither add or nor remove vertex components (if
+	 *  a replacement array is nullptr and the corresponding source
+	 *  array is not, the source data is taken instead)*/
+	for _, v := range ai.Vertices {
+		r.Vertices = append(r.Vertices, v.ToPbMsg())
+	}
+	for _, v := range ai.Normals {
+		r.Normals = append(r.Normals, v.ToPbMsg())
+	}
+	for _, v := range ai.Tangents {
+		r.Tangents = append(r.Tangents, v.ToPbMsg())
+	}
+
+	for _, v := range ai.Bitangents {
+		r.Bitangents = append(r.Bitangents, v.ToPbMsg())
+	}
+
+	for _, v := range ai.Colors {
+		var tmp pb_msg.AiAnimMesh_ColorsArray
+		for _, v1 := range v {
+			tmp.Colors = append(tmp.Colors, v1.ToPbMsg())
+		}
+		r.Colors = append(r.Colors, &tmp)
+	}
+
+	for _, v := range ai.TextureCoords {
+		var tmp pb_msg.AiAnimMesh_TextureCoordsArray
+		for _, v1 := range v {
+			tmp.TextureCoords = append(tmp.TextureCoords, v1.ToPbMsg())
+		}
+		r.TextureCoords = append(r.TextureCoords, &tmp)
+	}
+
+	r.Weight = ai.Weight
+	return r
+}
 func (ai *AiAnimMesh) HasNormals() bool {
 	return ai.Normals != nil
 }
@@ -405,7 +486,7 @@ func (ai *AiAnimMesh) HasVertexColors(pIndex int) bool {
  *  @param pIndex 0<index<AI_MAX_NUMBER_OF_TEXTURECOORDS
  *  @return true if texture coordinates are stored, false if not.
  */
-func (ai *AiAnimMesh) HasTextureCoords(pIndex int) bool {
+func (ai *AiAnimMesh) HasTextureCoords(pIndex uint32) bool {
 	if pIndex >= AI_MAX_NUMBER_OF_TEXTURECOORDS {
 		return false
 	}
@@ -430,20 +511,32 @@ func NewAiAnimMesh() *AiAnimMesh {
 
 type AiFace struct {
 	//! Pointer to the indices array. Size of the array is given in numIndices.
-	Indices []int
+	Indices []uint32
 }
 
+func (ai *AiFace) ToPbMsg() *pb_msg.AiFace {
+	return &pb_msg.AiFace{
+		Indices: ai.Indices,
+	}
+}
 func NewAiFace() *AiFace {
 	return &AiFace{}
 }
 
 type AiVertexWeight struct {
 	//! Index of the vertex which is influenced by the bone.
-	VertexId int
+	VertexId uint32
 
 	//! The strength of the influence in the range (0...1).
 	//! The influence from all bones at one vertex amounts to 1.
 	Weight float32
+}
+
+func (ai *AiVertexWeight) ToPbMsg() *pb_msg.AiVertexWeight {
+	return &pb_msg.AiVertexWeight{
+		VertexId: ai.VertexId,
+		Weight:   ai.Weight,
+	}
 }
 
 type AiBone struct {
@@ -451,12 +544,6 @@ type AiBone struct {
 	 * The name of the bone.
 	 */
 	Name string
-
-	/**
-	 * The number of vertices affected by this bone.
-	 * The maximum value for this member is #AI_MAX_BONE_WEIGHTS.
-	 */
-	NumWeights int
 	/**
 	 * The bone armature node - used for skeleton conversion
 	 * you must enable aiProcess_PopulateArmatureData to populate this
@@ -489,6 +576,25 @@ type AiBone struct {
 	OffsetMatrix common.AiMatrix4x4
 }
 
+func (ai *AiBone) ToPbMsg() *pb_msg.AiBone {
+	r := &pb_msg.AiBone{}
+	r.Name = ai.Name
+	for _, v := range ai.Armature {
+		r.Armature = append(r.Armature, v.ToPbMsg())
+	}
+	for _, v := range ai.Node {
+		r.Node = append(r.Node, v.ToPbMsg())
+	}
+	/**
+	 * The influence weights of this bone, by vertex index.
+	 */
+	for _, v := range ai.Weights {
+		r.Weights = append(r.Weights, v.ToPbMsg())
+	}
+	r.OffsetMatrix = ai.OffsetMatrix.ToPbMsg()
+	return r
+}
+
 /**
  * @brief A skeleton represents the bone hierarchy of an animation.
  *
@@ -509,16 +615,20 @@ type AiSkeleton struct {
 	 *  @brief The name of the skeleton instance.
 	 */
 	Name string
-
-	/**
-	 *  @brief  The number of bones in the skeleton.
-	 */
-	NumBones int
-
 	/**
 	 *  @brief The bone instance in the skeleton.
 	 */
 	Bones []*AiSkeletonBone
+}
+
+func (ai *AiSkeleton) ToPbMsg() *pb_msg.AiSkeleton {
+	r := &pb_msg.AiSkeleton{
+		Name: ai.Name,
+	}
+	for _, v := range ai.Bones {
+		r.Bones = append(r.Bones, v.ToPbMsg())
+	}
+	return r
 }
 
 /**
@@ -539,7 +649,7 @@ type AiSkeleton struct {
 
 type AiSkeletonBone struct {
 	/// The parent bone index, is -1 one if this bone represents the root bone.
-	Parent int
+	Parent int32
 	/// @brief The bone armature node - used for skeleton conversion
 	/// you must enable aiProcess_PopulateArmatureData to populate this
 	Armature []*AiNode
@@ -547,9 +657,6 @@ type AiSkeletonBone struct {
 	/// @brief The bone node in the scene - used for skeleton conversion
 	/// you must enable aiProcess_PopulateArmatureData to populate this
 	Node []*AiNode
-	/// @brief The number of weights
-	NumnWeights int
-
 	/// The mesh index, which will get influenced by the weight.
 	MeshId []*AiMesh
 
@@ -571,6 +678,26 @@ type AiSkeletonBone struct {
 
 	/// Matrix that transforms the locale bone in bind pose.
 	LocalMatrix common.AiMatrix4x4
+}
+
+func (ai *AiSkeletonBone) ToPbMsg() *pb_msg.AiSkeletonBone {
+	r := &pb_msg.AiSkeletonBone{}
+	r.Parent = ai.Parent
+	for _, v := range ai.Armature {
+		r.Armature = append(r.Armature, v.ToPbMsg())
+	}
+	for _, v := range ai.Node {
+		r.Node = append(r.Node, v.ToPbMsg())
+	}
+	for _, v := range ai.MeshId {
+		r.MeshId = append(r.MeshId, v.ToPbMsg())
+	}
+	for _, v := range ai.Weights {
+		r.Weights = append(r.Weights, v.ToPbMsg())
+	}
+	r.OffsetMatrix = ai.OffsetMatrix.ToPbMsg()
+	r.LocalMatrix = ai.LocalMatrix.ToPbMsg()
+	return r
 }
 
 // ---------------------------------------------------------------------------

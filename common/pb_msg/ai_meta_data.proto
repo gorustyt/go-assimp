@@ -1,0 +1,19 @@
+syntax = "proto3";
+option go_package = "common/pb_msg";
+package pb_msg;
+
+
+  message AiMetadata {
+    /** Arrays of keys, may not be NULL. Entries in this array may not be NULL as well. */
+   repeated string  Keys=1;
+
+/** Arrays of values, may not be NULL. Entries in this array may be NULL if the
+  * corresponding property key has no assigned value. */
+   repeated  AiMetadataEntry Values=2;
+    }
+
+
+    message AiMetadataEntry {
+     int32 Type=1;
+      bytes   Data =2;
+    }

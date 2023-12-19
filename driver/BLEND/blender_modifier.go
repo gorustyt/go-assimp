@@ -35,8 +35,16 @@ func (b *BlenderModifierShowcase) ApplyModifiers(out core.AiNode,
 	// we're allowed to dereference the pointers without risking to crash. We might still be
 	// invoking UB btw - we're assuming that the ModifierData member of the respective modifier
 	// structures is at offset sizeof(vftable) with no padding.
-	cur := orig_object.modifiers.first.(*SharedModifierData)
-	for ; cur != nil; cur = cur.modifier.next.(*SharedModifierData) {
+	var cur IElemBase
+	if orig_object.modifiers != nil && orig_object.modifiers.first != nil {
+		cur = orig_object.modifiers.first
+	}
+	var curv *SharedModifierData
+	if cur != nil {
+		curv = cur.(*SharedModifierData)
+	}
+	for ; cur != nil && curv != nil; cur = curv.modifier.next {
+		curv = cur.(*SharedModifierData)
 		if cur.GetDnaType() == "" {
 			return errors.New("invalid GetDnaType")
 		}
@@ -65,7 +73,7 @@ func (b *BlenderModifierShowcase) ApplyModifiers(out core.AiNode,
 
 		// now, we can be sure that we should be fine to dereference *cur* as
 		// ModifierData (with the above note).
-		dat := cur.modifier
+		dat := curv.modifier
 		curgod := 0
 		curmod := 0
 		endmod := len(b.cached_modifiers)

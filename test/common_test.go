@@ -21,3 +21,9 @@ func TestLowerBound(t *testing.T) {
 		Assert(t, index == i+1)
 	}
 }
+
+func TestDeepEqual(t *testing.T) {
+	Assert(t, DeepEqual(0.001, 0.0011111))
+	Assert(t, !DeepEqual(0.01, 0.0011111))
+	Assert(t, DeepEqual([]int{1, 2, 3, 4, 5, 6}, []int{1, 2, 3, 4, 5, 6}))
+}

@@ -7,7 +7,7 @@ import (
 )
 
 type AiQuaternion struct {
-	W, X, Y, Z float64
+	W, X, Y, Z float32
 }
 
 func (ai *AiQuaternion) ToPbMsg() *pb_msg.AiQuaternion {

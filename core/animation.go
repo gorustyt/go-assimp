@@ -230,10 +230,10 @@ func (ai *AiMeshKey) ToPbMsg() *pb_msg.AiMeshKey {
 
 type AiVectorKey struct {
 	/** The time of this key */
-	Time float32
+	Time float64
 
 	/** The value of this key */
-	Value common.AiVector3D
+	Value *common.AiVector3D
 }
 
 func (ai *AiVectorKey) ToPbMsg() *pb_msg.AiVectorKey {
@@ -243,10 +243,10 @@ func (ai *AiVectorKey) ToPbMsg() *pb_msg.AiVectorKey {
 
 type AiQuatKey struct {
 	/** The time of this key */
-	Time float32
+	Time float64
 
 	/** The value of this key */
-	Value common.AiQuaternion
+	Value *common.AiQuaternion
 }
 
 func (ai *AiQuatKey) ToPbMsg() *pb_msg.AiQuatKey {

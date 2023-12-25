@@ -53,10 +53,10 @@ message AiMatrix4x4{
 }
 
     message AiQuaternion {
-  double W=1;
-      double      X=2;
-      double         Y=3;
-      double   Z=4;
+  float W=1;
+      float      X=2;
+      float        Y=3;
+      float   Z=4;
     };
 
 

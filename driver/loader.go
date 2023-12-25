@@ -5,6 +5,7 @@ import (
 	"assimp/core"
 	"assimp/driver/AC"
 	"assimp/driver/BLEND"
+	"assimp/driver/assetBin"
 	"assimp/driver/base/iassimp"
 	"assimp/driver/post_processing"
 	"assimp/driver/pre_processing"
@@ -21,6 +22,7 @@ var (
 type LoaderCons func(data []byte) (iassimp.Loader, error)
 
 func init() {
+	RegisterLoader(ASSETBIN.NewAssBinImporter, ASSETBIN.Desc)
 	RegisterLoader(AC.NewAC3DImporter, AC.Desc)
 	RegisterLoader(BLEND.NewBlenderImporter, BLEND.Desc)
 }

@@ -173,7 +173,7 @@ type AiNode struct {
 	 * @link importer_notes @endlink page for more information on every source file
 	 * format. Importers that don't document any metadata don't write any.
 	 */
-	MetaData []*AiMetadata
+	MetaData *AiMetadata
 }
 
 func (node *AiNode) ToPbMsg() *pb_msg.AiNode {
@@ -191,9 +191,7 @@ func (node *AiNode) ToPbMsg() *pb_msg.AiNode {
 	 * mesh list of the #aiScene.
 	 */
 	r.Meshes = node.Meshes
-	for _, v := range node.MetaData {
-		r.MetaData = append(r.MetaData, v.ToPbMsg())
-	}
+	r.MetaData = node.MetaData.ToPbMsg()
 	return &r
 }
 func NewAiNode(name string) *AiNode {

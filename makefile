@@ -1,2 +1,2 @@
 protoc:
-	protoc --go_out=./ ./common/pb_msg/*.proto
+	protoc --go_out=./  ./common/pb_msg/*.proto

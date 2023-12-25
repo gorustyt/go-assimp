@@ -1041,8 +1041,12 @@ func (ai *AiMaterial) ToPbMsg() *pb_msg.AiMaterial {
 
 func (ai *AiMaterial) AddFloat32PropertyVar(pro AiMaterialProperty, data ...float32) {
 	pro = pro.ResetData()
-	pro.DataType = pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32
-	bytesData, err := proto.Marshal(&pb_msg.AiMaterialPropertyFloat32{Data: data})
+	pro.DataType = pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat64
+	tmp := &pb_msg.AiMaterialPropertyFloat64{}
+	for _, v := range data {
+		tmp.Data = append(tmp.Data, float64(v))
+	}
+	bytesData, err := proto.Marshal(tmp)
 	if err != nil {
 		panic(err)
 	}

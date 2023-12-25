@@ -12,6 +12,14 @@ type AiVector3D struct {
 func (ai AiVector3D) Empty() bool {
 	return ai.X == 0 && ai.Y == 0 && ai.Z == 0
 }
+
+func (ai *AiVector3D) FromPbMsg(data *pb_msg.AiVector3D) *AiVector3D {
+	return &AiVector3D{
+		X: data.X,
+		Y: data.Y,
+		Z: data.Z,
+	}
+}
 func (ai AiVector3D) ToPbMsg() *pb_msg.AiVector3D {
 	return &pb_msg.AiVector3D{X: ai.X, Y: ai.Y, Z: ai.Z}
 }

@@ -4,7 +4,7 @@ package pb_msg;
 import "common/pb_msg/common.proto";
 enum AiMaterialPropertyType{
   AiPropertyTypeString=0;
-  AiPropertyTypeFloat32=1;
+  AiPropertyTypeFloat64=1;
   AiPropertyTypeInt=2;
   AiPropertyTypeVector3D=3;
   AiPropertyTypeAiUVTransform=4;
@@ -12,8 +12,8 @@ enum AiMaterialPropertyType{
   AiPropertyTypeColor4D=6;
   AiPropertyTypeColor3D=7;
 }
-message AiMaterialPropertyFloat32 {
-  repeated  float Data=1;
+message AiMaterialPropertyFloat64 {
+  repeated  double Data=1;
 }
 
 message AiMaterialPropertyInt64 {

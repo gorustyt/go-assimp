@@ -1,4 +1,4 @@
-package awesomeProject2
+package assimp
 
 import (
 	"assimp/core"

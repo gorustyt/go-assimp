@@ -56,5 +56,5 @@ message AiNode {
   * @link importer_notes @endlink page for more information on every source file
   * format. Importers that don't document any metadata don't write any.
   */
-  repeated AiMetadata MetaData=6;
+  AiMetadata MetaData=6;
 }

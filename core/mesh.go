@@ -248,7 +248,7 @@ func (ai *AiMesh) ToPbMsg() *pb_msg.AiMesh {
 	for _, v := range ai.Bones {
 		r.Bones = append(r.Bones, v.ToPbMsg())
 	}
-	r.MaterialIndex = ai.MaterialIndex
+	r.MaterialIndex = int32(ai.MaterialIndex)
 	r.Name = ai.Name
 
 	for _, v := range ai.AnimMeshes {
@@ -573,7 +573,7 @@ type AiBone struct {
 	 * It is sometimes called an inverse-bind matrix,
 	 * or inverse bind pose matrix.
 	 */
-	OffsetMatrix common.AiMatrix4x4
+	OffsetMatrix *common.AiMatrix4x4
 }
 
 func (ai *AiBone) ToPbMsg() *pb_msg.AiBone {

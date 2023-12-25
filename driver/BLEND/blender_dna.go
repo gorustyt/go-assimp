@@ -337,7 +337,7 @@ func (s *Structure) Index(i int) *Field {
 func (s *Structure) IndexByString(ss string) *Field {
 	it, ok := s.indices[ss]
 	if !ok {
-		logger.ErrorF("BlendDNA: Did not find a field named `%v ` in structure `%v", ss, s.name)
+		logger.WarnF("BlendDNA: Did not find a field named `%v ` in structure `%v", ss, s.name)
 		return nil
 	}
 
@@ -513,7 +513,7 @@ func (s *Structure) readFieldPtrArray(in any, count int, name string, db *FileDa
 	// find the structure definition pertaining to this field
 	i := 0
 	for ; i < int(math.Min(float64(f.array_sizes[0]), float64(len(ptrval)))); i++ {
-		err := s.Convert(ptrval[i], db)
+		err := s.Convert(&ptrval[i], db)
 		if err != nil {
 			return out1, err
 		}

@@ -1,6 +1,10 @@
 package core
 
-import "assimp/common/pb_msg"
+import (
+	"assimp/common"
+	"assimp/common/pb_msg"
+	"google.golang.org/protobuf/proto"
+)
 
 type AiMetadataType int
 
@@ -41,6 +45,13 @@ func (ai *AiMetadata) ToPbMsg() *pb_msg.AiMetadata {
 	}
 	return &r
 }
+func (ai *AiMetadata) FromPbMsg(data *pb_msg.AiMetadata) *AiMetadata {
+	ai.Keys = data.Keys
+	for _, v := range data.Values {
+		ai.Values = append(ai.Values, ((&AiMetadataEntry{}).FromPbMsg(v)))
+	}
+	return ai
+}
 
 /**
  * Metadata entry
@@ -50,12 +61,121 @@ func (ai *AiMetadata) ToPbMsg() *pb_msg.AiMetadata {
 
 type AiMetadataEntry struct {
 	Type AiMetadataType
-	Data []byte
+	Data any
 }
 
 func (ai *AiMetadataEntry) ToPbMsg() *pb_msg.AiMetadataEntry {
 	r := pb_msg.AiMetadataEntry{}
 	r.Type = int32(ai.Type)
-	r.Data = ai.Data
+	var v proto.Message
+	switch ai.Type {
+	case AI_BOOL:
+		b := ai.Data.(bool)
+		t := 0
+		if b {
+			t = 1
+		}
+		v = &pb_msg.AiMaterialPropertyInt64{Data: []int64{int64(t)}}
+	case AI_INT32:
+		v = &pb_msg.AiMaterialPropertyInt64{Data: []int64{int64(ai.Data.(int32))}}
+	case AI_UINT64:
+		v = &pb_msg.AiMaterialPropertyInt64{Data: []int64{int64(ai.Data.(uint64))}}
+	case AI_FLOAT:
+		v = &pb_msg.AiMaterialPropertyFloat64{Data: []float64{float64(ai.Data.(float32))}}
+	case AI_DOUBLE:
+		v = &pb_msg.AiMaterialPropertyFloat64{Data: []float64{ai.Data.(float64)}}
+	case AI_AISTRING:
+		v = &pb_msg.AiMaterialPropertyString{Data: []string{ai.Data.(string)}}
+	case AI_AIVECTOR3D:
+		v = ai.Data.(*common.AiVector3D).ToPbMsg()
+	case AI_AIMETADATA:
+		v = ai.Data.(*AiMetadata).ToPbMsg()
+	case AI_INT64:
+		v = &pb_msg.AiMaterialPropertyInt64{Data: []int64{ai.Data.(int64)}}
+	case AI_UINT32:
+		v = &pb_msg.AiMaterialPropertyInt64{Data: []int64{int64(ai.Data.(uint32))}}
+	}
+	r.Data, _ = proto.Marshal(v)
 	return &r
+}
+
+func (ai *AiMetadataEntry) FromPbMsg(data *pb_msg.AiMetadataEntry) *AiMetadataEntry {
+	ai.Type = AiMetadataType(data.Type)
+	switch ai.Type {
+	case AI_BOOL:
+		tmp := &pb_msg.AiMaterialPropertyInt64{}
+		err := proto.Unmarshal(data.Data, tmp)
+		if err != nil {
+			panic(err)
+		}
+		if tmp.Data[0] != 0 {
+			ai.Data = true
+		}
+	case AI_INT32:
+		tmp := &pb_msg.AiMaterialPropertyInt64{}
+		err := proto.Unmarshal(data.Data, tmp)
+		if err != nil {
+			panic(err)
+		}
+		ai.Data = int32(tmp.Data[0])
+	case AI_UINT64:
+		tmp := &pb_msg.AiMaterialPropertyInt64{}
+		err := proto.Unmarshal(data.Data, tmp)
+		if err != nil {
+			panic(err)
+		}
+		ai.Data = uint64(tmp.Data[0])
+	case AI_FLOAT:
+		tmp := &pb_msg.AiMaterialPropertyFloat64{}
+		err := proto.Unmarshal(data.Data, tmp)
+		if err != nil {
+			panic(err)
+		}
+		ai.Data = float32(tmp.Data[0])
+	case AI_DOUBLE:
+		tmp := &pb_msg.AiMaterialPropertyFloat64{}
+		err := proto.Unmarshal(data.Data, tmp)
+		if err != nil {
+			panic(err)
+		}
+		ai.Data = tmp.Data[0]
+	case AI_AISTRING:
+		tmp := &pb_msg.AiMaterialPropertyString{}
+		err := proto.Unmarshal(data.Data, tmp)
+		if err != nil {
+			panic(err)
+		}
+		ai.Data = tmp.Data[0]
+	case AI_AIVECTOR3D:
+		tmp := &pb_msg.AiVector3D{}
+		err := proto.Unmarshal(data.Data, tmp)
+		if err != nil {
+			panic(err)
+		}
+		ai.Data = (&common.AiVector3D{}).FromPbMsg(tmp)
+	case AI_AIMETADATA:
+		tmp := &pb_msg.AiMetadata{}
+		err := proto.Unmarshal(data.Data, tmp)
+		if err != nil {
+			panic(err)
+		}
+		ai.Data = (&AiMetadata{}).FromPbMsg(tmp)
+
+	case AI_INT64:
+		tmp := &pb_msg.AiMaterialPropertyInt64{}
+		err := proto.Unmarshal(data.Data, tmp)
+		if err != nil {
+			panic(err)
+		}
+
+		ai.Data = tmp.Data[0]
+	case AI_UINT32:
+		tmp := &pb_msg.AiMaterialPropertyInt64{}
+		err := proto.Unmarshal(data.Data, tmp)
+		if err != nil {
+			panic(err)
+		}
+		ai.Data = uint32(tmp.Data[0])
+	}
+	return ai
 }

@@ -68,9 +68,9 @@ func NewLogger(cfg *LogConfig) *Logger {
 }
 
 func (l *Logger) Init() {
-	fileWriter := l.getLogWriter(l.cfg.FileName, l.cfg.MaxSize, l.cfg.MaxBackups, l.cfg.MaxAge)
+	//fileWriter := l.getLogWriter(l.cfg.FileName, l.cfg.MaxSize, l.cfg.MaxBackups, l.cfg.MaxAge)
 	consoleWriter := zapcore.AddSync(os.Stdout)
-	writerSyncer := zapcore.NewMultiWriteSyncer(fileWriter, consoleWriter)
+	writerSyncer := zapcore.NewMultiWriteSyncer(consoleWriter)
 	// 获取日志编码格式
 	encoder := l.getEncoder()
 	level := l.getLevel()
@@ -107,10 +107,10 @@ func (l *Logger) getEncoder() zapcore.Encoder {
 	// "time":"2022-09-01T19:11:35.921+0800"
 	encodeConfig.TimeKey = "time"
 	// 将Level序列化为全大写字符串。例如，将info level序列化为INFO。
-	encodeConfig.EncodeLevel = zapcore.CapitalLevelEncoder
+	encodeConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	// 以 package/file:行 的格式 序列化调用程序，从完整路径中删除除最后一个目录外的所有目录。
 	encodeConfig.EncodeCaller = zapcore.ShortCallerEncoder
-	return zapcore.NewJSONEncoder(encodeConfig)
+	return zapcore.NewConsoleEncoder(encodeConfig)
 }
 
 func (l *Logger) getLevel() *zapcore.Level {

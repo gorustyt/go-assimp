@@ -327,7 +327,7 @@ func (b *BlenderImporter) ConvertNode(in *Scene, obj *Object, conv_data *Convers
 			if err != nil {
 				return nil, err
 			}
-			err = b.ConvertMesh(in, obj, obj.data.(*Mesh), conv_data, conv_data.meshes)
+			err = b.ConvertMesh(in, obj, obj.data.(*Mesh), conv_data, &conv_data.meshes)
 			if err != nil {
 				return nil, err
 			}
@@ -862,7 +862,7 @@ var (
 
 // ------------------------------------------------------------------------------------------------
 func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
-	conv_data *ConversionData, temp []*core.AiMesh) error {
+	conv_data *ConversionData, temp *[]*core.AiMesh) error {
 	// TODO: Resolve various problems with BMesh triangulation before re-enabling.
 	//       See issues #400, #373, #318  #315 and #132.
 	//if TODO_FIX_BMESH_CONVERSION{
@@ -916,18 +916,15 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 	}
 
 	// ... and allocate the corresponding meshes
-	old := len(temp)
+	old := len(*temp)
 	mat_num_to_mesh_idx := map[int]int{}
 	for k, v := range per_mat {
 
-		mat_num_to_mesh_idx[k] = len(temp)
+		mat_num_to_mesh_idx[k] = len(*temp)
 		var out = core.NewAiMesh()
-		temp = append(temp, out)
+		*temp = append(*temp, out)
 		out.Vertices = make([]*common.AiVector3D, per_mat_verts[k])
 		out.Normals = make([]*common.AiVector3D, per_mat_verts[k])
-
-		//out.mNumFaces = 0
-		//out.mNumVertices = 0
 		out.Faces = make([]*core.AiFace, v)
 
 		// all sub-meshes created from this mesh are named equally. this allows
@@ -964,7 +961,7 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 
 		mf := mesh.mface[i]
 
-		out := temp[mat_num_to_mesh_idx[int(mf.mat_nr)]]
+		out := (*temp)[mat_num_to_mesh_idx[int(mf.mat_nr)]]
 		var f = core.NewAiFace()
 		out.Faces = append(out.Faces, f)
 		tmp := 3
@@ -1051,7 +1048,7 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 
 		mf := mesh.mpoly[i]
 
-		out := temp[mat_num_to_mesh_idx[int(mf.mat_nr)]]
+		out := (*temp)[mat_num_to_mesh_idx[int(mf.mat_nr)]]
 		var f = core.NewAiFace()
 		out.Faces = append(out.Faces, f)
 		f.Indices = make([]uint32, mf.totloop)
@@ -1117,28 +1114,28 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 		if int(mesh.totface) > len(mesh.mtface) {
 			return errors.New("Number of UV faces is larger than the corresponding UV face array (#1)")
 		}
-		for it := old; it != len(temp); it++ {
-			if 0 == len(temp[it].Vertices) {
+		for it := old; it != len(*temp); it++ {
+			if 0 == len((*temp)[it].Vertices) {
 				return errors.New("invalid type ")
 			}
-			if 0 == len(temp[it].Faces) {
+			if 0 == len((*temp)[it].Faces) {
 				return errors.New("invalid type ")
 			}
-			itMatTexUvMapping, ok := matTexUvMappings[uint32(temp[it].MaterialIndex)]
+			itMatTexUvMapping, ok := matTexUvMappings[uint32((*temp)[it].MaterialIndex)]
 			if !ok {
 				// default behaviour like before
-				temp[it].TextureCoords[0] = make([]*common.AiVector3D, len(temp[it].Vertices))
+				(*temp)[it].TextureCoords[0] = make([]*common.AiVector3D, len((*temp)[it].Vertices))
 			} else {
 				// create texture coords for every mapped tex
 				for i := 0; i < len(itMatTexUvMapping); i++ {
-					temp[it].TextureCoords[i] = make([]*common.AiVector3D, len(temp[it].Vertices))
+					(*temp)[it].TextureCoords[i] = make([]*common.AiVector3D, len((*temp)[it].Vertices))
 				}
 			}
 		}
 
 		for i := 0; i < int(mesh.totface); i++ {
 			v := mesh.mtface[i]
-			out := temp[mat_num_to_mesh_idx[int(mesh.mface[i].mat_nr)]]
+			out := (*temp)[mat_num_to_mesh_idx[int(mesh.mface[i].mat_nr)]]
 			f := core.NewAiFace()
 			out.Faces = append(out.Faces, f)
 			vo1 := common.NewAiVector3D()
@@ -1151,7 +1148,7 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 
 		for i := 0; i < int(mesh.totpoly); i++ {
 			v := mesh.mpoly[i]
-			out := temp[mat_num_to_mesh_idx[int(v.mat_nr)]]
+			out := (*temp)[mat_num_to_mesh_idx[int(v.mat_nr)]]
 
 			f := core.NewAiFace()
 			out.Faces = append(out.Faces, f)
@@ -1192,21 +1189,21 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 		if int(mesh.totface) > len(mesh.tface) {
 			return errors.New("Number of faces is larger than the corresponding UV face array (#2)")
 		}
-		for it := old; it != len(temp); it++ {
-			if 0 == len(temp[it].Vertices) {
+		for it := old; it != len((*temp)); it++ {
+			if 0 == len((*temp)[it].Vertices) {
 				return errors.New("invalid ")
 			}
-			if 0 == len(temp[it].Faces) {
+			if 0 == len((*temp)[it].Faces) {
 				return errors.New("invalid ")
 			}
 
-			temp[it].TextureCoords[0] = make([]*common.AiVector3D, len(temp[it].Vertices))
+			(*temp)[it].TextureCoords[0] = make([]*common.AiVector3D, len((*temp)[it].Vertices))
 		}
 
 		for i := 0; i < int(mesh.totface); i++ {
 			v := mesh.tface[i]
 
-			out := temp[mat_num_to_mesh_idx[int(mesh.mface[i].mat_nr)]]
+			out := (*temp)[mat_num_to_mesh_idx[int(mesh.mface[i].mat_nr)]]
 			f := core.NewAiFace()
 			out.Faces = append(out.Faces, f)
 			vo1 := common.NewAiVector3D()
@@ -1223,20 +1220,20 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 		if int(mesh.totface) > (len(mesh.mcol) / 4) {
 			return errors.New("Number of faces is larger than the corresponding color face array")
 		}
-		for it := old; it != len(temp); it++ {
-			if 0 == len(temp[it].Vertices) {
+		for it := old; it != len((*temp)); it++ {
+			if 0 == len((*temp)[it].Vertices) {
 				return errors.New("invalid ")
 			}
-			if 0 == len(temp[it].Faces) {
+			if 0 == len((*temp)[it].Faces) {
 				return errors.New("invalid ")
 			}
 
-			temp[it].Colors[0] = make([]*common.AiColor4D, len(temp[it].Vertices))
+			(*temp)[it].Colors[0] = make([]*common.AiColor4D, len((*temp)[it].Vertices))
 		}
 
 		for i := 0; i < int(mesh.totface); i++ {
 
-			out := temp[mat_num_to_mesh_idx[int(mesh.mface[i].mat_nr)]]
+			out := (*temp)[mat_num_to_mesh_idx[int(mesh.mface[i].mat_nr)]]
 			f := core.NewAiFace()
 			out.Faces = append(out.Faces, f)
 			vo := common.NewAiColor4D0()
@@ -1254,7 +1251,7 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 
 		for i := 0; i < int(mesh.totpoly); i++ {
 			v := mesh.mpoly[i]
-			out := temp[mat_num_to_mesh_idx[int(v.mat_nr)]]
+			out := (*temp)[mat_num_to_mesh_idx[int(v.mat_nr)]]
 			f := core.NewAiFace()
 			out.Faces = append(out.Faces, f)
 			vo := common.NewAiColor4D0()

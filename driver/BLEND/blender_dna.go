@@ -525,6 +525,9 @@ func (s *Structure) readFieldPtrArray(in any, count int, name string, db *FileDa
 		// resolve the pointer and load the corresponding structure
 		v, err := s.ResolvePointer(in, &ptrval[i], db, f)
 		if err != nil {
+			if errors.Is(err, ErrorPtrZero) {
+				continue
+			}
 			return out1, err
 		}
 		out1 = append(out1, v)

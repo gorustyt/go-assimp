@@ -3,14 +3,15 @@ option go_package = "common/pb_msg";
 package pb_msg;
 import "common/pb_msg/common.proto";
 enum AiMaterialPropertyType{
-  AiPropertyTypeString=0;
-  AiPropertyTypeFloat64=1;
-  AiPropertyTypeInt=2;
-  AiPropertyTypeVector3D=3;
-  AiPropertyTypeAiUVTransform=4;
-  AiPropertyTypeVector4D=5;
-  AiPropertyTypeColor4D=6;
-  AiPropertyTypeColor3D=7;
+  AiPropertyTypeBytes=0;
+  AiPropertyTypeString=1;
+  AiPropertyTypeFloat64=2;
+  AiPropertyTypeInt=3;
+  AiPropertyTypeVector3D=4;
+  AiPropertyTypeAiUVTransform=5;
+  AiPropertyTypeVector4D=6;
+  AiPropertyTypeColor4D=7;
+  AiPropertyTypeColor3D=8;
 }
 message AiMaterialPropertyFloat64 {
   repeated  double Data=1;

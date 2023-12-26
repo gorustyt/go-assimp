@@ -437,9 +437,6 @@ func (b *BlenderImporter) ParseBlendFile(file *FileDatabase) error {
 			dna = dna_reader.GetDNA()
 			continue
 		}
-		if err != nil {
-			return err
-		}
 		file.entries = append(file.entries, head)
 	}
 	if dna == nil {
@@ -616,10 +613,7 @@ func (b *BlenderImporter) BuildDefaultMaterial(conv_data *ConversionData) error 
 			if index == -1 {
 				// Setup a default material.
 				p := &Material{ElemBase: &ElemBase{}}
-				if len(core.AI_DEFAULT_MATERIAL_NAME) < len(p.id.name)-2 {
-					return errors.New("invalid length")
-				}
-				p.id.name = p.id.name[:2] + core.AI_DEFAULT_MATERIAL_NAME
+				p.id.name = core.AI_DEFAULT_MATERIAL_NAME
 				// Note: MSVC11 does not zero-initialize Material here, although it should.
 				// Thus all relevant fields should be explicitly initialized. We cannot add
 				// a default constructor to Material since the DNA codegen does not support
@@ -918,15 +912,11 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 	// ... and allocate the corresponding meshes
 	old := len(*temp)
 	mat_num_to_mesh_idx := map[int]int{}
-	for k, v := range per_mat {
+	for k, _ := range per_mat {
 
 		mat_num_to_mesh_idx[k] = len(*temp)
 		var out = core.NewAiMesh()
 		*temp = append(*temp, out)
-		out.Vertices = make([]*common.AiVector3D, per_mat_verts[k])
-		out.Normals = make([]*common.AiVector3D, per_mat_verts[k])
-		out.Faces = make([]*core.AiFace, v)
-
 		// all sub-meshes created from this mesh are named equally. this allows
 		// curious users to recover the original adjacency.
 		out.Name = mesh.id.name[2:]
@@ -987,7 +977,7 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 		vn.X = v.no[0]
 		vn.Y = v.no[1]
 		vn.Z = v.no[2]
-		f.Indices[0] = uint32(len(out.Vertices))
+		f.Indices[0] = uint32(len(out.Vertices)) - 1
 		vo, vn = getVoVn(out)
 
 		//  if (f.mNumIndices >= 2) {
@@ -1001,7 +991,7 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 		vn.X = v.no[0]
 		vn.Y = v.no[1]
 		vn.Z = v.no[2]
-		f.Indices[1] = uint32(len(out.Vertices))
+		f.Indices[1] = uint32(len(out.Vertices)) - 1
 
 		vo, vn = getVoVn(out)
 		if mf.v3 >= mesh.totvert {
@@ -1015,12 +1005,12 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 		vn.X = v.no[0]
 		vn.Y = v.no[1]
 		vn.Z = v.no[2]
-		f.Indices[2] = uint32(len(out.Vertices))
+		f.Indices[2] = uint32(len(out.Vertices)) - 1
 
 		vo, vn = getVoVn(out)
 
 		if mf.v4 >= mesh.totvert {
-			return errors.New("Vertex index v4 out of range")
+			return errors.New("vertex index v4 out of range")
 		}
 		//  if (f.mNumIndices >= 4) {
 		if mf.v4 != 0 {
@@ -1031,9 +1021,7 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 			vn.X = v.no[0]
 			vn.Y = v.no[1]
 			vn.Z = v.no[2]
-			f.Indices[3] = uint32(len(out.Vertices))
-			vo, vn = getVoVn(out)
-
+			f.Indices[3] = uint32(len(out.Vertices)) - 1
 			out.PrimitiveTypes |= uint32(core.AiPrimitiveType_POLYGON)
 		} else {
 			out.PrimitiveTypes |= uint32(core.AiPrimitiveType_TRIANGLE)
@@ -1096,7 +1084,7 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 		texuv := map[uint32]*MLoopUV{}
 		maxTex := unsafe.Sizeof(pMat.mtex) / unsafe.Sizeof(pMat.mtex[0])
 		for t := 0; t < int(maxTex); t++ {
-			if pMat.mtex[t] != nil && pMat.mtex[t].uvname[0] != 0 {
+			if pMat.mtex[t] != nil && pMat.mtex[t].uvname != "" {
 				// get the CustomData layer for given uvname and correct type
 				pLoop := getCustomDataLayerData(mesh.ldata, CD_MLOOPUV, pMat.mtex[t].uvname)
 				if pLoop != nil {
@@ -1112,7 +1100,7 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 	// collect texture coordinates, they're stored in a separate per-face buffer
 	if len(mesh.mtface) != 0 || len(mesh.mloopuv) != 0 {
 		if int(mesh.totface) > len(mesh.mtface) {
-			return errors.New("Number of UV faces is larger than the corresponding UV face array (#1)")
+			return errors.New("number of UV faces is larger than the corresponding UV face array (#1)")
 		}
 		for it := old; it != len(*temp); it++ {
 			if 0 == len((*temp)[it].Vertices) {

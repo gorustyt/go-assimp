@@ -17,6 +17,15 @@ func IsPtrError(err error, fn func()) error {
 	return nil
 }
 
+func getName(bytes []byte) string {
+	for i, v := range bytes {
+		if v == 0 {
+			return string(bytes[:i])
+		}
+	}
+	return string(bytes)
+}
+
 func (dest *Object) Convert(db *FileDatabase, s *Structure) (err error) {
 
 	err = s.ReadField(&dest.id, "id", db)
@@ -59,7 +68,7 @@ func (dest *Object) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	dest.parsubstr = string(tmp2)
+	dest.parsubstr = getName(tmp2)
 	out, err := s.ReadFieldPtr("*parent", db)
 	if err := IsPtrError(err, func() {
 		dest.parent = out.(*Object)
@@ -265,7 +274,7 @@ func (dest *MTex) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	dest.uvname = string(tmp)
+	dest.uvname = getName(tmp)
 	err = s.ReadField(&temp, "projx", db)
 	if err != nil {
 		return err
@@ -1602,7 +1611,7 @@ func (dest *ModifierData) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	dest.name = string(tmp)
+	dest.name = getName(tmp)
 	return db.Discard(int(s.size))
 }
 
@@ -1611,7 +1620,7 @@ func (dest *ModifierData) Convert(db *FileDatabase, s *Structure) (err error) {
 func (dest *ID) Convert(db *FileDatabase, s *Structure) (err error) {
 	tmp := make([]uint8, 1024)
 	err = s.ReadFieldArray(SliceToAny(tmp), "name", db)
-	dest.name = string(tmp)
+	dest.name = getName(tmp)
 	if err != nil {
 		return err
 	}
@@ -1730,13 +1739,13 @@ func (dest *Library) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	dest.name = string(tmp)
+	dest.name = getName(tmp)
 	tmp = make([]uint8, 240)
 	err = s.ReadFieldArray(SliceToAny(tmp), "filename", db)
 	if err != nil {
 		return err
 	}
-	dest.filename = string(tmp)
+	dest.filename = getName(tmp)
 	value, err := s.ReadFieldPtr("*parent", db)
 	if err = IsPtrError(err, func() {
 		dest.parent = value.(*Library)
@@ -1867,7 +1876,7 @@ func (dest *Image) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	dest.name = string(tmp)
+	dest.name = getName(tmp)
 	err = s.ReadField(&dest.ok, "ok", db)
 	if err != nil {
 		return err
@@ -2027,7 +2036,7 @@ func (dest *CustomDataLayer) Convert(
 	if err != nil {
 		return err
 	}
-	dest.name = string(tmp)
+	dest.name = getName(tmp)
 	datas, err := s.ReadCustomDataPtr(int(dest.Type), "*data", db)
 	if err != nil {
 		return err

@@ -10,7 +10,7 @@ import (
 func Test0(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/box.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/box.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/box_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
@@ -18,14 +18,14 @@ func Test0(t *testing.T) {
 func Test1(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/4Cubes4Mats_248.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/4Cubes4Mats_248.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/4Cubes4Mats_248_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
 func Test2(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/blender_269_regress1.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/blender_269_regress1.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/blender_269_regress1_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
@@ -33,7 +33,7 @@ func Test2(t *testing.T) {
 func Test3(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/BlenderDefault_248.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/BlenderDefault_248.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/BlenderDefault_248_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
@@ -41,7 +41,7 @@ func Test3(t *testing.T) {
 func Test4(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/BlenderDefault_250.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/BlenderDefault_250.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/BlenderDefault_250_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
@@ -49,7 +49,7 @@ func Test4(t *testing.T) {
 func Test5(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/BlenderDefault_250_Compressed.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/BlenderDefault_250_Compressed.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/BlenderDefault_250_Compressed_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
@@ -57,7 +57,7 @@ func Test5(t *testing.T) {
 func Test6(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/BlenderDefault_262.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/BlenderDefault_262.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/BlenderDefault_262_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
@@ -65,7 +65,7 @@ func Test6(t *testing.T) {
 func Test7(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/BlenderDefault_269.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/BlenderDefault_269.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/BlenderDefault_269_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
@@ -73,7 +73,7 @@ func Test7(t *testing.T) {
 func Test8(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/BlenderDefault_271.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/BlenderDefault_271.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/BlenderDefault_271_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
@@ -81,7 +81,7 @@ func Test8(t *testing.T) {
 func Test9(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/BlenderDefault_276.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/BlenderDefault_276.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/BlenderDefault_276_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
@@ -89,7 +89,7 @@ func Test9(t *testing.T) {
 func Test10(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/CubeHierarchy_248.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/CubeHierarchy_248.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/CubeHierarchy_248_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
@@ -97,7 +97,7 @@ func Test10(t *testing.T) {
 func Test11(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/HUMAN.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/HUMAN.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/HUMAN_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
@@ -105,7 +105,7 @@ func Test11(t *testing.T) {
 func Test12(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/MirroredCube_252.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/MirroredCube_252.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/MirroredCube_252_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
@@ -113,7 +113,7 @@ func Test12(t *testing.T) {
 func Test13(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/NoisyTexturedCube_VoronoiGlob_248.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/NoisyTexturedCube_VoronoiGlob_248.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/NoisyTexturedCube_VoronoiGlob_248_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
@@ -121,7 +121,7 @@ func Test13(t *testing.T) {
 func Test14(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/SmoothVsSolidCube_248.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/SmoothVsSolidCube_248.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/SmoothVsSolidCube_248_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
@@ -129,7 +129,7 @@ func Test14(t *testing.T) {
 func Test15(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/Suzanne_248.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/Suzanne_248.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/Suzanne_248_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
@@ -137,7 +137,7 @@ func Test15(t *testing.T) {
 func Test16(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/SuzanneSubdiv_252.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/SuzanneSubdiv_252.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/SuzanneSubdiv_252_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 	// check approximate shape by averaging together all vertices
@@ -168,7 +168,7 @@ func Test16(t *testing.T) {
 func Test17(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/TexturedCube_ImageGlob_248.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/TexturedCube_ImageGlob_248.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/TexturedCube_ImageGlob_248_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
@@ -176,7 +176,7 @@ func Test17(t *testing.T) {
 func Test18(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/TexturedPlane_ImageUv_248.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/TexturedPlane_ImageUv_248.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/TexturedPlane_ImageUv_248_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
@@ -184,7 +184,7 @@ func Test18(t *testing.T) {
 func Test19(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/TexturedPlane_ImageUvPacked_248.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/TexturedPlane_ImageUvPacked_248.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/TexturedPlane_ImageUvPacked_248_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
@@ -192,7 +192,7 @@ func Test19(t *testing.T) {
 func Test20(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/TorusLightsCams_250_compressed.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/TorusLightsCams_250_compressed.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/TorusLightsCams_250_compressed_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
@@ -200,7 +200,7 @@ func Test20(t *testing.T) {
 func Test21(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/yxa_1.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/yxa_1.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/yxa_1_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
@@ -208,7 +208,7 @@ func Test21(t *testing.T) {
 func Test22(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/Bob.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/Bob.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/Bob_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
@@ -216,7 +216,7 @@ func Test22(t *testing.T) {
 func Test23(t *testing.T) {
 	p, err := assimp.ParseFile("../example_data/BLEND/fleurOptonl.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("../example_data/BLEND/fleurOptonl.assbin")
+	p1, err := assimp.ParseFile("../example_data/BLEND/fleurOptonl_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }

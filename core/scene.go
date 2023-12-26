@@ -197,6 +197,6 @@ func (node *AiNode) ToPbMsg() *pb_msg.AiNode {
 func NewAiNode(name string) *AiNode {
 	return &AiNode{
 		Name:           name,
-		Transformation: &common.AiMatrix4x4{},
+		Transformation: common.NewAiMatrix4x4Identify(),
 	}
 }

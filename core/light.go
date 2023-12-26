@@ -182,5 +182,9 @@ func (ai *AiLight) ToPbMsg() *pb_msg.AiLight {
 	return r
 }
 func NewAiLight() *AiLight {
-	return &AiLight{}
+	return &AiLight{
+		ColorDiffuse:  common.NewAiColor3D(0, 0, 0),
+		ColorSpecular: common.NewAiColor3D(0, 0, 0),
+		ColorAmbient:  common.NewAiColor3D(0, 0, 0),
+	}
 }

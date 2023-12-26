@@ -2,7 +2,6 @@ package ASSETBIN
 
 import (
 	"assimp/common"
-	"assimp/common/pb_msg"
 	"assimp/common/reader"
 	"assimp/core"
 	"assimp/driver/base/iassimp"
@@ -623,8 +622,12 @@ func (ai *AssBinImporter) ReadBinaryMaterialProperty(prop *core.AiMaterialProper
 	if err != nil {
 		return err
 	}
-	prop.DataType = pb_msg.AiMaterialPropertyType(t)
-	prop.Data, err = ai.GetNBytes(int(dataLength))
+
+	data, err := ai.GetNBytes(int(dataLength))
+	if err != nil {
+		return err
+	}
+	err = GetAiMaterialPropertyData(prop, t, data)
 	if err != nil {
 		return err
 	}

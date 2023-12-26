@@ -1,6 +1,7 @@
 package test
 
 import (
+	"assimp/common/logger"
 	"bytes"
 	"math"
 	"reflect"
@@ -73,9 +74,19 @@ func deepValueEqual(v1, v2 reflect.Value, visited map[visit]bool) bool {
 		return true
 	case reflect.Slice:
 		if v1.IsNil() != v2.IsNil() {
+			logger.ErrorF("v1.Slice.IsNil:%v != v2.Slice.IsNil:%v v1:%v v2:%v",
+				v1.Type().String(),
+				v2.Type().String(),
+				v1.IsNil(),
+				v2.IsNil())
 			return false
 		}
 		if v1.Len() != v2.Len() {
+			logger.ErrorF("v1.Slice.Len:%v != v2.Slice.Len:%v v1:%v v2:%v",
+				v1.Type().String(),
+				v2.Type().String(),
+				v1.Len(),
+				v2.Len())
 			return false
 		}
 		if v1.UnsafePointer() == v2.UnsafePointer() {
@@ -93,6 +104,11 @@ func deepValueEqual(v1, v2 reflect.Value, visited map[visit]bool) bool {
 		return true
 	case reflect.Interface:
 		if v1.IsNil() || v2.IsNil() {
+			logger.ErrorF("v1.Interface.IsNil:%v != v2.Interface.IsNil:%v v1:%v v2:%v",
+				v1.Type().String(),
+				v2.Type().String(),
+				v1.IsNil(),
+				v2.IsNil())
 			return v1.IsNil() == v2.IsNil()
 		}
 		return deepValueEqual(v1.Elem(), v2.Elem(), visited)
@@ -133,29 +149,79 @@ func deepValueEqual(v1, v2 reflect.Value, visited map[visit]bool) bool {
 		// Can't do better than this:
 		return false
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		if v1.Int() != v2.Int() {
+			logger.ErrorF("v1.Int:%v != v2.Int:%v v1:%v v2:%v",
+				v1.Type().String(),
+				v2.Type().String(),
+				v1.Int(),
+				v2.Int())
+		}
 		return v1.Int() == v2.Int()
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		if v1.Uint() != v2.Uint() {
+			logger.ErrorF("v1.uInt:%v != v2.uInt:%v v1:%v v2:%v",
+				v1.Type().String(),
+				v2.Type().String(),
+				v1.Uint(),
+				v2.Uint())
+		}
 		return v1.Uint() == v2.Uint()
 	case reflect.String:
+		if v1.String() != v2.String() {
+			logger.ErrorF("v1.String:%v != v2.String:%v v1:%v v2:%v",
+				v1.Type().String(),
+				v2.Type().String(),
+				v1.String(),
+				v2.String())
+		}
 		return v1.String() == v2.String()
 	case reflect.Bool:
+		if v1.Bool() != v2.Bool() {
+			logger.ErrorF("v1.String:%v != v2.String:%v v1:%v v2:%v",
+				v1.Type().String(),
+				v2.Type().String(),
+				v1.Bool(),
+				v2.Bool())
+		}
 		return v1.Bool() == v2.Bool()
 	case reflect.Float32, reflect.Float64: //浮点数比较精度
+		if math.Abs(v1.Float()-v2.Float()) > Eps {
+			logger.ErrorF("v1.Float:%v != v2.Float:%v v1:%v v2:%v eps:%v delta:%v",
+				v1.Type().String(),
+				v2.Type().String(),
+				v1.Float(),
+				v2.Float(), Eps, math.Abs(v1.Float()-v2.Float()))
+		}
 		return math.Abs(v1.Float()-v2.Float()) <= Eps
 	case reflect.Complex64, reflect.Complex128:
+		if v1.Complex() != v2.Complex() {
+			logger.ErrorF("v1.Complex:%v != v2.Complex:%v v1:%v v2:%v",
+				v1.Type().String(),
+				v2.Type().String(),
+				v1.Complex(),
+				v2.Complex())
+		}
 		return v1.Complex() == v2.Complex()
 	default:
+		if v1.Interface() != v2.Interface() {
+			logger.ErrorF("v1.Interface:%v != v2.Interface:%v v1:%v v2:%v",
+				v1.Type().String(),
+				v2.Type().String(),
+				v1.Interface(),
+				v2.Interface())
+		}
 		// Normal equality suffices
 		return v1.Interface() == v2.Interface()
 	}
 }
-func DeepEqual(x, y any) bool {
+func deepEqual(x, y any) bool {
 	if x == nil || y == nil {
 		return x == y
 	}
 	v1 := reflect.ValueOf(x)
 	v2 := reflect.ValueOf(y)
 	if v1.Type() != v2.Type() {
+		logger.ErrorF("v1.Type:%v != v2.Type:%v", v1.Type().String(), v2.Type().String())
 		return false
 	}
 	return deepValueEqual(v1, v2, make(map[visit]bool))

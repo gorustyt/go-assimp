@@ -1025,7 +1025,7 @@ const (
 
 type AiMaterial struct {
 	/** List of all material properties loaded. */
-	Properties []AiMaterialProperty
+	Properties []*AiMaterialProperty
 	/** Storage allocated */
 	NumAllocated int32
 }
@@ -1041,7 +1041,7 @@ func (ai *AiMaterial) ToPbMsg() *pb_msg.AiMaterial {
 
 func (ai *AiMaterial) AddFloat32PropertyVar(pro AiMaterialProperty, data ...float32) {
 	pro = pro.ResetData()
-	pro.DataType = pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat64
+	pro.Type = pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat64
 	tmp := &pb_msg.AiMaterialPropertyFloat64{}
 	for _, v := range data {
 		tmp.Data = append(tmp.Data, float64(v))
@@ -1055,7 +1055,7 @@ func (ai *AiMaterial) AddFloat32PropertyVar(pro AiMaterialProperty, data ...floa
 }
 func (ai *AiMaterial) AddAiUVTransformPropertyVar(pro AiMaterialProperty, data AiUVTransform) {
 	pro = pro.ResetData()
-	pro.DataType = pb_msg.AiMaterialPropertyType_AiPropertyTypeAiUVTransform
+	pro.Type = pb_msg.AiMaterialPropertyType_AiPropertyTypeAiUVTransform
 	bytesData, err := proto.Marshal(data.ToPbMsg())
 	if err != nil {
 		panic(err)
@@ -1065,7 +1065,7 @@ func (ai *AiMaterial) AddAiUVTransformPropertyVar(pro AiMaterialProperty, data A
 }
 func (ai *AiMaterial) AddAiColor3DPropertyVar(pro AiMaterialProperty, data *common.AiColor3D) {
 	pro = pro.ResetData()
-	pro.DataType = pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D
+	pro.Type = pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D
 	bytesData, err := proto.Marshal(data.ToPbMsg())
 	if err != nil {
 		panic(err)
@@ -1075,7 +1075,7 @@ func (ai *AiMaterial) AddAiColor3DPropertyVar(pro AiMaterialProperty, data *comm
 }
 func (ai *AiMaterial) AddAiVector3DPropertyVar(pro AiMaterialProperty, data *common.AiVector3D) {
 	pro = pro.ResetData()
-	pro.DataType = pb_msg.AiMaterialPropertyType_AiPropertyTypeVector3D
+	pro.Type = pb_msg.AiMaterialPropertyType_AiPropertyTypeVector3D
 	bytesData, err := proto.Marshal(data.ToPbMsg())
 	if err != nil {
 		panic(err)
@@ -1086,7 +1086,7 @@ func (ai *AiMaterial) AddAiVector3DPropertyVar(pro AiMaterialProperty, data *com
 
 func (ai *AiMaterial) AddInt64PropertyVar(pro AiMaterialProperty, data ...int64) {
 	pro = pro.ResetData()
-	pro.DataType = pb_msg.AiMaterialPropertyType_AiPropertyTypeInt
+	pro.Type = pb_msg.AiMaterialPropertyType_AiPropertyTypeInt
 	bytesData, err := proto.Marshal(&pb_msg.AiMaterialPropertyInt64{Data: data})
 	if err != nil {
 		panic(err)
@@ -1097,7 +1097,7 @@ func (ai *AiMaterial) AddInt64PropertyVar(pro AiMaterialProperty, data ...int64)
 
 func (ai *AiMaterial) AddStringPropertyVar(pro AiMaterialProperty, data ...string) {
 	pro = pro.ResetData()
-	pro.DataType = pb_msg.AiMaterialPropertyType_AiPropertyTypeString
+	pro.Type = pb_msg.AiMaterialPropertyType_AiPropertyTypeString
 	bytesData, err := proto.Marshal(&pb_msg.AiMaterialPropertyString{Data: data})
 	if err != nil {
 		panic(err)
@@ -1109,11 +1109,11 @@ func (ai *AiMaterial) AddStringPropertyVar(pro AiMaterialProperty, data ...strin
 func (ai *AiMaterial) AddProperty(pro AiMaterialProperty) {
 	for i, v := range ai.Properties {
 		if v.Key == pro.Key && v.Semantic == pro.Semantic && v.Index == pro.Index {
-			ai.Properties[i] = pro
+			ai.Properties[i] = &pro
 			return
 		}
 	}
-	ai.Properties = append(ai.Properties, pro)
+	ai.Properties = append(ai.Properties, &pro)
 }
 
 type AiMaterialProperty struct {
@@ -1139,8 +1139,8 @@ type AiMaterialProperty struct {
 	 * utilize proper type conversions.
 	 * (It's probably a hacky solution, but it works.)
 	 */
-	DataType pb_msg.AiMaterialPropertyType
-	Data     []byte
+	Type pb_msg.AiMaterialPropertyType
+	Data []byte
 }
 
 func (p AiMaterialProperty) ToPbMsg() *pb_msg.AiMaterialProperty {
@@ -1148,7 +1148,7 @@ func (p AiMaterialProperty) ToPbMsg() *pb_msg.AiMaterialProperty {
 	r.Key = p.Key
 	r.Semantic = p.Semantic
 	r.Index = p.Index
-	r.Type = p.DataType
+	r.Type = p.Type
 	r.Data = p.Data
 	return r
 }

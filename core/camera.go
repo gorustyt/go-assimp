@@ -3,6 +3,7 @@ package core
 import (
 	"assimp/common"
 	"assimp/common/pb_msg"
+	"math"
 )
 
 type AiCamera struct {
@@ -99,6 +100,15 @@ func (ai *AiCamera) ToPbMsg() *pb_msg.AiCamera {
 	r.OrthographicWidth = ai.OrthographicWidth
 	return r
 }
+
 func NewAiCamera() *AiCamera {
-	return &AiCamera{}
+	return &AiCamera{
+		Up:                common.NewAiVector3D3(0., 1., 0.),
+		LookAt:            common.NewAiVector3D3(0., 0., 1.),
+		HorizontalFOV:     0.25 * math.Pi,
+		ClipPlaneNear:     1.0,
+		ClipPlaneFar:      1000.,
+		Aspect:            0.,
+		OrthographicWidth: 0.,
+	}
 }

@@ -37,6 +37,14 @@ type AiMetadata struct {
 	Values []*AiMetadataEntry
 }
 
+func (ai *AiMetadata) Clone() *AiMetadata {
+	r := &AiMetadata{}
+	r.Keys = ai.Keys
+	for _, v := range ai.Values {
+		r.Values = append(r.Values, v.Clone())
+	}
+	return r
+}
 func (ai *AiMetadata) ToPbMsg() *pb_msg.AiMetadata {
 	r := pb_msg.AiMetadata{}
 	r.Keys = ai.Keys
@@ -64,6 +72,20 @@ type AiMetadataEntry struct {
 	Data any
 }
 
+func (ai *AiMetadataEntry) Clone() *AiMetadataEntry {
+	r := &AiMetadataEntry{}
+	r.Type = ai.Type
+
+	switch ai.Type {
+	case AI_AIVECTOR3D:
+		r.Data = ai.Data.(*common.AiVector3D).Clone()
+	case AI_AIMETADATA:
+		r.Data = ai.Data.(*AiMetadata).Clone()
+	default:
+		r.Data = ai.Data
+	}
+	return r
+}
 func (ai *AiMetadataEntry) ToPbMsg() *pb_msg.AiMetadataEntry {
 	r := pb_msg.AiMetadataEntry{}
 	r.Type = int32(ai.Type)

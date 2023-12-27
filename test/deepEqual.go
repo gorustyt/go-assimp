@@ -18,9 +18,26 @@ type visit struct {
 
 func deepValueEqual(v1, v2 reflect.Value, visited map[visit]bool) bool {
 	if !v1.IsValid() || !v2.IsValid() {
+		var t1, t2 string
+		if v1.IsValid() {
+			t1 = v1.Type().String()
+		}
+		if v2.IsValid() {
+			t2 = v2.Type().String()
+		}
+		logger.ErrorF("v1.Slice.IsValid:%v != v2.Slice.IsValid:%v v1:%v v2:%v",
+			t1,
+			t2,
+			v1.IsValid(),
+			v2.IsValid())
 		return v1.IsValid() == v2.IsValid()
 	}
 	if v1.Type() != v2.Type() {
+		logger.ErrorF("v1.Slice.Type:%v != v2.Slice.Type:%v v1:%v v2:%v",
+			v1.Type().String(),
+			v2.Type().String(),
+			v1.Type().Kind(),
+			v2.Type().Kind())
 		return false
 	}
 
@@ -39,7 +56,6 @@ func deepValueEqual(v1, v2 reflect.Value, visited map[visit]bool) bool {
 		ptrval := func(v reflect.Value) unsafe.Pointer {
 			switch v.Kind() {
 			case reflect.Pointer, reflect.Map:
-
 				return v.UnsafePointer()
 			default:
 				return v.UnsafePointer()

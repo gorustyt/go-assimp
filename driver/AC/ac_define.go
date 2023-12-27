@@ -58,8 +58,11 @@ type Object struct {
 
 func newObject() *Object {
 	return &Object{
-		Type:      World,
-		texRepeat: &common.AiVector2D{1, 1},
+		Type:        World,
+		texRepeat:   common.NewAiVector2D(1, 1),
+		texOffset:   common.NewAiVector2D(0, 0),
+		rotation:    common.NewAiMatrix3x3(),
+		translation: common.NewAiVector3D3(0, 0, 0),
 	}
 }
 

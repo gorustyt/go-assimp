@@ -6,8 +6,8 @@ import (
 )
 
 type AiAABB struct {
-	Min common.AiVector3D
-	Max common.AiVector3D
+	Min *common.AiVector3D
+	Max *common.AiVector3D
 }
 
 func (ai *AiAABB) ToPbMsg() *pb_msg.AiAABB {
@@ -15,4 +15,9 @@ func (ai *AiAABB) ToPbMsg() *pb_msg.AiAABB {
 		Min: ai.Min.ToPbMsg(),
 		Max: ai.Max.ToPbMsg(),
 	}
+}
+
+func (ai *AiAABB) Clone() *AiAABB {
+	tmp := *ai
+	return &tmp
 }

@@ -145,9 +145,9 @@ func (f *BlenderTessellatorP2T) GeneratePointTransformMatrix(plane *PlaneP2T) *c
 		sideA = common.NewAiVector3D3(0.0, 1.0, 0.0)
 	}
 
-	sideB := common.NegationOperationSymbol(plane.normal, sideA)
+	sideB := plane.normal.NegationOperationSymbol(sideA)
 	sideB.Normalize()
-	sideA = common.NegationOperationSymbol(sideB, plane.normal)
+	sideA = sideB.NegationOperationSymbol(plane.normal)
 
 	var result common.AiMatrix4x4
 	result.A1 = sideA.X

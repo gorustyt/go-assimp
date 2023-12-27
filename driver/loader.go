@@ -87,6 +87,7 @@ func (im *importer) ReadFile(path string, pFlags int) (s *core.AiScene, err erro
 				l = ls
 				return true
 			}
+			ls.Close()
 		}
 		return false
 	}
@@ -105,6 +106,7 @@ func (im *importer) ReadFile(path string, pFlags int) (s *core.AiScene, err erro
 	if err != nil {
 		return res, err
 	}
+	l.Close()
 	pre := pre_processing.NewScenePreprocessor(res)
 	pre.ProcessScene()
 	im.ApplyPostProcessing(res, pFlags&int(^iassimp.AiProcess_ValidateDataStructure))

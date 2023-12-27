@@ -176,20 +176,29 @@ type AiNode struct {
 	MetaData *AiMetadata
 }
 
+func (node *AiNode) Clone() *AiNode {
+	if node == nil {
+		return nil
+	}
+	r := NewAiNode("")
+	r.Name = node.Name
+	r.Transformation = node.Transformation.Clone()
+	r.Parent = node.Parent.Clone()
+	for _, v := range node.Children {
+		r.Children = append(r.Children, v.Clone())
+	}
+	r.Meshes = node.Meshes
+	r.MetaData = node.MetaData.Clone()
+	return r
+}
 func (node *AiNode) ToPbMsg() *pb_msg.AiNode {
 	r := pb_msg.AiNode{}
 	r.Name = node.Name
-	/** The transformation relative to the node's parent. */
 	r.Transformation = node.Transformation.ToPbMsg()
-	/** Parent node. nullptr if this node is the root node. */
 	r.Parent = node.Parent.ToPbMsg()
-	/** The child nodes of this node. nullptr if mNumChildren is 0. */
 	for _, v := range node.Children {
 		r.Children = append(r.Children, v.ToPbMsg())
 	}
-	/** The meshes of this node. Each entry is an index into the
-	 * mesh list of the #aiScene.
-	 */
 	r.Meshes = node.Meshes
 	r.MetaData = node.MetaData.ToPbMsg()
 	return &r

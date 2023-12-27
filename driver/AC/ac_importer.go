@@ -36,36 +36,35 @@ func NewAC3DImporter(data []byte) (iassimp.Loader, error) {
 	im := &AC3DImporter{LineReader: r}
 	return im, nil
 }
+func (ac *AC3DImporter) Close() {
 
+}
 func (ac *AC3DImporter) LoadObjectSection() (objects []*Object, err error) {
 	if !ac.HasPrefix("OBJECT") {
 		return objects, nil
 	}
+	ac.NumMeshes++
 	name, err := ac.MustOneKeyString("OBJECT")
 	if err != nil {
 		return objects, err
 	}
-	var obj Object
-	objects = append(objects, &obj)
+	obj := newObject()
+	objects = append(objects, obj)
 	var light *core.AiLight
 	switch name {
 	case "light":
-		if light == nil {
-			light = &core.AiLight{}
-		}
+		light = core.NewAiLight()
+		ac.Lights = append(ac.Lights, light)
 		light.Type = core.AiLightSource_POINT
 		light.ColorSpecular = common.NewAiColor3D(1.0, 1.0, 1.0)
 		light.ColorDiffuse = light.ColorSpecular
 		light.AttenuationConstant = 1.0
-		light.Name, err = ac.MustOneKeyString("name")
-		if err != nil {
-			return objects, err
-		}
-		light.Name = fmt.Sprintf("ACLight_%s", light.Name)
+
+		light.Name = fmt.Sprintf("ACLight_%s", len(ac.Lights)-1)
 		obj.name = light.Name
 		logger.Info("AC3D: Light source encountered")
 		obj.Type = Light
-		ac.Lights = append(ac.Lights, light)
+
 	case "group":
 		obj.Type = Group
 	case "world":
@@ -79,20 +78,20 @@ func (ac *AC3DImporter) LoadObjectSection() (objects []*Object, err error) {
 			if err != nil {
 				return objects, err
 			}
-			if num > 0 {
-				for i := 0; i < num; i++ {
-					children, err := ac.LoadObjectSection()
-					if err != nil {
-						return nil, err
-					}
-					obj.children = append(obj.children, children...)
+			for i := 0; i < num; i++ {
+				children, err := ac.LoadObjectSection()
+				if err != nil {
+					return nil, err
 				}
+				obj.children = append(obj.children, children...)
 			}
+			return objects, nil
 		} else if ac.HasPrefix("name") {
 			obj.name, err = ac.MustOneKeyString("name")
 			if err != nil {
 				return nil, err
 			}
+			obj.name = common.ClearQuotationMark(obj.name)
 			if light != nil {
 				light.Name = obj.name
 			}
@@ -102,7 +101,7 @@ func (ac *AC3DImporter) LoadObjectSection() (objects []*Object, err error) {
 			if err != nil {
 				return nil, err
 			}
-			obj.textures = append(obj.textures, texture)
+			obj.textures = append(obj.textures, common.ClearQuotationMark(texture))
 			continue
 		} else if ac.HasPrefix("texrep") {
 			obj.texRepeat, err = ac.NextKeyAiVector2d("texrep")
@@ -147,7 +146,7 @@ func (ac *AC3DImporter) LoadObjectSection() (objects []*Object, err error) {
 			obj.vertices = append(obj.vertices, vs...)
 		} else if ac.HasPrefix("numsurf") {
 			Q3DWorkAround := false
-			var surf Surface
+
 			num, err := ac.MustOneKeyInt("numsurf")
 			if err != nil {
 				return nil, err
@@ -155,38 +154,49 @@ func (ac *AC3DImporter) LoadObjectSection() (objects []*Object, err error) {
 			for i := 0; i < num; i++ {
 				// FIX: this can occur for some files - Quick 3D for
 				// example writes no surf chunks
-				if ac.HasPrefix("SURF") {
+				if !ac.HasPrefix("SURF") { //TODO
+					panic("not impl")
 					Q3DWorkAround = true
-				} else {
-					_, err := ac.MustOneKeyInt("SURF")
-					if err != nil {
-						return nil, err
-					}
 				}
-				if ac.HasPrefix("mat") {
-					surf.mat, err = ac.MustOneKeyInt("SURF")
-					if err != nil {
-						return nil, err
-					}
-				} else if ac.HasPrefix("refs") {
-					if Q3DWorkAround {
 
-					}
-					vs, err := ac.NextLineVector3("refs")
-					if err != nil {
-						return nil, err
-					}
-					for _, v := range vs {
-						var entry SurfaceEntry
-						surf.entries = append(surf.entries, &entry)
-						entry.First = int(v.X)
-						entry.Second = common.AiVector2D{v.Y, v.Z}
-					}
-					obj.numRefs += len(vs)
-				} else { // make sure the line is processed a second time
-					break
+				var surf Surface
+				obj.surfaces = append(obj.surfaces, &surf)
+				surf.flags, err = ac.MustOneKeyInt("SURF", true)
+				if err != nil {
+					return nil, err
 				}
-				ac.NextLine()
+				for {
+
+					if ac.EOF() {
+						return objects, errors.New("AC3D: Unexpected EOF: surface is incomplete")
+					}
+					if ac.HasPrefix("mat") {
+						surf.mat, err = ac.MustOneKeyInt("mat")
+						if err != nil {
+							return nil, err
+						}
+						continue
+					} else if ac.HasPrefix("refs") {
+						if Q3DWorkAround {
+
+						}
+						vs, err := ac.NextLineVector3("refs")
+						if err != nil {
+							return nil, err
+						}
+						for _, v := range vs {
+							var entry SurfaceEntry
+							surf.entries = append(surf.entries, &entry)
+							entry.First = int(v.X)
+							entry.Second = common.AiVector2D{v.Y, v.Z}
+						}
+						obj.numRefs += len(vs)
+					} else { // make sure the line is processed a second time
+						break
+					}
+					ac.NextLine()
+				}
+
 			}
 		}
 		ac.NextLine()
@@ -219,6 +229,7 @@ func (ac *AC3DImporter) ConvertMaterial(object *Object,
 	n := int64(-1)
 	if matSrc.shin != 0 {
 		n = int64(core.AiShadingMode_Phong)
+		matDest.AddFloat32PropertyVar(core.AI_MATKEY_SHININESS, matSrc.shin)
 	} else {
 		n = int64(core.AiShadingMode_Gouraud)
 	}
@@ -230,8 +241,9 @@ func (ac *AC3DImporter) ConvertMaterial(object *Object,
 func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiMesh,
 	outMaterials *[]*core.AiMaterial,
 	materials *[]*Material, parent *core.AiNode) (node *core.AiNode) {
-	node = &core.AiNode{}
+	node = core.NewAiNode("")
 	node.Parent = parent
+	numMeshs := 0
 	if len(object.vertices) > 0 {
 		if len(object.surfaces) == 0 || object.numRefs == 0 {
 			/* " An object with 7 vertices (no surfaces, no materials defined).
@@ -243,8 +255,8 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 			   therefore: if no surfaces are defined return point data only
 			*/
 			logger.InfoF("AC3D: No surfaces defined in object definition a point list is returned")
-			var mesh core.AiMesh
-			*meshes = append(*meshes, &mesh)
+			mesh := core.NewAiMesh()
+			*meshes = append(*meshes, mesh)
 			numVertices := len(object.vertices)
 			numFaces := numVertices
 			mesh.Faces = make([]*core.AiFace, numFaces)
@@ -290,6 +302,9 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 						v.entries[it2].First = 0
 					}
 				}
+				if needMat[idx].First == 0 {
+					numMeshs++
+				}
 				switch SurfaceType(v.GetType()) {
 				// closed line
 				case ClosedLine:
@@ -319,11 +334,11 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 					needMat[idx].Second += len(v.entries)
 				}
 			}
-			node.Meshes = make([]int32, len(node.Meshes))
+			node.Meshes = make([]int32, numMeshs)
 			mat := 0
 			oldm := len(*meshes)
 			cit := 0
-			cend := len(needMat) - 1
+			cend := len(needMat)
 			for cit != cend {
 				citv := needMat[cit]
 				if citv.First == 0 {
@@ -331,8 +346,8 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 					mat++
 					continue
 				}
-				var mesh core.AiMesh
-				*meshes = append(*meshes, &mesh)
+				mesh := core.NewAiMesh()
+				*meshes = append(*meshes, mesh)
 				mesh.MaterialIndex = int32(len(*outMaterials))
 				var tmpMaterial core.AiMaterial
 				*outMaterials = append(*outMaterials, &tmpMaterial)
@@ -347,7 +362,7 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 
 				mesh.Faces = make([]*core.AiFace, numFaces)
 				for i := range mesh.Faces {
-					mesh.Faces[i] = &core.AiFace{}
+					mesh.Faces[i] = core.NewAiFace()
 				}
 				faces := 0
 				vertices := 0
@@ -361,9 +376,12 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 				cur := 0
 				// allocate UV coordinates, but only if the texture name for the
 				// surface is not empty
-				uv := 0
+				uv := -1
 				if len(object.textures) != 0 {
 					mesh.TextureCoords[0] = make([]*common.AiVector3D, len(mesh.Vertices))
+					for i := range mesh.TextureCoords[0] {
+						mesh.TextureCoords[0][i] = common.NewAiVector3D3(0, 0, 0)
+					}
 					mesh.NumUVComponents[0] = 2
 				}
 				uvs := mesh.TextureCoords[0]
@@ -390,9 +408,11 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 									mesh.Vertices[vertices] = object.vertices[entry.First].Add(object.translation)
 
 									// copy texture coordinates
-									uvs[uv].X = entry.Second.X
-									uvs[uv].Y = entry.Second.Y
-									uv++
+									if uv != -1 {
+										uvs[uv].X = entry.Second.X
+										uvs[uv].Y = entry.Second.Y
+										uv++
+									}
 									vertices++
 								}
 							}
@@ -423,34 +443,48 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 								if (i & 1) == 0 {
 									mesh.Vertices[vertices] = object.vertices[entry1.First].Add(object.translation)
 									vertices++
-									uvs[uv].X = entry1.Second.X
-									uvs[uv].Y = entry1.Second.Y
-									uv++
+									if uv != -1 {
+										uvs[uv].X = entry1.Second.X
+										uvs[uv].Y = entry1.Second.Y
+										uv++
+									}
+
 									mesh.Vertices[vertices] = object.vertices[entry2.First].Add(object.translation)
 									vertices++
-									uvs[uv].X = entry2.Second.X
-									uvs[uv].Y = entry2.Second.Y
-									uv++
+									if uv != -1 {
+										uvs[uv].X = entry2.Second.X
+										uvs[uv].Y = entry2.Second.Y
+										uv++
+									}
+
 								} else {
 									mesh.Vertices[vertices] = object.vertices[entry2.First].Add(object.translation)
 									vertices++
-									uvs[uv].X = entry2.Second.X
-									uvs[uv].Y = entry2.Second.Y
-									uv++
+									if uv != -1 {
+										uvs[uv].X = entry2.Second.X
+										uvs[uv].Y = entry2.Second.Y
+										uv++
+									}
+
 									mesh.Vertices[vertices] = object.vertices[entry1.First].Add(object.translation)
 									vertices++
-									uvs[uv].X = entry1.Second.X
-									uvs[uv].Y = entry1.Second.Y
-									uv++
+									if uv != -1 {
+										uvs[uv].X = entry1.Second.X
+										uvs[uv].Y = entry1.Second.Y
+										uv++
+									}
 								}
 								if vertices-len(mesh.Vertices) >= len(mesh.Vertices) {
 									logger.FatalF("AC3D: Invalid number of vertices")
 								}
 								mesh.Vertices[vertices] = object.vertices[entry3.First].Add(object.translation)
 								vertices++
-								uvs[uv].X = entry3.Second.X
-								uvs[uv].Y = entry3.Second.Y
-								uv++
+								if uv != -1 {
+									uvs[uv].X = entry3.Second.X
+									uvs[uv].Y = entry3.Second.Y
+									uv++
+								}
+
 							}
 						} else {
 
@@ -478,9 +512,11 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 								vertices++
 
 								// copy texture coordinates
-								uvs[uv].X = itv.entries[it2].Second.X
-								uvs[uv].Y = itv.entries[it2].Second.Y
-								uv++
+								if uv != -1 {
+									uvs[uv].X = itv.entries[it2].Second.X
+									uvs[uv].Y = itv.entries[it2].Second.Y
+									uv++
+								}
 
 								if ClosedLine == Type && tmp-1 == m {
 									// if this is a closed line repeat its beginning now
@@ -492,9 +528,11 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 								// second point
 								mesh.Vertices[vertices] = object.vertices[itv.entries[it2].First]
 								vertices++
-								uvs[uv].X = itv.entries[it2].Second.X
-								uvs[uv].Y = itv.entries[it2].Second.Y
-								uv++
+								if uv != -1 {
+									uvs[uv].X = itv.entries[it2].Second.X
+									uvs[uv].Y = itv.entries[it2].Second.Y
+									uv++
+								}
 							}
 						}
 					}
@@ -569,6 +607,7 @@ func (ac *AC3DImporter) Read(pScene *core.AiScene) (err error) {
 			if err != nil {
 				return err
 			}
+			mat.name = common.ClearQuotationMark(mat.name)
 			mat.rgb, err = ac.NextKeyAiColor3d("rgb")
 			if err != nil {
 				return err
@@ -601,7 +640,7 @@ func (ac *AC3DImporter) Read(pScene *core.AiScene) (err error) {
 		}
 		rootObjects = append(rootObjects, objs...)
 	}
-	if len(rootObjects) == 0 {
+	if len(rootObjects) == 0 || ac.NumMeshes == 0 {
 		return errors.New("AC3D: No meshes have been loaded")
 	}
 	if len(materials) == 0 {
@@ -613,7 +652,7 @@ func (ac *AC3DImporter) Read(pScene *core.AiScene) (err error) {
 	if len(rootObjects) == 1 {
 		root = rootObjects[0]
 	} else {
-		root = &Object{}
+		root = newObject()
 	}
 	var meshes []*core.AiMesh
 	var omaterials []*core.AiMaterial

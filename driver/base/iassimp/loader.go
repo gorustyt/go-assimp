@@ -7,6 +7,7 @@ import (
 type Loader interface {
 	CanRead(checkSig bool) bool
 	Read(pScene *core.AiScene) (err error)
+	Close()
 }
 
 type Importer interface {

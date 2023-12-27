@@ -1,5 +1,11 @@
 package core
 
+import (
+	"assimp/common/pb_msg"
+	"fmt"
+	"strings"
+)
+
 //! @cond AI_DOX_INCLUDE_INTERNAL
 // ---------------------------------------------------------------------------
 /** @brief A very primitive RTTI system for the contents of material
@@ -45,100 +51,59 @@ const (
 	 */
 )
 
-//// ------------------------------------------------------------------------------------------------
-//func (ai *AiMaterial) AddBinaryProperty(data []byte, dataLength uint32, pKey string, Type uint32, index uint32, pType AiPropertyTypeInfo) error {
-//	if data == nil || len(data) == 0 || pKey == "" {
-//		return errors.New("invalid Binary Property params")
-//	}
-//	// first search the list whether there is already an entry with this key
-//	iOutIndex := math.MaxUint32
-//	for i := 0; i < len(ai.Properties); i++ {
-//		prop := ai.Properties[i]
-//
-//		if prop != nil && prop.Key != pKey &&
-//			prop.Semantic == Type && prop.Index == index {
-//			iOutIndex = i
-//		}
-//	}
-//
-//	// Allocate a new material property
-//	pcNew := &AiMaterialProperty{}
-//	// .. and fill it
-//	pcNew.Type = pType
-//	pcNew.Semantic = Type
-//	pcNew.Index = index
-//	pcNew.Data = make([]byte, dataLength)
-//	copy(pcNew.Data, data)
-//	if 1024 <= len(pcNew.Key) {
-//		return fmt.Errorf("invalid key length :%v", pcNew.Key)
-//	}
-//	pcNew.Key = pKey
-//	if math.MaxUint32 != iOutIndex {
-//		ai.Properties[iOutIndex] = pcNew
-//		return nil
-//	}
-//	// push back ...
-//	ai.Properties = append(ai.Properties, pcNew)
-//	return nil
-//}
-//
-//// ------------------------------------------------------------------------------------------------
-//// Get a specific property from a material
-//func (ai *AiMaterial) GetProperty(
-//	pKey string,
-//	Type uint32,
-//	index uint32) (res *AiMaterialProperty) {
-//
-//	/*  Just search for a property with exactly this name ..
-//	 *  could be improved by hashing, but it's possibly
-//	 *  no worth the effort (we're bound to C structures,
-//	 *  thus std::map or derivates are not applicable. */
-//	for i := 0; i < len(ai.Properties); i++ {
-//		prop := ai.Properties[i]
-//
-//		if prop != nil && prop.Key == pKey && (0 == Type || prop.Semantic == Type) && (0 == index || prop.Index == index) {
-//			return ai.Properties[i]
-//		}
-//	}
-//	return res
-//}
-//
-//// ------------------------------------------------------------------------------------------------
-//// Get a string from the material
-//func (ai *AiMaterial) GetPropertyString(
-//	pKey string,
-//	Type uint32,
-//	index uint32) (res string, err error) {
-//	prop := ai.GetProperty(pKey, Type, index)
-//	if prop == nil {
-//		return res, errors.New("GetPropertyString not found ")
-//	}
-//
-//	if AiPTI_String == prop.Type {
-//		if len(prop.Data) < 5 {
-//			return res, errors.New("GetPropertyString invalid Data Length")
-//		}
-//		// The string is stored as 32 but length prefix followed by zero-terminated UTF8 data
-//		//
-//		//ai_assert(pOut.length + 1 + 4 == prop.DataLength);
-//		//ai_assert(prop.Data[prop.DataLength - 1]==0);
-//		//memcpy(pOut.data, prop.Data + 4, pOut.length + 1);
-//		//res = prop.Data[]
-//	} else {
-//		// TODO - implement lexical cast as well
-//		return res, fmt.Errorf("Material property %v  was found, but is no string", pKey)
-//	}
-//	return res, nil
-//}
-//
-//// ------------------------------------------------------------------------------------------------
-//func (ai *AiMaterial) AddPropertyString(s string,
-//	pKey string,
-//	Type uint32,
-//	index uint32) error {
-//	data := []byte(s)
-//	return ai.AddBinaryProperty(data, uint32(len(s)+1+4), pKey,
-//		Type,
-//		index,
-//		AiPTI_String)
-//}
+func init() {
+
+	RegisterPropertyTypeInfo("default", AI_MATKEY_NAME.Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeString)
+
+	RegisterPropertyTypeInfo("default", AI_MATKEY_COLOR_AMBIENT.Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D, pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D)
+	RegisterPropertyTypeInfo("default", AI_MATKEY_COLOR_DIFFUSE.Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D, pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D)
+	RegisterPropertyTypeInfo("default", AI_MATKEY_COLOR_EMISSIVE.Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D, pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D)
+	RegisterPropertyTypeInfo("default", AI_MATKEY_COLOR_REFLECTIVE.Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D, pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D)
+	RegisterPropertyTypeInfo("default", AI_MATKEY_COLOR_SPECULAR.Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D, pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D)
+
+	RegisterPropertyTypeInfo("default", AI_MATKEY_SHININESS.Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32)
+
+	RegisterPropertyTypeInfo("default", AI_MATKEY_UVTRANSFORM_AMBIENT(0).Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeAiUVTransform)
+	RegisterPropertyTypeInfo("default", AI_MATKEY_TEXTURE_DIFFUSE(0).Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeString)
+	RegisterPropertyTypeInfo("default", AI_MATKEY_MAPPINGMODE_U_DIFFUSE(0).Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32)
+	RegisterPropertyTypeInfo("default", AI_MATKEY_MAPPINGMODE_V_DIFFUSE(0).Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32)
+	RegisterPropertyTypeInfo("default", AI_MATKEY_OPACITY.Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32)
+	RegisterPropertyTypeInfo("default", AI_MATKEY_REFLECTIVITY.Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32)
+	RegisterPropertyTypeInfo("default", AI_MATKEY_SHADING_MODEL.Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeInt)
+}
+
+func GetAiPropertyTypeInfo(key string) (res []pb_msg.AiMaterialPropertyType) {
+	for k, v := range aiPropertyTypeInfoMap {
+		if strings.HasPrefix(k, key) {
+			res = append(res, v...)
+		}
+	}
+	return res
+}
+
+func UnRegisterPropertyTypeSource(source string) {
+	for k := range aiPropertyTypeInfoMap {
+		if strings.HasSuffix(k, fmt.Sprintf(".source.%v", source)) {
+			delete(aiPropertyTypeInfoMap, k)
+		}
+	}
+}
+
+func RegisterPropertyTypeInfo(source, key string, values ...pb_msg.AiMaterialPropertyType) {
+	key = fmt.Sprintf("%v.source.%v", key, source)
+	v, ok := aiPropertyTypeInfoMap[key]
+	if !ok {
+		aiPropertyTypeInfoMap[key] = append(aiPropertyTypeInfoMap[key], values...)
+		return
+	}
+	for _, t := range v {
+		for _, value := range values {
+			if t == value {
+				continue
+			}
+			aiPropertyTypeInfoMap[key] = append(aiPropertyTypeInfoMap[key], value)
+		}
+	}
+}
+
+var aiPropertyTypeInfoMap = map[string][]pb_msg.AiMaterialPropertyType{}

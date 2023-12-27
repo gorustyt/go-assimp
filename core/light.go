@@ -3,6 +3,7 @@ package core
 import (
 	"assimp/common"
 	"assimp/common/pb_msg"
+	"math"
 )
 
 type AiLightSourceType int
@@ -183,8 +184,15 @@ func (ai *AiLight) ToPbMsg() *pb_msg.AiLight {
 }
 func NewAiLight() *AiLight {
 	return &AiLight{
-		ColorDiffuse:  common.NewAiColor3D(0, 0, 0),
-		ColorSpecular: common.NewAiColor3D(0, 0, 0),
-		ColorAmbient:  common.NewAiColor3D(0, 0, 0),
+		Up:                common.NewAiVector3D3(0, 0, 0),
+		Direction:         common.NewAiVector3D3(0, 0, 0),
+		Position:          common.NewAiVector3D3(0, 0, 0),
+		ColorDiffuse:      common.NewAiColor3D(0, 0, 0),
+		ColorSpecular:     common.NewAiColor3D(0, 0, 0),
+		ColorAmbient:      common.NewAiColor3D(0, 0, 0),
+		AttenuationLinear: 1,
+		Type:              AiLightSource_UNDEFINED,
+		AngleInnerCone:    math.Pi * 2,
+		AngleOuterCone:    math.Pi * 2,
 	}
 }

@@ -12,6 +12,10 @@ type AiMatrix4x4 struct {
 	D1, D2, D3, D4 float32
 }
 
+func (ai *AiMatrix4x4) Clone() *AiMatrix4x4 {
+	tmp := *ai
+	return &tmp
+}
 func (ai *AiMatrix4x4) ToPbMsg() *pb_msg.AiMatrix4X4 {
 	r := &pb_msg.AiMatrix4X4{
 		A1: ai.A1, A2: ai.A2, A3: ai.A3, A4: ai.A4,

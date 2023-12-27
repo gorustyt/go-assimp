@@ -14,50 +14,54 @@ func (ai AiVector3D) Empty() bool {
 }
 
 func (ai *AiVector3D) FromPbMsg(data *pb_msg.AiVector3D) *AiVector3D {
-	return &AiVector3D{
-		X: data.X,
-		Y: data.Y,
-		Z: data.Z,
-	}
+	ai.X = data.X
+	ai.Y = data.Y
+	ai.Z = data.Z
+	return ai
 }
-func (ai AiVector3D) ToPbMsg() *pb_msg.AiVector3D {
+func (ai *AiVector3D) ToPbMsg() *pb_msg.AiVector3D {
 	return &pb_msg.AiVector3D{X: ai.X, Y: ai.Y, Z: ai.Z}
 }
 
-func (ai AiVector3D) Add(o *AiVector3D) *AiVector3D {
+func (ai *AiVector3D) Clone() *AiVector3D {
+	tmp := *ai
+	return &tmp
+}
+
+func (ai *AiVector3D) Add(o *AiVector3D) *AiVector3D {
 	ai.X += o.X
 	ai.Y += o.Y
 	ai.Z += o.Z
-	tmp := ai
+	tmp := *ai
 	return &tmp
 }
 
-func (ai AiVector3D) Sub(o *AiVector3D) *AiVector3D {
+func (ai *AiVector3D) Sub(o *AiVector3D) *AiVector3D {
 	ai.X -= o.X
 	ai.Y -= o.Y
 	ai.Z -= o.Z
-	tmp := ai
+	tmp := *ai
 	return &tmp
 }
 
-func (ai AiVector3D) Mul(f float32) *AiVector3D {
+func (ai *AiVector3D) Mul(f float32) *AiVector3D {
 	ai.X *= f
 	ai.Y *= f
 	ai.Z *= f
-	tmp := ai
+	tmp := *ai
 	return &tmp
 }
 
-func (ai AiVector3D) Div(f float32) *AiVector3D {
+func (ai *AiVector3D) Div(f float64) *AiVector3D {
 	if f == 0 {
 		tmp := ai
-		return &tmp
+		return tmp
 	}
-	invF := float32(1.0) / f
+	invF := float32(1.0) / float32(f)
 	ai.X *= invF
 	ai.Y *= invF
 	ai.Z *= invF
-	tmp := ai
+	tmp := *ai
 	return &tmp
 }
 
@@ -94,12 +98,12 @@ func (ai *AiVector3D) Set(pX, pY, pZ float32) {
 	ai.Z = pZ
 }
 
-func (ai *AiVector3D) SquareLength() float32 {
-	return ai.X*ai.X + ai.Y*ai.Y + ai.Z*ai.Z
+func (ai *AiVector3D) SquareLength() float64 {
+	return float64(ai.X*ai.X + ai.Y*ai.Y + ai.Z*ai.Z)
 }
 
-func (ai *AiVector3D) Length() float32 {
-	return float32(math.Sqrt(float64(ai.SquareLength())))
+func (ai *AiVector3D) Length() float64 {
+	return math.Sqrt(ai.SquareLength())
 }
 
 func (ai *AiVector3D) Normalize() *AiVector3D {
@@ -156,12 +160,12 @@ func (ai *AiVector3D) Less(other *AiVector3D) bool {
 	}
 }
 
-func NegationOperationSymbol(v1, v2 *AiVector3D) *AiVector3D {
-	return NewAiVector3D3(v1.Y*v2.Z-v1.Z*v2.Y, v1.Z*v2.X-v1.X*v2.Z, v1.X*v2.Y-v1.Y*v2.X)
+func (ai *AiVector3D) NegationOperationSymbol(v2 *AiVector3D) *AiVector3D {
+	return NewAiVector3D3(ai.Y*v2.Z-ai.Z*v2.Y, ai.Z*v2.X-ai.X*v2.Z, ai.X*v2.Y-ai.Y*v2.X)
 }
 
-func MulAiVector3D(v1, v2 *AiVector3D) float32 {
-	return v1.X*v2.X + v1.Y*v2.Y + v1.Z*v2.Z
+func (ai *AiVector3D) MulAiVector3D(v2 *AiVector3D) float64 {
+	return float64(ai.X*v2.X + ai.Y*v2.Y + ai.Z*v2.Z)
 }
 
 // ------------------------------------------------------------------------------------------------

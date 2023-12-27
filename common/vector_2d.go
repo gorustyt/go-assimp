@@ -9,6 +9,11 @@ type AiVector2D struct {
 func (ai *AiVector2D) ToPbMsg() *pb_msg.AiVector2D {
 	return &pb_msg.AiVector2D{X: ai.X, Y: ai.Y}
 }
+func (ai *AiVector2D) FromPbMsg(data *pb_msg.AiVector2D) *AiVector2D {
+	ai.X = data.X
+	ai.Y = data.Y
+	return ai
+}
 
 func (ai *AiVector2D) Set(pX, pY float32) {
 	ai.X = pX

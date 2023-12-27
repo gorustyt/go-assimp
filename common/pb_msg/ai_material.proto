@@ -5,13 +5,14 @@ import "common/pb_msg/common.proto";
 enum AiMaterialPropertyType{
   AiPropertyTypeBytes=0;
   AiPropertyTypeString=1;
-  AiPropertyTypeFloat64=2;
-  AiPropertyTypeInt=3;
-  AiPropertyTypeVector3D=4;
-  AiPropertyTypeAiUVTransform=5;
-  AiPropertyTypeVector4D=6;
-  AiPropertyTypeColor4D=7;
-  AiPropertyTypeColor3D=8;
+  AiPropertyTypeFloat32=2;
+  AiPropertyTypeFloat64=3;
+  AiPropertyTypeInt=4;
+  AiPropertyTypeVector3D=5;
+  AiPropertyTypeAiUVTransform=6;
+  AiPropertyTypeVector4D=7;
+  AiPropertyTypeColor4D=8;
+  AiPropertyTypeColor3D= 9;
 }
 message AiMaterialPropertyFloat64 {
   repeated  double Data=1;
@@ -34,7 +35,6 @@ message AiUVTransform {
 message  AiMaterial{
   /** List of all material properties loaded. */
   repeated AiMaterialProperty Properties=1;
-  int32 NumAllocated =2;
 }
 
 // ---------------------------------------------------------------------------

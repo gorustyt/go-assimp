@@ -3,6 +3,7 @@ package BLEND
 import (
 	"assimp/common"
 	"assimp/common/logger"
+	"assimp/common/pb_msg"
 	"assimp/common/reader"
 	"assimp/core"
 	"assimp/driver/base/iassimp"
@@ -32,6 +33,62 @@ type BlenderImporter struct {
 	modifier_cache *BlenderModifierShowcase
 }
 
+func init() {
+	for k, v := range propertyTypeMap {
+		core.RegisterPropertyTypeInfo("BLEND", k, v...)
+	}
+}
+func NewBlenderImporter(data []byte) (iassimp.Loader, error) {
+	r, err := reader.NewFileStreamReader(data)
+	if err != nil {
+		return nil, err
+	}
+	b := &BlenderImporter{StreamReader: r}
+	return b, nil
+}
+
+var propertyTypeMap = map[string][]pb_msg.AiMaterialPropertyType{
+	//================================================BLEND====================================================
+	"$mat.blend.diffuse.color":               {pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D},
+	"$mat.blend.diffuse.intensity":           {pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32},
+	"$mat.blend.diffuse.shader":              {pb_msg.AiMaterialPropertyType_AiPropertyTypeInt},
+	"$mat.blend.diffuse.ramp":                {pb_msg.AiMaterialPropertyType_AiPropertyTypeInt},
+	"$mat.blend.specular.color":              {pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D},
+	"$mat.blend.specular.intensity":          {pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32},
+	"$mat.blend.specular.shader":             {pb_msg.AiMaterialPropertyType_AiPropertyTypeInt},
+	"$mat.blend.specular.ramp":               {pb_msg.AiMaterialPropertyType_AiPropertyTypeInt},
+	"$mat.blend.specular.hardness":           {pb_msg.AiMaterialPropertyType_AiPropertyTypeInt},
+	"$mat.blend.transparency.use":            {pb_msg.AiMaterialPropertyType_AiPropertyTypeInt},
+	"$mat.blend.transparency.method":         {pb_msg.AiMaterialPropertyType_AiPropertyTypeInt},
+	"$mat.blend.transparency.alpha":          {pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32},
+	"$mat.blend.transparency.specular":       {pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32},
+	"$mat.blend.transparency.fresnel":        {pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32},
+	"$mat.blend.transparency.blend":          {pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32},
+	"$mat.blend.transparency.ior":            {pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32},
+	"$mat.blend.transparency.filter":         {pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32},
+	"$mat.blend.transparency.falloff":        {pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32},
+	"$mat.blend.transparency.limit":          {pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32},
+	"$mat.blend.transparency.depth":          {pb_msg.AiMaterialPropertyType_AiPropertyTypeInt},
+	"$mat.blend.transparency.glossAmount":    {pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32},
+	"$mat.blend.transparency.glossThreshold": {pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32},
+	"$mat.blend.transparency.glossSamples":   {pb_msg.AiMaterialPropertyType_AiPropertyTypeInt},
+	"$mat.blend.mirror.use":                  {pb_msg.AiMaterialPropertyType_AiPropertyTypeInt},
+	"$mat.blend.mirror.reflectivity":         {pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32},
+	"$mat.blend.mirror.color":                {pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D},
+	"$mat.blend.mirror.fresnel":              {pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32},
+	"$mat.blend.mirror.blend":                {pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32},
+	"$mat.blend.mirror.depth":                {pb_msg.AiMaterialPropertyType_AiPropertyTypeInt},
+	"$mat.blend.mirror.maxDist":              {pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32},
+	"$mat.blend.mirror.fadeTo":               {pb_msg.AiMaterialPropertyType_AiPropertyTypeInt},
+	"$mat.blend.mirror.glossAmount":          {pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32},
+	"$mat.blend.mirror.glossThreshold":       {pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32},
+	"$mat.blend.mirror.glossSamples":         {pb_msg.AiMaterialPropertyType_AiPropertyTypeInt},
+	"$mat.blend.mirror.glossAnisotropic":     {pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32},
+}
+
+func (b *BlenderImporter) Close() {
+
+}
 func (b *BlenderImporter) checkMagic() ([]byte, bool, error) {
 	magic, err := b.Peek(7)
 	if err != nil {
@@ -447,13 +504,6 @@ func (b *BlenderImporter) ParseBlendFile(file *FileDatabase) error {
 	})
 	return nil
 }
-func NewBlenderImporter(data []byte) (iassimp.Loader, error) {
-	r, err := reader.NewFileStreamReader(data)
-	if err != nil {
-		return nil, err
-	}
-	return &BlenderImporter{StreamReader: r}, nil
-}
 
 // ------------------------------------------------------------------------------------------------
 func (b *BlenderImporter) ResolveImage(out *core.AiMaterial, mat *Material, tex *MTex, img *Image, conv_data *ConversionData) error {
@@ -805,7 +855,7 @@ func (b *BlenderImporter) BuildMaterials(conv_data *ConversionData) error {
 		// is hardness/shininess set?
 		if mat.har != 0 {
 			har := mat.har
-			mout.AddInt64PropertyVar(core.AI_MATKEY_SHININESS, int64(har))
+			mout.AddFloat32PropertyVar(core.AI_MATKEY_SHININESS, float32(har))
 		}
 
 		col = common.NewAiColor3D(mat.ambr, mat.ambg, mat.ambb)
@@ -1022,9 +1072,9 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 			vn.Y = v.no[1]
 			vn.Z = v.no[2]
 			f.Indices[3] = uint32(len(out.Vertices)) - 1
-			out.PrimitiveTypes |= uint32(core.AiPrimitiveType_POLYGON)
+			out.PrimitiveTypes |= core.AiPrimitiveType_POLYGON
 		} else {
-			out.PrimitiveTypes |= uint32(core.AiPrimitiveType_TRIANGLE)
+			out.PrimitiveTypes |= core.AiPrimitiveType_TRIANGLE
 		}
 
 		//  }
@@ -1065,9 +1115,9 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 			vo, vn = getVoVn(out)
 		}
 		if mf.totloop == 3 {
-			out.PrimitiveTypes |= uint32(core.AiPrimitiveType_TRIANGLE)
+			out.PrimitiveTypes |= core.AiPrimitiveType_TRIANGLE
 		} else {
-			out.PrimitiveTypes |= uint32(core.AiPrimitiveType_POLYGON)
+			out.PrimitiveTypes |= core.AiPrimitiveType_POLYGON
 		}
 	}
 

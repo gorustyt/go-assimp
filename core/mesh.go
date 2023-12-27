@@ -52,7 +52,7 @@ type AiMesh struct {
 	 * The "SortByPrimitiveType"-Step can be used to make sure the
 	 * output meshes consist of one primitive type each.
 	 */
-	PrimitiveTypes uint32
+	PrimitiveTypes AiPrimitiveType
 	/**
 	 * @brief Vertex positions.
 	 *
@@ -198,7 +198,7 @@ type AiMesh struct {
 	/**
 	 *  The bounding box.
 	 */
-	AABB AiAABB
+	AABB *AiAABB
 
 	/**
 	 * Vertex UV stream names. Pointer to array of size AI_MAX_NUMBER_OF_TEXTURECOORDS
@@ -206,9 +206,59 @@ type AiMesh struct {
 	TextureCoordsNames []string
 }
 
+func (ai *AiMesh) Clone() *AiMesh {
+	r := NewAiMesh()
+	r.PrimitiveTypes = ai.PrimitiveTypes
+	for _, v := range ai.Vertices {
+		r.Vertices = append(r.Vertices, v.Clone())
+	}
+
+	for _, v := range ai.Normals {
+		r.Normals = append(r.Normals, v.Clone())
+	}
+
+	for _, v := range ai.Tangents {
+		r.Tangents = append(r.Tangents, v.Clone())
+	}
+
+	for _, v := range ai.Bitangents {
+		r.Bitangents = append(r.Bitangents, v.Clone())
+	}
+	for i, v := range ai.Colors {
+		for j, v1 := range v {
+			r.Colors[i][j] = v1.Clone()
+		}
+
+	}
+
+	for i, v := range ai.TextureCoords {
+		for j, v1 := range v {
+			r.TextureCoords[i][j] = v1.Clone()
+		}
+	}
+	r.NumUVComponents = ai.NumUVComponents
+
+	for _, v := range ai.Faces {
+		r.Faces = append(r.Faces, v.Clone())
+	}
+
+	for _, v := range ai.Bones {
+		r.Bones = append(r.Bones, v.Clone())
+	}
+	r.MaterialIndex = ai.MaterialIndex
+	r.Name = ai.Name
+
+	for _, v := range ai.AnimMeshes {
+		r.AnimMeshes = append(r.AnimMeshes, v.Clone())
+	}
+	r.Method = ai.Method
+	r.AABB = ai.AABB
+	r.TextureCoordsNames = ai.TextureCoordsNames
+	return r
+}
 func (ai *AiMesh) ToPbMsg() *pb_msg.AiMesh {
 	r := pb_msg.AiMesh{}
-	r.PrimitiveTypes = ai.PrimitiveTypes
+	r.PrimitiveTypes = uint32(ai.PrimitiveTypes)
 	for _, v := range ai.Vertices {
 		r.Vertices = append(r.Vertices, v.ToPbMsg())
 	}
@@ -359,6 +409,7 @@ func (ai *AiMesh) GetTextureCoordsName(index uint32) string {
 }
 func NewAiMesh() *AiMesh {
 	return &AiMesh{
+		TextureCoords:   make([][]*common.AiVector3D, AI_MAX_NUMBER_OF_TEXTURECOORDS),
 		NumUVComponents: make([]uint32, AI_MAX_NUMBER_OF_TEXTURECOORDS),
 		Colors:          make([][]*common.AiColor4D, AI_MAX_NUMBER_OF_COLOR_SETS),
 	}
@@ -410,15 +461,7 @@ type AiAnimMesh struct {
 
 func (ai *AiAnimMesh) ToPbMsg() *pb_msg.AiAnimMesh {
 	r := &pb_msg.AiAnimMesh{}
-	/**Anim Mesh name */
 	r.Name = ai.Name
-
-	/** Replacement for aiMesh::mVertices. If this array is non-nullptr,
-	 *  it *must* contain mNumVertices entries. The corresponding
-	 *  array in the host mesh must be non-nullptr as well - animation
-	 *  meshes may neither add or nor remove vertex components (if
-	 *  a replacement array is nullptr and the corresponding source
-	 *  array is not, the source data is taken instead)*/
 	for _, v := range ai.Vertices {
 		r.Vertices = append(r.Vertices, v.ToPbMsg())
 	}
@@ -447,6 +490,39 @@ func (ai *AiAnimMesh) ToPbMsg() *pb_msg.AiAnimMesh {
 			tmp.TextureCoords = append(tmp.TextureCoords, v1.ToPbMsg())
 		}
 		r.TextureCoords = append(r.TextureCoords, &tmp)
+	}
+
+	r.Weight = ai.Weight
+	return r
+}
+
+func (ai *AiAnimMesh) Clone() *AiAnimMesh {
+	r := &AiAnimMesh{}
+	r.Name = ai.Name
+	for _, v := range ai.Vertices {
+		r.Vertices = append(r.Vertices, v.Clone())
+	}
+	for _, v := range ai.Normals {
+		r.Normals = append(r.Normals, v.Clone())
+	}
+	for _, v := range ai.Tangents {
+		r.Tangents = append(r.Tangents, v.Clone())
+	}
+
+	for _, v := range ai.Bitangents {
+		r.Bitangents = append(r.Bitangents, v.Clone())
+	}
+
+	for i, v := range ai.Colors {
+		for j, v1 := range v {
+			r.Colors[i][j] = v1.Clone()
+		}
+	}
+
+	for i, v := range ai.TextureCoords {
+		for j, v1 := range v {
+			r.TextureCoords[i][j] = v1.Clone()
+		}
 	}
 
 	r.Weight = ai.Weight
@@ -514,6 +590,13 @@ type AiFace struct {
 	Indices []uint32
 }
 
+func (ai *AiFace) Clone() *AiFace {
+	tmp := NewAiFace()
+	tmp.Indices = make([]uint32, len(ai.Indices))
+	copy(tmp.Indices, ai.Indices)
+	return tmp
+}
+
 func (ai *AiFace) ToPbMsg() *pb_msg.AiFace {
 	return &pb_msg.AiFace{
 		Indices: ai.Indices,
@@ -532,6 +615,10 @@ type AiVertexWeight struct {
 	Weight float32
 }
 
+func (ai *AiVertexWeight) Clone() *AiVertexWeight {
+	tmp := *ai
+	return &tmp
+}
 func (ai *AiVertexWeight) ToPbMsg() *pb_msg.AiVertexWeight {
 	return &pb_msg.AiVertexWeight{
 		VertexId: ai.VertexId,
@@ -576,6 +663,22 @@ type AiBone struct {
 	OffsetMatrix *common.AiMatrix4x4
 }
 
+func (ai *AiBone) Clone() *AiBone {
+	r := &AiBone{}
+	r.Name = ai.Name
+	for _, v := range ai.Armature {
+		r.Armature = append(r.Armature, v.Clone())
+	}
+	for _, v := range ai.Node {
+		r.Node = append(r.Node, v.Clone())
+	}
+	for _, v := range ai.Weights {
+		r.Weights = append(r.Weights, v.Clone())
+	}
+	r.OffsetMatrix = ai.OffsetMatrix.Clone()
+
+	return r
+}
 func (ai *AiBone) ToPbMsg() *pb_msg.AiBone {
 	r := &pb_msg.AiBone{}
 	r.Name = ai.Name
@@ -585,9 +688,6 @@ func (ai *AiBone) ToPbMsg() *pb_msg.AiBone {
 	for _, v := range ai.Node {
 		r.Node = append(r.Node, v.ToPbMsg())
 	}
-	/**
-	 * The influence weights of this bone, by vertex index.
-	 */
 	for _, v := range ai.Weights {
 		r.Weights = append(r.Weights, v.ToPbMsg())
 	}

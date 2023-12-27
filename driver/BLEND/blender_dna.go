@@ -231,13 +231,13 @@ func ExtractArraySize(s string) (array_sizes [2]int32) {
 	if index == -1 {
 		return
 	}
-	array_sizes[0] = common.Strtoul10(s[index+1:])
+	array_sizes[0], _ = common.Strtoul10(s[index+1:])
 	s = s[index+1:]
 	index = strings.Index(s, "[")
 	if index == -1 {
 		return
 	}
-	array_sizes[1] = common.Strtoul10(s[index+1:])
+	array_sizes[1], _ = common.Strtoul10(s[index+1:])
 	return array_sizes
 }
 

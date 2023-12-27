@@ -5,6 +5,7 @@ import (
 	"assimp/common/logger"
 	"bufio"
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"strconv"
@@ -26,7 +27,7 @@ type LineReader interface {
 	EOF() bool
 
 	MustOneKeyString(key string) (string, error)
-	MustOneKeyInt(key string) (int, error)
+	MustOneKeyInt(key string, options ...bool) (int, error)
 	NextKeyAiVector2d(key string) (res *common.AiVector2D, err error)
 	MustOneKeyFloat32(key string) (float32, error)
 	NextKeyAiVector3d(key string) (res *common.AiVector3D, err error)
@@ -120,7 +121,7 @@ func (r *lineReader) checkIndexValid(index int) bool {
 	return true
 }
 
-func (r *lineReader) MustOneKeyInt(key string) (int, error) {
+func (r *lineReader) MustOneKeyInt(key string, options ...bool) (res int, err error) {
 	values, err := r.nextKey(key, 1)
 	if err != nil {
 		return 0, err
@@ -128,12 +129,21 @@ func (r *lineReader) MustOneKeyInt(key string) (int, error) {
 	if !r.IsEndLine(1) {
 		return 0, ErrBadParams
 	}
-	res, err := strconv.Atoi(values[0])
+	if len(options) > 0 && options[0] {
+
+		o, err := hex.DecodeString(strings.TrimPrefix(values[0], "0x"))
+		if err != nil {
+			return 0, err
+		}
+		res = int(o[0])
+	} else {
+		res, err = strconv.Atoi(values[0])
+	}
 	if err != nil {
 		return 0, err
 	}
 	r.NextLine()
-	return res, nil
+	return int(res), nil
 }
 func (r *lineReader) MustOneKeyString(key string) (string, error) {
 	values, err := r.nextKey(key, 1)
@@ -308,7 +318,9 @@ func (r *lineReader) NextLineVector3(verticesKey string) (vertices []*common.AiV
 			return nil, err
 		}
 		vertices = append(vertices, v)
-		r.NextLine()
+		if i != num-1 {
+			r.NextLine()
+		}
 	}
 	if len(vertices) != num {
 		return vertices, ErrBadParams

@@ -10,6 +10,13 @@ func (ai *AiColor3D) ToPbMsg() *pb_msg.AiColor3D {
 	return &pb_msg.AiColor3D{R: ai.R, G: ai.G, B: ai.B}
 }
 
+func (ai *AiColor3D) FromPbMsg(data *pb_msg.AiColor3D) *AiColor3D {
+	ai.R = data.R
+	ai.G = data.G
+	ai.B = data.B
+	return ai
+}
+
 func NewAiColor3D(R, G, B float32) *AiColor3D {
 	return &AiColor3D{R: R, G: G, B: B}
 }

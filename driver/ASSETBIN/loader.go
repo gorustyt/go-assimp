@@ -78,7 +78,9 @@ func NewAssBinImporter(data []byte) (iassimp.Loader, error) {
 	}
 	return &AssBinImporter{StreamReader: r}, nil
 }
+func (ai *AssBinImporter) Close() {
 
+}
 func (ai *AssBinImporter) Read(pScene *core.AiScene) (err error) {
 	// signature
 	err = ai.Discard(44)
@@ -447,10 +449,11 @@ func (ai *AssBinImporter) ReadBinaryMesh(mesh *core.AiMesh) error {
 	if err != nil {
 		return err
 	}
-	mesh.PrimitiveTypes, err = ai.GetUInt32()
+	tmp, err := ai.GetUInt32()
 	if err != nil {
 		return err
 	}
+	mesh.PrimitiveTypes = core.AiPrimitiveType(tmp)
 	numVertices, err := ai.GetUInt32()
 	if err != nil {
 		return err
@@ -618,7 +621,7 @@ func (ai *AssBinImporter) ReadBinaryMaterialProperty(prop *core.AiMaterialProper
 	if err != nil {
 		return err
 	}
-	t, err := ai.GetUInt32()
+	_, err = ai.GetUInt32()
 	if err != nil {
 		return err
 	}
@@ -627,11 +630,7 @@ func (ai *AssBinImporter) ReadBinaryMaterialProperty(prop *core.AiMaterialProper
 	if err != nil {
 		return err
 	}
-	err = GetAiMaterialPropertyData(prop, t, data)
-	if err != nil {
-		return err
-	}
-	return nil
+	return parseAiMaterialByKey(prop, data)
 }
 
 // -----------------------------------------------------------------------------------
@@ -656,10 +655,10 @@ func (ai *AssBinImporter) ReadBinaryMaterial(mat *core.AiMaterial) error {
 		if len(mat.Properties) > 0 {
 			mat.Properties = mat.Properties[:0]
 		}
-		mat.Properties = make([]core.AiMaterialProperty, numProperties)
+		mat.Properties = make([]*core.AiMaterialProperty, numProperties)
 		for i := uint32(0); i < numProperties; i++ {
-			mat.Properties[i] = core.AiMaterialProperty{}
-			err = ai.ReadBinaryMaterialProperty(&mat.Properties[i])
+			mat.Properties[i] = &core.AiMaterialProperty{}
+			err = ai.ReadBinaryMaterialProperty(mat.Properties[i])
 			if err != nil {
 				return err
 			}

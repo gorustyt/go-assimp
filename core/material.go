@@ -1026,13 +1026,10 @@ const (
 type AiMaterial struct {
 	/** List of all material properties loaded. */
 	Properties []*AiMaterialProperty
-	/** Storage allocated */
-	NumAllocated int32
 }
 
 func (ai *AiMaterial) ToPbMsg() *pb_msg.AiMaterial {
 	r := &pb_msg.AiMaterial{}
-	r.NumAllocated = ai.NumAllocated
 	for _, v := range ai.Properties {
 		r.Properties = append(r.Properties, v.ToPbMsg())
 	}
@@ -1202,6 +1199,15 @@ type AiUVTransform struct {
 
 func (ai AiUVTransform) ToPbMsg() *pb_msg.AiUVTransform {
 	return &pb_msg.AiUVTransform{
-		Rotation: ai.Rotation,
+		Rotation:    ai.Rotation,
+		Translation: ai.Translation.ToPbMsg(),
+		Scaling:     ai.Scaling.ToPbMsg(),
 	}
+}
+
+func (ai *AiUVTransform) FromPbMsg(data *pb_msg.AiUVTransform) *AiUVTransform {
+	ai.Rotation = data.Rotation
+	ai.Scaling = (&common.AiVector2D{}).FromPbMsg(data.Scaling)
+	ai.Translation = (&common.AiVector2D{}).FromPbMsg(data.Translation)
+	return ai
 }

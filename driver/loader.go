@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"assimp/common/config"
 	"assimp/common/logger"
 	"assimp/core"
 	"assimp/driver/AC"
@@ -65,7 +66,9 @@ func (im *importer) ApplyPostProcessing(pScene *core.AiScene, pFlags int) {
 	ds.Execute(pScene)
 	logger.Info("Leaving post processing pipeline")
 }
+
 func (im *importer) ReadFile(path string, pFlags int) (s *core.AiScene, err error) {
+
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -87,7 +90,6 @@ func (im *importer) ReadFile(path string, pFlags int) (s *core.AiScene, err erro
 				l = ls
 				return true
 			}
-			ls.Close()
 		}
 		return false
 	}
@@ -102,11 +104,12 @@ func (im *importer) ReadFile(path string, pFlags int) (s *core.AiScene, err erro
 		return nil, errors.New("invalid format")
 	}
 	res := &core.AiScene{}
+	cfg := config.NewConfig()
+	l.InitConfig(cfg)
 	err = l.Read(res)
 	if err != nil {
 		return res, err
 	}
-	l.Close()
 	pre := pre_processing.NewScenePreprocessor(res)
 	pre.ProcessScene()
 	im.ApplyPostProcessing(res, pFlags&int(^iassimp.AiProcess_ValidateDataStructure))

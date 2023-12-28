@@ -12,10 +12,21 @@ type Vertex struct {
 }
 
 func NewVertex() *Vertex {
-	return &Vertex{
+	v := &Vertex{
+		position:  common.NewAiVector3D(),
+		normal:    common.NewAiVector3D(),
+		tangent:   common.NewAiVector3D(),
+		bitangent: common.NewAiVector3D(),
 		texcoords: make([]*common.AiVector3D, AI_MAX_NUMBER_OF_TEXTURECOORDS),
 		colors:    make([]*common.AiColor4D, AI_MAX_NUMBER_OF_COLOR_SETS),
 	}
+	for i := range v.texcoords {
+		v.texcoords[i] = common.NewAiVector3D()
+	}
+	for i := range v.colors {
+		v.colors[i] = common.NewAiColor4D0()
+	}
+	return v
 }
 
 // ----------------------------------------------------------------------------
@@ -123,7 +134,7 @@ func (v *Vertex) SortBack(out *AiMesh, idx int) {
 func (v *Vertex) BinaryOpVertex(v0 *Vertex, v1 *Vertex, opStr string) *Vertex {
 	// this is a heavy task for the compiler to optimize ... *pray*
 
-	var res Vertex
+	res := NewVertex()
 	res.position = op(v0.position, v1.position, opStr).(*common.AiVector3D)
 	res.normal = op(v0.normal, v1.normal, opStr).(*common.AiVector3D)
 	res.tangent = op(v0.tangent, v1.tangent, opStr).(*common.AiVector3D)
@@ -134,7 +145,7 @@ func (v *Vertex) BinaryOpVertex(v0 *Vertex, v1 *Vertex, opStr string) *Vertex {
 	for i := 0; i < AI_MAX_NUMBER_OF_COLOR_SETS; i++ {
 		res.colors[i] = op(v0.colors[i], v1.colors[i], opStr).(*common.AiColor4D)
 	}
-	return &res
+	return res
 }
 
 // ----------------------------------------------------------------------------
@@ -142,7 +153,7 @@ func (v *Vertex) BinaryOpVertex(v0 *Vertex, v1 *Vertex, opStr string) *Vertex {
 func (v *Vertex) BinaryOp(v0 *Vertex, f float32, opStr string) *Vertex {
 	// this is a heavy task for the compiler to optimize ... *pray*
 
-	var res Vertex
+	res := NewVertex()
 	res.position = op(v0.position, f, opStr).(*common.AiVector3D)
 	res.normal = op(v0.normal, f, opStr).(*common.AiVector3D)
 	res.tangent = op(v0.tangent, f, opStr).(*common.AiVector3D)
@@ -154,7 +165,7 @@ func (v *Vertex) BinaryOp(v0 *Vertex, f float32, opStr string) *Vertex {
 	for i := 0; i < AI_MAX_NUMBER_OF_COLOR_SETS; i++ {
 		res.colors[i] = op(v0.colors[i], f, opStr).(*common.AiColor4D)
 	}
-	return &res
+	return res
 }
 
 // ----------------------------------------------------------------------------
@@ -162,7 +173,7 @@ func (v *Vertex) BinaryOp(v0 *Vertex, f float32, opStr string) *Vertex {
 func (v *Vertex) BinaryOp1(f float32, v0 *Vertex, opStr string) *Vertex {
 	// this is a heavy task for the compiler to optimize ... *pray*
 
-	var res Vertex
+	res := NewVertex()
 	res.position = op(f, v0.position, opStr).(*common.AiVector3D)
 	res.normal = op(f, v0.normal, opStr).(*common.AiVector3D)
 	res.tangent = op(f, v0.tangent, opStr).(*common.AiVector3D)
@@ -174,7 +185,7 @@ func (v *Vertex) BinaryOp1(f float32, v0 *Vertex, opStr string) *Vertex {
 	for i := 0; i < AI_MAX_NUMBER_OF_COLOR_SETS; i++ {
 		res.colors[i] = op(f, v0.colors[i], opStr).(*common.AiColor4D)
 	}
-	return &res
+	return res
 }
 
 func op(v1 interface{}, v2 interface{}, op string) any {

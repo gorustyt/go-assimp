@@ -10,9 +10,7 @@ func (ai *AiColor4D) Clone() *AiColor4D {
 	tmp := *ai
 	return &tmp
 }
-func (ai *AiColor4D) Empty() bool {
-	return ai.R == 0 && ai.G == 0 && ai.B == 0 && ai.A == 0
-}
+
 func (ai *AiColor4D) ToPbMsg() *pb_msg.AiColor4D {
 	return &pb_msg.AiColor4D{R: ai.R, G: ai.G, B: ai.B, A: ai.A}
 }
@@ -46,11 +44,11 @@ func (ai *AiColor4D) Add(o *AiColor4D) *AiColor4D {
 // ------------------------------------------------------------------------------------------------
 
 func (ai *AiColor4D) Sub(o *AiColor4D) *AiColor4D {
-	ai.R -= o.R
-	ai.G -= o.G
-	ai.B -= o.B
-	ai.A -= o.A
 	tmp := *ai
+	tmp.R -= o.R
+	tmp.G -= o.G
+	tmp.B -= o.B
+	tmp.A -= o.A
 	return &tmp
 }
 
@@ -61,23 +59,23 @@ func (ai *AiColor4D) Mul(v2 *AiColor4D) *AiColor4D {
 // ------------------------------------------------------------------------------------------------
 
 func (ai *AiColor4D) MulValue(f float32) *AiColor4D {
-	ai.R *= f
-	ai.G *= f
-	ai.B *= f
-	ai.A *= f
-
 	tmp := *ai
+	tmp.R *= f
+	tmp.G *= f
+	tmp.B *= f
+	tmp.A *= f
 	return &tmp
 }
 
 // ------------------------------------------------------------------------------------------------
 
 func (ai *AiColor4D) DivValue(f float32) *AiColor4D {
-	ai.R /= f
-	ai.G /= f
-	ai.B /= f
-	ai.A /= f
 	tmp := *ai
+	tmp.R /= f
+	tmp.G /= f
+	tmp.B /= f
+	tmp.A /= f
+
 	return &tmp
 }
 

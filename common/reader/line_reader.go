@@ -313,6 +313,9 @@ func (r *lineReader) NextLineVector3(verticesKey string) (vertices []*common.AiV
 		return nil, err
 	}
 	for i := 0; i < num; i++ {
+		if i == 131 {
+			_ = num
+		}
 		v, err := r.ReadLineAiVector3d()
 		if err != nil {
 			return nil, err

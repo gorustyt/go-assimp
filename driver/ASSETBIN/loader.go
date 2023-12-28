@@ -2,6 +2,7 @@ package ASSETBIN
 
 import (
 	"assimp/common"
+	"assimp/common/config"
 	"assimp/common/reader"
 	"assimp/core"
 	"assimp/driver/base/iassimp"
@@ -78,7 +79,7 @@ func NewAssBinImporter(data []byte) (iassimp.Loader, error) {
 	}
 	return &AssBinImporter{StreamReader: r}, nil
 }
-func (ai *AssBinImporter) Close() {
+func (ai *AssBinImporter) InitConfig(cfg *config.Config) {
 
 }
 func (ai *AssBinImporter) Read(pScene *core.AiScene) (err error) {

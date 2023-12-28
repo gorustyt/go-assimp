@@ -80,7 +80,7 @@ func (f *BlenderTessellatorP2T) GetEigenVectorFromLargestEigenValue(mtx *common.
 	lastV := v
 	for i := 0; i < 100; i++ {
 		v = mc.MulVector3d(v)
-		v.Normalize()
+		v = v.Normalize()
 		if (v.Sub(lastV)).SquareLength() < 1e-16 {
 			break
 		}
@@ -141,12 +141,12 @@ func (f *BlenderTessellatorP2T) MakeFacesFromTriangles(triangles []*poly2tri.Tri
 // ------------------------------------------------------------------------------------------------
 func (f *BlenderTessellatorP2T) GeneratePointTransformMatrix(plane *PlaneP2T) *common.AiMatrix4x4 {
 	sideA := common.NewAiVector3D3(1.0, 0.0, 0.0)
-	if math.Abs(float64(common.MulAiVector3D(plane.normal, sideA))) > 0.999 {
+	if math.Abs(float64(plane.normal.MulAiVector3D(sideA))) > 0.999 {
 		sideA = common.NewAiVector3D3(0.0, 1.0, 0.0)
 	}
 
 	sideB := plane.normal.NegationOperationSymbol(sideA)
-	sideB.Normalize()
+	sideB = sideB.Normalize()
 	sideA = sideB.NegationOperationSymbol(plane.normal)
 
 	var result common.AiMatrix4x4

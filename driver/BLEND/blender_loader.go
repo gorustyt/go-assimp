@@ -2,6 +2,7 @@ package BLEND
 
 import (
 	"assimp/common"
+	"assimp/common/config"
 	"assimp/common/logger"
 	"assimp/common/pb_msg"
 	"assimp/common/reader"
@@ -86,7 +87,7 @@ var propertyTypeMap = map[string][]pb_msg.AiMaterialPropertyType{
 	"$mat.blend.mirror.glossAnisotropic":     {pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32},
 }
 
-func (b *BlenderImporter) Close() {
+func (b *BlenderImporter) InitConfig(cfg *config.Config) {
 
 }
 func (b *BlenderImporter) checkMagic() ([]byte, bool, error) {

@@ -2,26 +2,10 @@ package common
 
 import (
 	"assimp/common/logger"
-	"assimp/common/pb_msg"
 	"encoding/binary"
-	"fmt"
 	"math"
-	"strings"
 	"unsafe"
 )
-
-type AiQuaternion struct {
-	W, X, Y, Z float32
-}
-
-func (ai *AiQuaternion) ToPbMsg() *pb_msg.AiQuaternion {
-	return &pb_msg.AiQuaternion{
-		W: ai.W,
-		X: ai.X,
-		Y: ai.Y,
-		Z: ai.Z,
-	}
-}
 
 type AiPropertyStore struct {
 	Sentinel uint8
@@ -109,22 +93,4 @@ type Number interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 |
 		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 |
 		~float32 | ~float64
-}
-
-
-
-// -------------------------------------------------------------------------------
-/** @brief Find the min/max values of an array of Ts
- *  @param in Input array
- *  @param size Number of elements to process
- *  @param[out] min minimum value
- *  @param[out] max maximum value
- */
-
-func  ArrayBounds[T any ]( in []T) {
-MinMaxChooser<T>()(min, max);
-for  i := 0; i < len(t); i++ {
-min = std::min(in[i], min);
-max = std::max(in[i], max);
-}
 }

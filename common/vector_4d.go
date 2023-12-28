@@ -15,3 +15,7 @@ func (ai *AiVector4D) FromPbMsg(data *pb_msg.AiVector4D) *AiVector4D {
 	ai[3] = data.W
 	return ai
 }
+
+func NewAiVector4D() *AiVector4D {
+	return &AiVector4D{}
+}

@@ -2,6 +2,7 @@ package AC
 
 import (
 	"assimp/common"
+	"assimp/common/config"
 	"assimp/common/logger"
 	"assimp/common/reader"
 	"assimp/core"
@@ -36,8 +37,8 @@ func NewAC3DImporter(data []byte) (iassimp.Loader, error) {
 	im := &AC3DImporter{LineReader: r}
 	return im, nil
 }
-func (ac *AC3DImporter) Close() {
-
+func (ac *AC3DImporter) InitConfig(cfg *config.Config) {
+	ac.configEvalSubdivision = cfg.SubDivision
 }
 func (ac *AC3DImporter) LoadObjectSection() (objects []*Object, err error) {
 	if !ac.HasPrefix("OBJECT") {
@@ -378,6 +379,7 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 				// surface is not empty
 				uv := -1
 				if len(object.textures) != 0 {
+					uv = 0
 					mesh.TextureCoords[0] = make([]*common.AiVector3D, len(mesh.Vertices))
 					for i := range mesh.TextureCoords[0] {
 						mesh.TextureCoords[0][i] = common.NewAiVector3D3(0, 0, 0)
@@ -540,16 +542,17 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 				cit++
 				mat++
 			}
+
 			// Now apply catmull clark subdivision if necessary. We split meshes into
 			// materials which is not done by AC3D during smoothing, so we need to
 			// collect all meshes using the same material group.
 			if object.subDiv != 0 {
 				if ac.configEvalSubdivision {
 					div := core.NewSubDivision(core.CATMULL_CLARKE)
-					logger.InfoF("AC3D: Evaluating subdivision surface: ", object.name)
+					logger.InfoF("AC3D: Evaluating subdivision surface:%v ", object.name)
 					cpy := make([]*core.AiMesh, len(*meshes)-oldm)
 					tmp := (*meshes)[oldm:]
-					div.Subdivide1(&tmp, len(cpy), &cpy, object.subDiv, true)
+					div.Subdivide(tmp, cpy, object.subDiv, true)
 					copy((*meshes)[oldm:], cpy)
 					// previous meshes are deleted vy Subdivide().
 				} else {
@@ -601,8 +604,8 @@ func (ac *AC3DImporter) Read(pScene *core.AiScene) (err error) {
 	var lights []*core.AiLight
 	for !ac.EOF() {
 		if ac.HasPrefix("MATERIAL") {
-			var mat Material
-			materials = append(materials, &mat)
+			mat := newMaterial()
+			materials = append(materials, mat)
 			mat.name, err = ac.NextOneKeyString("MATERIAL")
 			if err != nil {
 				return err
@@ -645,7 +648,7 @@ func (ac *AC3DImporter) Read(pScene *core.AiScene) (err error) {
 	}
 	if len(materials) == 0 {
 		logger.Warn("AC3D: No material has been found")
-		materials = append(materials, &Material{})
+		materials = append(materials, newMaterial())
 	}
 	ac.NumMeshes += (ac.NumMeshes >> 2) + 1
 	var root *Object

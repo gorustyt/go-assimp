@@ -25,12 +25,9 @@ func AssertError(t *testing.T, err error) {
 	}
 }
 
-func DeepEqual(p1, p2 *core.AiScene) bool {
-	for _, mesh := range p1.Meshes {
-		mesh.Name = "" //assetBin 沒有這個字段
-	}
-	for _, mesh := range p1.Materials {
-		for _, mesh1 := range p2.Materials {
+func deepEqualMaterials(p1, p2 []*core.AiMaterial) {
+	for _, mesh := range p1 {
+		for _, mesh1 := range p2 {
 			for i, v := range mesh.Properties {
 				v1 := mesh1.Properties[i]
 				if v.Type != v1.Type {
@@ -131,6 +128,76 @@ func DeepEqual(p1, p2 *core.AiScene) bool {
 			}
 		}
 	}
+}
+func deepEqualMesh(p1, p2 []*core.AiMesh) {
+	for _, vi := range p1 {
+		for _, vj := range p2 {
+			for iv := range vi.Faces {
+				v1, v2 := vi.Faces[iv], vj.Faces[iv]
+				if !deepEqual(v1, v2) {
+					logger.ErrorF("deepEqualMesh Face not equal vi:%v,vj:%v", *v1, *v2)
+				}
+			}
 
+			for iv := range vi.Vertices {
+				v1, v2 := vi.Vertices[iv], vj.Vertices[iv]
+				if !deepEqual(v1, v2) {
+					logger.ErrorF("deepEqualMesh Vertic not equal vi:%v,vj:%v", *v1, *v2)
+				}
+			}
+			for iv := range vi.Normals {
+				if !deepEqual(vi.Normals[iv], vj.Normals[iv]) {
+					logger.ErrorF("deepEqualMesh Normal not equal vi:%v,vj:%v", *vi.Normals[iv], *vj.Normals[iv])
+				}
+			}
+			for iv := range vi.Tangents {
+				v1, v2 := vi.Tangents[iv], vj.Tangents[iv]
+				if !deepEqual(v1, v2) {
+					logger.ErrorF("deepEqualMesh Tangent not equal vi:%v,vj:%v", *v1, *v2)
+				}
+			}
+
+			for i := range vi.Colors {
+				for j := range vi.Colors[i] {
+					v1, v2 := vi.Colors[i][j], vi.Colors[i][j]
+					if !deepEqual(v1, v2) {
+						logger.ErrorF("deepEqualMesh Color not equal vi:%v,vj:%v", *v1, *v2)
+					}
+				}
+			}
+
+			for i := range vi.TextureCoords {
+				for j := range vi.TextureCoords[i] {
+					v1, v2 := vi.TextureCoords[i][j], vi.TextureCoords[i][j]
+					if !deepEqual(v1, v2) {
+						logger.ErrorF("deepEqualMesh TextureCoord not equal vi:%v,vj:%v", *v1, *v2)
+					}
+				}
+			}
+			for iv := range vi.NumUVComponents {
+				v1, v2 := vi.NumUVComponents[iv], vj.NumUVComponents[iv]
+				if !deepEqual(v1, v2) {
+					logger.ErrorF("deepEqualMesh NumUVComponent not equal vi:%v,vj:%v", v1, v2)
+				}
+			}
+
+			for iv := range vi.Bones {
+				v1, v2 := vi.Bones[iv], vj.Bones[iv]
+				if !deepEqual(v1, v2) {
+					logger.ErrorF("deepEqualMesh Bone not equal vi:%v,vj:%v", *v1, *v2)
+				}
+			}
+
+		}
+	}
+}
+func DeepEqual(p1, p2 *core.AiScene) bool {
+	for _, mesh := range p1.Meshes {
+		mesh.Name = "" //assetBin 沒有這個字段
+	}
+	//只比较一部分，并且修改协议
+	deepEqualMaterials(p1.Materials, p2.Materials)
+	//deepEqualMesh(p1.Meshes, p2.Meshes)
+	//全比较
 	return deepEqual(p1, p2)
 }

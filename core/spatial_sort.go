@@ -41,7 +41,7 @@ type SpatialSort struct {
 func NewSpatialSort() *SpatialSort {
 	s := &SpatialSort{}
 	s.PlaneNormal = PlaneInit
-	s.PlaneNormal.Normalize()
+	s.PlaneNormal = *s.PlaneNormal.Normalize()
 	return s
 }
 
@@ -60,7 +60,7 @@ func (s *SpatialSort) CalculateDistance(pPosition *common.AiVector3D) float64 {
 func (s *SpatialSort) Finalize() {
 	scale := 1.0 / len(s.Positions)
 	for i := 0; i < len(s.Positions); i++ {
-		s.Centroid.Add(s.Positions[i].Position.Mul(float32(scale)))
+		s.Centroid = *s.Centroid.Add(s.Positions[i].Position.Mul(float32(scale)))
 	}
 	for i := 0; i < len(s.Positions); i++ {
 		s.Positions[i].Distance = s.CalculateDistance(&s.Positions[i].Position)

@@ -149,7 +149,7 @@ func Test16(t *testing.T) {
 
 		invVertexCount := 1.0 / float32(len(mesh.Vertices))
 		for j := 0; j < len(mesh.Vertices); j++ {
-			vertexAvg.Add(mesh.Vertices[j].Mul(invVertexCount))
+			vertexAvg = vertexAvg.Add(mesh.Vertices[j].Mul(invVertexCount))
 		}
 	}
 

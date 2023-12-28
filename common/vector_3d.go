@@ -29,26 +29,26 @@ func (ai *AiVector3D) Clone() *AiVector3D {
 }
 
 func (ai *AiVector3D) Add(o *AiVector3D) *AiVector3D {
-	ai.X += o.X
-	ai.Y += o.Y
-	ai.Z += o.Z
 	tmp := *ai
+	tmp.X += o.X
+	tmp.Y += o.Y
+	tmp.Z += o.Z
 	return &tmp
 }
 
 func (ai *AiVector3D) Sub(o *AiVector3D) *AiVector3D {
-	ai.X -= o.X
-	ai.Y -= o.Y
-	ai.Z -= o.Z
 	tmp := *ai
+	tmp.X -= o.X
+	tmp.Y -= o.Y
+	tmp.Z -= o.Z
 	return &tmp
 }
 
 func (ai *AiVector3D) Mul(f float32) *AiVector3D {
-	ai.X *= f
-	ai.Y *= f
-	ai.Z *= f
 	tmp := *ai
+	tmp.X *= f
+	tmp.Y *= f
+	tmp.Z *= f
 	return &tmp
 }
 
@@ -57,11 +57,11 @@ func (ai *AiVector3D) Div(f float64) *AiVector3D {
 		tmp := ai
 		return tmp
 	}
-	invF := float32(1.0) / float32(f)
-	ai.X *= invF
-	ai.Y *= invF
-	ai.Z *= invF
 	tmp := *ai
+	invF := float32(1.0) / float32(f)
+	tmp.X *= invF
+	tmp.Y *= invF
+	tmp.Z *= invF
 	return &tmp
 }
 
@@ -107,12 +107,7 @@ func (ai *AiVector3D) Length() float64 {
 }
 
 func (ai *AiVector3D) Normalize() *AiVector3D {
-	l := ai.Length()
-	if l == 0 {
-		return ai
-	}
-	ai.Div(ai.Length())
-	return ai
+	return ai.Div(ai.Length())
 }
 
 func (ai *AiVector3D) MulMatrix3x3(mat *AiMatrix3x3) {

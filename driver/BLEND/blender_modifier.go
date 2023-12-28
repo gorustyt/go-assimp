@@ -1,12 +1,18 @@
 package BLEND
 
 import (
+	"assimp/common"
 	"assimp/common/logger"
 	"assimp/core"
 	"errors"
+	"math"
 )
 
 // add all available modifiers here
+const (
+	TYPE_CatmullClarke = 0x0
+	TYPE_Simple        = 0x1
+)
 
 var creators = []func() IBlenderModifier{
 	func() IBlenderModifier { return &BlenderModifier_Mirror{} },
@@ -153,7 +159,111 @@ func (b *BlenderModifier_Mirror) DoIt(out core.AiNode,
 	in *Scene,
 	orig_object *Object,
 ) {
-	logger.InfoF("This modifier is not supported, skipping: ", orig_modifier.GetDnaType())
+	// hijacking the ABI, see the big note in BlenderModifierShowcase::ApplyModifiers()
+	mir := orig_modifier.(*MirrorModifierData)
+	common.AiAssert(mir.modifier.Type == int32(eModifierType_Mirror))
+	mirror_ob := mir.mirror_ob
+	// XXX not entirely correct, mirroring on two axes results in 4 distinct objects in blender ...
+
+	// take all input meshes and clone them
+	for i := 0; i < len(out.Meshes); i++ {
+		mesh := conv_data.meshes[out.Meshes[i]].Clone()
+		xs := float32(1)
+		if mir.flag&Flags_AXIS_X != 0 {
+			xs = -1.
+		}
+		ys := float32(1)
+		if mir.flag&Flags_AXIS_Y != 0 {
+			ys = -1.
+		}
+		zs := float32(1)
+		if mir.flag&Flags_AXIS_Z != 0 {
+			zs = -1.
+		}
+		if mirror_ob != nil {
+			center := common.NewAiVector3D3(mirror_ob.obmat[3][0], mirror_ob.obmat[3][1], mirror_ob.obmat[3][2])
+			for j := 0; j < len(mesh.Vertices); j++ {
+				v := mesh.Vertices[j]
+
+				v.X = center.X + xs*(center.X-v.X)
+				v.Y = center.Y + ys*(center.Y-v.Y)
+				v.Z = center.Z + zs*(center.Z-v.Z)
+			}
+		} else {
+			for j := 0; j < len(mesh.Vertices); j++ {
+				v := mesh.Vertices[j]
+				v.X *= xs
+				v.Y *= ys
+				v.Z *= zs
+			}
+		}
+
+		if len(mesh.Normals) > 0 {
+			for j := 0; j < len(mesh.Vertices); j++ {
+				v := mesh.Normals[j]
+				v.X *= xs
+				v.Y *= ys
+				v.Z *= zs
+			}
+		}
+
+		if len(mesh.Tangents) > 0 {
+			for j := 0; j < len(mesh.Vertices); j++ {
+				v := mesh.Tangents[j]
+				v.X *= xs
+				v.Y *= ys
+				v.Z *= zs
+			}
+		}
+
+		if len(mesh.Bitangents) > 0 {
+			for j := 0; j < len(mesh.Vertices); j++ {
+				v := mesh.Bitangents[j]
+				v.X *= xs
+				v.Y *= ys
+				v.Z *= zs
+			}
+		}
+
+		us := float32(1.)
+		if mir.flag&Flags_MIRROR_U != 0 {
+			us = -1.
+		}
+		vs := float32(1.)
+		if mir.flag&Flags_MIRROR_V != 0 {
+			vs = -1.
+		}
+
+		for n := 0; mesh.HasTextureCoords(uint32(n)); n++ {
+			for j := 0; j < len(mesh.Vertices); j++ {
+				v := mesh.TextureCoords[n][j]
+				v.X *= us
+				v.Y *= vs
+			}
+		}
+
+		// Only reverse the winding order if an odd number of axes were mirrored.
+		if xs*ys*zs < 0 {
+			for j := 0; j < len(mesh.Faces); j++ {
+				face := mesh.Faces[j]
+				for fi := 0; fi < len(face.Indices)/2; fi++ {
+					face.Indices[fi], face.Indices[len(face.Indices)-1-fi] = face.Indices[len(face.Indices)-1-fi], face.Indices[fi]
+
+				}
+
+			}
+		}
+
+		conv_data.meshes = append(conv_data.meshes, mesh)
+	}
+	nind := make([]int32, len(out.Meshes)*2)
+	copy(nind, out.Meshes[:len(out.Meshes)])
+	for i := 0; i < len(out.Meshes); i++ {
+		nind[len(out.Meshes)+i] = int32(len(out.Meshes)) + out.Meshes[i]
+	}
+	out.Meshes = nind
+	logger.InfoF("BlendModifier: Applied the `Mirror` modifier to `%v %v ",
+		orig_object.id.name, "`")
 	return
 }
 
@@ -163,4 +273,43 @@ type BlenderModifier_Subdivision struct {
 
 func (b *BlenderModifier_Subdivision) IsActive(modin *ModifierData) bool {
 	return modin.Type == int32(eModifierType_Subsurf)
+}
+func (b *BlenderModifier_Subdivision) DoIt(out core.AiNode,
+	conv_data *ConversionData,
+	orig_modifier IElemBase,
+	in *Scene,
+	orig_object *Object,
+) {
+	// hijacking the ABI, see the big note in BlenderModifierShowcase::ApplyModifiers()
+	mir := orig_modifier.(*SubsurfModifierData)
+	common.AiAssert(mir.modifier.Type == int32(eModifierType_Subsurf))
+
+	var algo core.Algorithm
+	switch mir.subdivType {
+	case TYPE_CatmullClarke:
+		algo = core.CATMULL_CLARKE
+	case TYPE_Simple:
+		logger.Warn("BlendModifier: The `SIMPLE` subdivision algorithm is not currently implemented, using Catmull-Clarke")
+		algo = core.CATMULL_CLARKE
+	default:
+		logger.WarnF("BlendModifier: Unrecognized subdivision algorithm: %v", mir.subdivType)
+		return
+	}
+
+	subd := core.NewSubDivision(algo)
+	if len(conv_data.meshes) == 0 {
+		return
+	}
+	meshIndex := len(conv_data.meshes) - len(out.Meshes)
+	if meshIndex >= len(conv_data.meshes) {
+		logger.Error("Invalid index detected.")
+		return
+	}
+	meshes := conv_data.meshes[len(conv_data.meshes)-len(out.Meshes):]
+	tempmeshes := make([]*core.AiMesh, len(out.Meshes))
+	subd.Subdivide(meshes, tempmeshes, int(math.Max(float64(mir.renderLevels), float64(mir.levels))), true)
+	copy(tempmeshes[:len(out.Meshes)], tempmeshes)
+	logger.InfoF("BlendModifier: Applied the `Subdivision` modifier to `%v %v",
+		orig_object.id.name, "`")
+	return
 }

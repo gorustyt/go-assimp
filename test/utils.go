@@ -197,7 +197,7 @@ func DeepEqual(p1, p2 *core.AiScene) bool {
 	}
 	//只比较一部分，并且修改协议
 	deepEqualMaterials(p1.Materials, p2.Materials)
-	//deepEqualMesh(p1.Meshes, p2.Meshes)
+	deepEqualMesh(p1.Meshes, p2.Meshes)
 	//全比较
 	return deepEqual(p1, p2)
 }

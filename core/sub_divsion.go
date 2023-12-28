@@ -235,7 +235,12 @@ func (div *CatmullClarkSubdivider) InternSubdivide(smesh []*AiMesh,
 
 	// we want edges to go away before the recursive calls so begin a new scope
 	edges := map[common.Pair[int, int]]*Edge{}
-
+	makeEdgeHash := func(v1, v2 int) common.Pair[int, int] {
+		if v1 < v2 {
+			v1, v2 = v2, v1
+		}
+		return *common.NewPair(v1, v2)
+	}
 	// ---------------------------------------------------------------------
 	// 2. Set each edge point to be the average of all neighbouring
 	// face points and original points. Every edge exists twice
@@ -261,7 +266,7 @@ func (div *CatmullClarkSubdivider) InternSubdivide(smesh []*AiMesh,
 					maptbl[FLATTEN_VERTEX_IDX(t, id[1])],
 				}
 
-				key := *common.NewPair(mp[0], mp[1])
+				key := makeEdgeHash(mp[0], mp[1])
 				e, ok := edges[key]
 				if !ok {
 					e = NewEdge()
@@ -448,7 +453,9 @@ func (div *CatmullClarkSubdivider) InternSubdivide(smesh []*AiMesh,
 				if a == len(face.Indices)-1 {
 					tmp = 0
 				}
-				key := *common.NewPair(maptbl[FLATTEN_VERTEX_IDX(t, int(face.Indices[a]))], maptbl[FLATTEN_VERTEX_IDX(t, int(face.Indices[tmp]))])
+
+				key := makeEdgeHash(maptbl[FLATTEN_VERTEX_IDX(t, int(face.Indices[a]))],
+					maptbl[FLATTEN_VERTEX_IDX(t, int(face.Indices[tmp]))])
 				e0, ok := edges[key] // fixme: replace with mod face.mNumIndices?
 				if !ok {
 					e0 = NewEdge()
@@ -459,7 +466,7 @@ func (div *CatmullClarkSubdivider) InternSubdivide(smesh []*AiMesh,
 					tmp = len(face.Indices) - 1
 				}
 				// c) adjacent edge on the right, seen from the centroid
-				key = *common.NewPair(maptbl[FLATTEN_VERTEX_IDX(t, int(face.Indices[a]))], maptbl[FLATTEN_VERTEX_IDX(t, int(face.Indices[tmp]))])
+				key = makeEdgeHash(maptbl[FLATTEN_VERTEX_IDX(t, int(face.Indices[a]))], maptbl[FLATTEN_VERTEX_IDX(t, int(face.Indices[tmp]))])
 				e1, ok := edges[key]
 				if !ok {
 					e1 = NewEdge()
@@ -535,7 +542,7 @@ func (div *CatmullClarkSubdivider) InternSubdivide(smesh []*AiMesh,
 										tmp = len(f.Indices) - 1
 									}
 
-									key = *common.NewPair(org, maptbl[FLATTEN_VERTEX_IDX(nidx, int(f.Indices[tmp]))])
+									key = makeEdgeHash(org, maptbl[FLATTEN_VERTEX_IDX(nidx, int(f.Indices[tmp]))])
 									c0, ok := edges[key]
 									if !ok {
 										c0 = NewEdge()
@@ -546,7 +553,7 @@ func (div *CatmullClarkSubdivider) InternSubdivide(smesh []*AiMesh,
 									if m == len(f.Indices)-1 {
 										tmp = 0
 									}
-									key = *common.NewPair(org, maptbl[FLATTEN_VERTEX_IDX(
+									key = makeEdgeHash(org, maptbl[FLATTEN_VERTEX_IDX(
 										nidx, int(f.Indices[tmp]))])
 									c1, ok := edges[key]
 									if !ok {

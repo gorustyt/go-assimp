@@ -114,6 +114,7 @@ func deepValueEqual(v1, v2 reflect.Value, visited map[visit]bool) bool {
 		}
 		for i := 0; i < v1.Len(); i++ {
 			if !deepValueEqual(v1.Index(i), v2.Index(i), visited) {
+				logger.ErrorF("not equal type1:%v type2:%v", v1.Type().String(), v2.Type().String())
 				return false
 			}
 		}

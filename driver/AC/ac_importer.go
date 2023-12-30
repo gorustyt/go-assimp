@@ -428,8 +428,6 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 								if object.vertices[entry1.First] == object.vertices[entry2.First] ||
 									object.vertices[entry1.First] == object.vertices[entry3.First] ||
 									object.vertices[entry2.First] == object.vertices[entry3.First] {
-									cit++
-									mat++
 									continue
 								}
 
@@ -601,7 +599,6 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 func (ac *AC3DImporter) Read(pScene *core.AiScene) (err error) {
 	materials := make([]*Material, 0)
 	rootObjects := make([]*Object, 0)
-	var lights []*core.AiLight
 	for !ac.EOF() {
 		if ac.HasPrefix("MATERIAL") {
 			mat := newMaterial()
@@ -669,6 +666,6 @@ func (ac *AC3DImporter) Read(pScene *core.AiScene) (err error) {
 	}
 	pScene.Meshes = meshes
 	pScene.Materials = omaterials
-	pScene.Lights = lights
+	pScene.Lights = ac.Lights
 	return nil
 }

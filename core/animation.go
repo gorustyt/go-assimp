@@ -129,20 +129,20 @@ type AiNodeAnim struct {
 	 *
 	 * If there are position keys, there will also be at least one
 	 * scaling and one rotation key.*/
-	PositionKeys []*AiVectorKey
+	PositionKeys []*common.AiVectorKey
 	/** The rotation keys of this animation channel. Rotations are
 	 *  given as quaternions,  which are 4D vectors. The array is
 	 *  mNumRotationKeys in size.
 	 *
 	 * If there are rotation keys, there will also be at least one
 	 * scaling and one position key. */
-	RotationKeys []*AiQuatKey
+	RotationKeys []*common.AiQuatKey
 	/** The scaling keys of this animation channel. Scalings are
 	 *  specified as 3D vector. The array is mNumScalingKeys in size.
 	 *
 	 * If there are scaling keys, there will also be at least one
 	 * position and one rotation key.*/
-	ScalingKeys []*AiVectorKey
+	ScalingKeys []*common.AiVectorKey
 
 	/** Defines how the animation behaves before the first
 	 *  key is encountered.
@@ -223,33 +223,5 @@ func (ai *AiMeshKey) ToPbMsg() *pb_msg.AiMeshKey {
 		Time:  ai.Time,
 		Value: ai.Value,
 	}
-	return r
-}
-
-/** A time-value pair specifying a certain 3D vector for the given time. */
-
-type AiVectorKey struct {
-	/** The time of this key */
-	Time float64
-
-	/** The value of this key */
-	Value *common.AiVector3D
-}
-
-func (ai *AiVectorKey) ToPbMsg() *pb_msg.AiVectorKey {
-	r := &pb_msg.AiVectorKey{}
-	return r
-}
-
-type AiQuatKey struct {
-	/** The time of this key */
-	Time float64
-
-	/** The value of this key */
-	Value *common.AiQuaternion
-}
-
-func (ai *AiQuatKey) ToPbMsg() *pb_msg.AiQuatKey {
-	r := &pb_msg.AiQuatKey{}
 	return r
 }

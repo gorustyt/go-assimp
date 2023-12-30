@@ -77,6 +77,18 @@ func NewAiMatrix4x4FromAiMatrix3x3(m *AiMatrix3x3) *AiMatrix4x4 {
 	ai.D4 = 1.0
 	return &ai
 }
+
+// ------------------------------------------------------------------------------------------------
+/** Transformation of a vector by a 4x4 matrix */
+
+func (ai *AiMatrix4x4) MulAiVector3D(pVector *AiVector3D) *AiVector3D {
+	var res AiVector3D
+	res.X = ai.A1*pVector.X + ai.A2*pVector.Y + ai.A3*pVector.Z + ai.A4
+	res.Y = ai.B1*pVector.X + ai.B2*pVector.Y + ai.B3*pVector.Z + ai.B4
+	res.Z = ai.C1*pVector.X + ai.C2*pVector.Y + ai.C3*pVector.Z + ai.C4
+	return &res
+}
+
 func (ai *AiMatrix4x4) AddMatrix4x4(m *AiMatrix4x4) *AiMatrix4x4 {
 	return NewAiMatrix4x4FromValues(
 		m.A1+ai.A1,

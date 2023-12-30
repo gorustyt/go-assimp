@@ -94,3 +94,17 @@ type Number interface {
 		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 |
 		~float32 | ~float64
 }
+
+func Max[T Number](a, b T) T {
+	if a <= b {
+		return b
+	}
+	return a
+}
+
+func Min[T Number](a, b T) T {
+	if a <= b {
+		return a
+	}
+	return b
+}

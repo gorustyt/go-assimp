@@ -2,6 +2,7 @@ package core
 
 import (
 	"assimp/common"
+	"fmt"
 	"math"
 	"sort"
 	"unsafe"
@@ -58,7 +59,7 @@ func (s *SpatialSort) CalculateDistance(pPosition *common.AiVector3D) float64 {
 
 // ------------------------------------------------------------------------------------------------
 func (s *SpatialSort) Finalize() {
-	scale := 1.0 / len(s.Positions)
+	scale := 1.0 / float64(len(s.Positions))
 	for i := 0; i < len(s.Positions); i++ {
 		s.Centroid = *s.Centroid.Add(s.Positions[i].Position.Mul(float32(scale)))
 	}
@@ -66,6 +67,9 @@ func (s *SpatialSort) Finalize() {
 		s.Positions[i].Distance = s.CalculateDistance(&s.Positions[i].Position)
 	}
 	sort.Slice(s.Positions, func(i, j int) bool {
+		if s.Positions[i].Distance == s.Positions[j].Distance {
+			return s.Positions[i].Index < s.Positions[j].Index
+		}
 		return s.Positions[i].Less(s.Positions[j])
 	})
 	s.Finalized = true
@@ -300,6 +304,12 @@ func (s *SpatialSort) GenerateMappingTable(pRadius float64) ([]int, int) {
 			fill[s.Positions[i].Index] = t
 		}
 		t++
+		if t == 704 {
+			fmt.Printf("================t==%d i==%v\n", t, i)
+		}
+		if t == 29030-1 || t == 29075-1 || t == 29113-1 || t == 29073-1 {
+			fmt.Printf("%s", "")
+		}
 	}
 
 	// debug invariant: mPositions[i].mIndex values must range from 0 to mPositions.size()-1

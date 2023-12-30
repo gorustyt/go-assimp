@@ -3,6 +3,7 @@ package core
 import (
 	"assimp/common"
 	"assimp/common/logger"
+	"fmt"
 	"time"
 )
 
@@ -193,7 +194,6 @@ func (div *CatmullClarkSubdivider) InternSubdivide(smesh []*AiMesh,
 	if num == 0 {
 		return
 	}
-	var maptbl []int
 	spatial := NewSpatialSort()
 	for t := 0; t < len(smesh); t++ {
 		mesh := smesh[t]
@@ -236,7 +236,7 @@ func (div *CatmullClarkSubdivider) InternSubdivide(smesh []*AiMesh,
 	// we want edges to go away before the recursive calls so begin a new scope
 	edges := map[common.Pair[int, int]]*Edge{}
 	makeEdgeHash := func(v1, v2 int) common.Pair[int, int] {
-		if v1 < v2 {
+		if v1 > v2 {
 			v1, v2 = v2, v1
 		}
 		return *common.NewPair(v1, v2)
@@ -272,6 +272,13 @@ func (div *CatmullClarkSubdivider) InternSubdivide(smesh []*AiMesh,
 					e = NewEdge()
 					edges[key] = e
 				}
+				if mp[0] == 29030 || mp[0] == 29075 || mp[0] == 29113 || mp[0] == 29073 {
+					fmt.Printf("%s", "")
+				}
+				if i < 300 {
+					//fmt.Printf("i:%v  mp[0]:%v======mp[1]:%v\n", i, mp[0], mp[1])
+				}
+
 				e.ref++
 				if e.ref <= 2 {
 					if e.ref == 1 { // original points (end points) - add only once
@@ -291,8 +298,9 @@ func (div *CatmullClarkSubdivider) InternSubdivide(smesh []*AiMesh,
 	// ---------------------------------------------------------------------
 
 	bad_cnt := 0
-	for _, v := range edges {
+	for i, v := range edges {
 		if v.ref < 2 {
+			logger.ErrorF("fond bad cnt first:%v second:%v", i.First, i.Second)
 			common.AiAssert(v.ref != 0)
 			bad_cnt++
 		}
@@ -381,7 +389,10 @@ func (div *CatmullClarkSubdivider) InternSubdivide(smesh []*AiMesh,
 		return
 	}
 
-	var new_points = make([]common.Pair[bool, *Vertex], num_unique)
+	new_points := make([]*common.Pair[bool, *Vertex], num_unique)
+	for i := range new_points {
+		new_points[i] = common.NewPair(false, NewVertex())
+	}
 	// ---------------------------------------------------------------------
 	// 5. Spawn a quad from each face point to the corresponding edge points
 	// the original points being the fourth quad points.
@@ -434,7 +445,6 @@ func (div *CatmullClarkSubdivider) InternSubdivide(smesh []*AiMesh,
 		for ; i < len(minp.Faces); i++ {
 
 			face := minp.Faces[i]
-			now2 := time.Now()
 			for a := 0; a < len(face.Indices); a++ {
 
 				// Get a clean new face.
@@ -503,7 +513,6 @@ func (div *CatmullClarkSubdivider) InternSubdivide(smesh []*AiMesh,
 					} else {
 
 						F, R := NewVertex(), NewVertex()
-						now3 := time.Now()
 						for o := 0; o < cnt; o++ {
 							common.AiAssert(adj[o] < totfaces)
 							F = F.Add(F, centroids[adj[o]])
@@ -572,8 +581,6 @@ func (div *CatmullClarkSubdivider) InternSubdivide(smesh []*AiMesh,
 								logger.Warn("OBJ: no name for material library specified.")
 							}
 						}
-						cost := time.Since(now3).Milliseconds()
-						logger.DebugF("3 cost :%v Milliseconds", cost)
 						d := float32(cnt)
 						divsq := float32(1.) / (d * d)
 						vertex1 := NewVertexFromAiMesh(minp, int(face.Indices[a]))
@@ -588,8 +595,6 @@ func (div *CatmullClarkSubdivider) InternSubdivide(smesh []*AiMesh,
 				ov.Second.SortBack(mout, v)
 				v++
 			}
-			cost := time.Since(now2).Milliseconds()
-			logger.DebugF("2 cost :%v Milliseconds", cost)
 		}
 		cost := time.Since(now1).Milliseconds()
 		logger.DebugF("1 cost :%v Milliseconds", cost)

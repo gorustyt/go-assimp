@@ -110,7 +110,9 @@ func (v *Vertex) Mul1(f float32, v0 *Vertex) *Vertex {
 func (v *Vertex) SortBack(out *AiMesh, idx int) {
 	common.AiAssert(idx < len(out.Vertices))
 	out.Vertices[idx] = v.position
-
+	if idx == 303184 {
+		_ = idx
+	}
 	if out.HasNormals() {
 		out.Normals[idx] = v.normal
 	}
@@ -119,7 +121,6 @@ func (v *Vertex) SortBack(out *AiMesh, idx int) {
 		out.Tangents[idx] = v.tangent
 		out.Bitangents[idx] = v.bitangent
 	}
-
 	for i := 0; out.HasTextureCoords(uint32(i)); i++ {
 		out.TextureCoords[i][idx] = v.texcoords[i]
 	}

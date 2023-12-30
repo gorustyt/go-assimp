@@ -219,9 +219,9 @@ func (ai *AssBinImporter) ReadAiString() (string, error) {
 
 // -----------------------------------------------------------------------------------
 
-func (ai *AssBinImporter) ReadAiVertexWeight() (*core.AiVertexWeight, error) {
+func (ai *AssBinImporter) ReadAiVertexWeight() (*common.AiVertexWeight, error) {
 	var (
-		w   core.AiVertexWeight
+		w   common.AiVertexWeight
 		err error
 	)
 	w.VertexId, err = ai.GetUInt32()
@@ -250,8 +250,8 @@ func (ai *AssBinImporter) ReadAiMatrix4x4() (m *common.AiMatrix4x4, err error) {
 
 // -----------------------------------------------------------------------------------
 
-func (ai *AssBinImporter) ReadAiVectorKey() (v *core.AiVectorKey, err error) {
-	v = &core.AiVectorKey{}
+func (ai *AssBinImporter) ReadAiVectorKey() (v *common.AiVectorKey, err error) {
+	v = &common.AiVectorKey{}
 	v.Time, err = ai.GetFloat64()
 	if err != nil {
 		return nil, err
@@ -265,8 +265,8 @@ func (ai *AssBinImporter) ReadAiVectorKey() (v *core.AiVectorKey, err error) {
 
 // -----------------------------------------------------------------------------------
 
-func (ai *AssBinImporter) ReadAiQuatKey() (v *core.AiQuatKey, err error) {
-	v = &core.AiQuatKey{}
+func (ai *AssBinImporter) ReadAiQuatKey() (v *common.AiQuatKey, err error) {
+	v = &common.AiQuatKey{}
 	v.Time, err = ai.GetFloat64()
 	if err != nil {
 		return nil, err
@@ -422,7 +422,7 @@ func (ai *AssBinImporter) ReadBinaryBone(b *core.AiBone) error {
 	// for the moment we write dumb min/max values for the bones, too.
 	// maybe I'll add a better, hash-like solution later
 	// else write as usual
-	b.Weights = make([]*core.AiVertexWeight, numWeights)
+	b.Weights = make([]*common.AiVertexWeight, numWeights)
 	for i := range b.Weights {
 		b.Weights[i], err = ai.ReadAiVertexWeight()
 		if err != nil {
@@ -709,7 +709,7 @@ func (ai *AssBinImporter) ReadBinaryNodeAnim(nd *core.AiNodeAnim) error {
 	nd.PostState = core.AiAnimBehaviour(t1)
 
 	if numPositionKeys > 0 {
-		nd.PositionKeys = make([]*core.AiVectorKey, numPositionKeys)
+		nd.PositionKeys = make([]*common.AiVectorKey, numPositionKeys)
 		for i := range nd.PositionKeys {
 			nd.PositionKeys[i], err = ai.ReadAiVectorKey()
 			if err != nil {
@@ -719,7 +719,7 @@ func (ai *AssBinImporter) ReadBinaryNodeAnim(nd *core.AiNodeAnim) error {
 	}
 	if numRotationKeys > 0 {
 		// else write as usual
-		nd.RotationKeys = make([]*core.AiQuatKey, numRotationKeys)
+		nd.RotationKeys = make([]*common.AiQuatKey, numRotationKeys)
 		for i := range nd.RotationKeys {
 			nd.RotationKeys[i], err = ai.ReadAiQuatKey()
 			if err != nil {
@@ -729,7 +729,7 @@ func (ai *AssBinImporter) ReadBinaryNodeAnim(nd *core.AiNodeAnim) error {
 	}
 	if numScalingKeys > 0 {
 		// else write as usual
-		nd.ScalingKeys = make([]*core.AiVectorKey, numScalingKeys)
+		nd.ScalingKeys = make([]*common.AiVectorKey, numScalingKeys)
 		for i := range nd.ScalingKeys {
 			nd.ScalingKeys[i], err = ai.ReadAiVectorKey()
 			if err != nil {

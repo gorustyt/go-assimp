@@ -171,7 +171,7 @@ func (f *BlenderTessellatorP2T) GeneratePointTransformMatrix(plane *PlaneP2T) *c
 func (f *BlenderTessellatorP2T) TransformAndFlattenVectices(transform *common.AiMatrix4x4, vertices []*PointP2T) {
 	for i := 0; i < len(vertices); i++ {
 		point := vertices[i]
-		point.point3D = common.Matrix4x4tMulAiVector3D(transform, point.point3D)
+		point.point3D = transform.MulAiVector3D(point.point3D)
 		point.point2D.SetPoint(float64(point.point3D.Y), float64(point.point3D.Z))
 	}
 }

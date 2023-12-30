@@ -30,8 +30,11 @@ func deepEqualMaterials(p1, p2 []*core.AiMaterial) {
 		for _, mesh1 := range p2 {
 			for i, v := range mesh.Properties {
 				v1 := mesh1.Properties[i]
+				if v.Key != v1.Key {
+					logger.ErrorF("deepEqualMaterials key  not equal v1:%v v2%v  ", v.Key, v1.Key)
+				}
 				if v.Type != v1.Type {
-					logger.ErrorF("v1Name:%v v2Name:%v  Properties Type not equal!", v.Key, v1.Key)
+					logger.ErrorF("deepEqualMaterials key  not equal v1:%v v2%v", v.Type, v1.Type)
 				}
 				switch v.Type {
 				case pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32, pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat64:
@@ -130,8 +133,39 @@ func deepEqualMaterials(p1, p2 []*core.AiMaterial) {
 	}
 }
 func deepEqualMesh(p1, p2 []*core.AiMesh) {
+
 	for _, vi := range p1 {
 		for _, vj := range p2 {
+			if !deepEqual(vi.Method, vj.Method) {
+				logger.ErrorF("deepEqualMesh Method not equal vi:%v,vj:%v", vi.Method, vj.Method)
+			}
+
+			if !deepEqual(vi.PrimitiveTypes, vj.PrimitiveTypes) {
+				logger.ErrorF("deepEqualMesh PrimitiveTypes not equal vi:%v,vj:%v", vi.PrimitiveTypes, vj.PrimitiveTypes)
+			}
+
+			if !deepEqual(vi.MaterialIndex, vj.MaterialIndex) {
+				logger.ErrorF("deepEqualMesh MaterialIndex not equal vi:%v,vj:%v", vi.MaterialIndex, vj.MaterialIndex)
+			}
+
+			if !deepEqual(vi.Name, vj.Name) {
+				logger.ErrorF("deepEqualMesh Name not equal vi:%v,vj:%v", vi.Name, vj.Name)
+			}
+
+			if !deepEqual(vi.TextureCoordsNames, vj.TextureCoordsNames) {
+				logger.ErrorF("deepEqualMesh TextureCoordsNames not equal vi:%v,vj:%v", vi.TextureCoordsNames, vj.TextureCoordsNames)
+			}
+
+			if !deepEqual(vi.AABB, vj.AABB) {
+				logger.ErrorF("deepEqualMesh AABB not equal vi:%v,vj:%v", *vi.AABB, *vj.AABB)
+			}
+
+			for iv := range vi.AnimMeshes {
+				v1, v2 := vi.AnimMeshes[iv], vj.AnimMeshes[iv]
+				if !deepEqual(v1, v2) {
+					logger.ErrorF("deepEqualMesh Face not equal vi:%v,vj:%v", *v1, *v2)
+				}
+			}
 			for iv := range vi.Faces {
 				v1, v2 := vi.Faces[iv], vj.Faces[iv]
 				if !deepEqual(v1, v2) {
@@ -159,7 +193,7 @@ func deepEqualMesh(p1, p2 []*core.AiMesh) {
 
 			for i := range vi.Colors {
 				for j := range vi.Colors[i] {
-					v1, v2 := vi.Colors[i][j], vi.Colors[i][j]
+					v1, v2 := vi.Colors[i][j], vj.Colors[i][j]
 					if !deepEqual(v1, v2) {
 						logger.ErrorF("deepEqualMesh Color not equal vi:%v,vj:%v", *v1, *v2)
 					}
@@ -168,7 +202,7 @@ func deepEqualMesh(p1, p2 []*core.AiMesh) {
 
 			for i := range vi.TextureCoords {
 				for j := range vi.TextureCoords[i] {
-					v1, v2 := vi.TextureCoords[i][j], vi.TextureCoords[i][j]
+					v1, v2 := vi.TextureCoords[i][j], vj.TextureCoords[i][j]
 					if !deepEqual(v1, v2) {
 						logger.ErrorF("deepEqualMesh TextureCoord not equal vi:%v,vj:%v", *v1, *v2)
 					}
@@ -191,13 +225,74 @@ func deepEqualMesh(p1, p2 []*core.AiMesh) {
 		}
 	}
 }
-func DeepEqual(p1, p2 *core.AiScene) bool {
+func deepEqualScene(p1, p2 *core.AiScene) {
 	for _, mesh := range p1.Meshes {
 		mesh.Name = "" //assetBin 沒有這個字段
 	}
+	if p1.Flags != p2.Flags {
+		logger.ErrorF("deepScene Flags not equal v1:%v v2%v  ", p1.Flags, p2.Flags)
+	}
+
+	if p1.Name != p2.Name {
+		logger.ErrorF("deepScene Name not equal v1:%v v2%v", p1.Name, p2.Name)
+	}
+}
+
+func deepEqualNode(p1, p2 *core.AiNode) {
+	if !deepEqual(p1, p2) {
+		logger.Error("deepScene Node not equal ")
+	}
+}
+
+func deepEqualTexture(p1, p2 []*core.AiTexture) {
+	if !deepEqual(p1, p2) {
+		logger.Error("deepScene Texture not equal ")
+	}
+}
+
+func deepEqualAnimation(p1, p2 []*core.AiAnimation) {
+	if !deepEqual(p1, p2) {
+		logger.Error("deepScene Animation not equal ")
+	}
+}
+
+func deepEqualAiLight(p1, p2 []*core.AiLight) {
+	if !deepEqual(p1, p2) {
+		logger.Error("deepScene Light not equal ")
+	}
+}
+
+func deepEqualCamera(p1, p2 []*core.AiCamera) {
+	if !deepEqual(p1, p2) {
+		logger.Error("deepScene Camera not equal ")
+	}
+}
+
+func deepEqualMetadata(p1, p2 []*core.AiMetadata) {
+	if !deepEqual(p1, p2) {
+		logger.Error("deepScene Metadata not equal ")
+	}
+}
+
+func deepEqualAiSkeleton(p1, p2 []*core.AiSkeleton) {
+	if !deepEqual(p1, p2) {
+		logger.Error("deepScene Skeleton not equal ")
+	}
+}
+
+func DeepEqual(p1, p2 *core.AiScene) bool {
+
 	//只比较一部分，并且修改协议
+	deepEqualScene(p1, p2)
+	deepEqualNode(p1.RootNode, p2.RootNode)
 	deepEqualMaterials(p1.Materials, p2.Materials)
 	deepEqualMesh(p1.Meshes, p2.Meshes)
+	deepEqualTexture(p1.Textures, p2.Textures)
+	deepEqualAnimation(p1.Animations, p2.Animations)
+	deepEqualAiLight(p1.Lights, p2.Lights)
+	deepEqualCamera(p1.Cameras, p2.Cameras)
+	deepEqualMetadata(p1.MetaData, p2.MetaData)
+	deepEqualAiSkeleton(p1.Skeletons, p2.Skeletons)
 	//全比较
 	return deepEqual(p1, p2)
 }

@@ -6,6 +6,14 @@ type AiVector2D struct {
 	X, Y float32
 }
 
+func (ai *AiVector2D) BoundMin(b *AiVector2D) *AiVector2D {
+	return NewAiVector2D(Min(ai.X, b.X), Min(ai.Y, b.Y))
+}
+
+func (ai *AiVector2D) BoundMax(b *AiVector2D) *AiVector2D {
+	return NewAiVector2D(Max(ai.X, b.X), Max(ai.Y, b.Y))
+}
+
 func (ai *AiVector2D) ToPbMsg() *pb_msg.AiVector2D {
 	return &pb_msg.AiVector2D{X: ai.X, Y: ai.Y}
 }

@@ -10,6 +10,13 @@ func (ai *AiColor4D) Clone() *AiColor4D {
 	tmp := *ai
 	return &tmp
 }
+func (ai *AiColor4D) BoundMin(a, b *AiColor4D) *AiColor4D {
+	return NewAiColor4D(Min(a.R, b.R), Min(a.G, b.G), Min(a.B, b.B), Min(a.A, b.A))
+}
+
+func (ai *AiColor4D) BoundMax(a, b *AiColor4D) *AiColor4D {
+	return NewAiColor4D(Max(a.R, b.R), Max(a.G, b.G), Max(a.B, b.B), Max(a.A, b.A))
+}
 
 func (ai *AiColor4D) ToPbMsg() *pb_msg.AiColor4D {
 	return &pb_msg.AiColor4D{R: ai.R, G: ai.G, B: ai.B, A: ai.A}

@@ -9,8 +9,12 @@ type AiVector3D struct {
 	X, Y, Z float32
 }
 
-func (ai AiVector3D) Empty() bool {
-	return ai.X == 0 && ai.Y == 0 && ai.Z == 0
+func (ai *AiVector3D) BoundMin(b *AiVector3D) *AiVector3D {
+	return NewAiVector3D3(Min(ai.X, b.X), Min(ai.Y, b.Y), Min(ai.Z, b.Z))
+}
+
+func (ai *AiVector3D) BoundMax(b *AiVector3D) *AiVector3D {
+	return NewAiVector3D3(Max(ai.X, b.X), Max(ai.Y, b.Y), Max(ai.Z, b.Z))
 }
 
 func (ai *AiVector3D) FromPbMsg(data *pb_msg.AiVector3D) *AiVector3D {
@@ -54,8 +58,8 @@ func (ai *AiVector3D) Mul(f float32) *AiVector3D {
 
 func (ai *AiVector3D) Div(f float64) *AiVector3D {
 	if f == 0 {
-		tmp := ai
-		return tmp
+		tmp := *ai
+		return &tmp
 	}
 	tmp := *ai
 	invF := float32(1.0) / float32(f)
@@ -163,13 +167,30 @@ func (ai *AiVector3D) MulAiVector3D(v2 *AiVector3D) float64 {
 	return float64(ai.X*v2.X + ai.Y*v2.Y + ai.Z*v2.Z)
 }
 
-// ------------------------------------------------------------------------------------------------
-/** Transformation of a vector by a 4x4 matrix */
+/** A time-value pair specifying a certain 3D vector for the given time. */
+type AiVectorKey struct {
+	/** The time of this key */
+	Time float64
 
-func Matrix4x4tMulAiVector3D(pMatrix *AiMatrix4x4, pVector *AiVector3D) *AiVector3D {
-	var res AiVector3D
-	res.X = pMatrix.A1*pVector.X + pMatrix.A2*pVector.Y + pMatrix.A3*pVector.Z + pMatrix.A4
-	res.Y = pMatrix.B1*pVector.X + pMatrix.B2*pVector.Y + pMatrix.B3*pVector.Z + pMatrix.B4
-	res.Z = pMatrix.C1*pVector.X + pMatrix.C2*pVector.Y + pMatrix.C3*pVector.Z + pMatrix.C4
-	return &res
+	/** The value of this key */
+	Value *AiVector3D
+}
+
+func (ai *AiVectorKey) ToPbMsg() *pb_msg.AiVectorKey {
+	r := &pb_msg.AiVectorKey{}
+	return r
+}
+
+func (ai *AiVectorKey) BoundMin(b *AiVectorKey) *AiVectorKey {
+	return &AiVectorKey{
+		Time:  Min(ai.Time, b.Time),
+		Value: ai.Value.BoundMin(b.Value),
+	}
+}
+
+func (ai *AiVectorKey) BoundMax(b *AiVectorKey) *AiVectorKey {
+	return &AiVectorKey{
+		Time:  Max(ai.Time, b.Time),
+		Value: ai.Value.BoundMin(b.Value),
+	}
 }

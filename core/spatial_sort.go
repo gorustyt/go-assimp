@@ -2,7 +2,6 @@ package core
 
 import (
 	"assimp/common"
-	"fmt"
 	"math"
 	"sort"
 	"unsafe"
@@ -304,12 +303,6 @@ func (s *SpatialSort) GenerateMappingTable(pRadius float64) ([]int, int) {
 			fill[s.Positions[i].Index] = t
 		}
 		t++
-		if t == 704 {
-			fmt.Printf("================t==%d i==%v\n", t, i)
-		}
-		if t == 29030-1 || t == 29075-1 || t == 29113-1 || t == 29073-1 {
-			fmt.Printf("%s", "")
-		}
 	}
 
 	// debug invariant: mPositions[i].mIndex values must range from 0 to mPositions.size()-1

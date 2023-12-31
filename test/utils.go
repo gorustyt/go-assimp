@@ -238,9 +238,24 @@ func deepEqualScene(p1, p2 *core.AiScene) {
 	}
 }
 
-func deepEqualNode(p1, p2 *core.AiNode) {
+func deepEqualNode(p1, p2 *core.AiNode, level int) {
 	if !deepEqual(p1, p2) {
 		logger.Error("deepScene Node not equal ")
+	}
+	if p1.Name != p2.Name {
+		logger.ErrorF("deepEqualNode Name not equal ")
+	}
+	for i := range p1.Children {
+		deepEqualNode(p1.Children[i], p2.Children[i], level+1)
+	}
+	if !deepEqual(p1.Transformation, p2.Transformation) {
+		logger.ErrorF("deepEqualNode Transformation not equal p1:%v,p2:%v", *p1.Transformation, *p2.Transformation)
+	}
+	if !deepEqual(p1.Meshes, p2.Meshes) {
+		logger.ErrorF("deepEqualNode Meshes not equal p1:%v,p2:%v", p1.Meshes, p2.Meshes)
+	}
+	if !deepEqual(p1.MetaData, p2.MetaData) {
+		logger.Error("deepEqualNode MetaData not equal ")
 	}
 }
 
@@ -284,7 +299,7 @@ func DeepEqual(p1, p2 *core.AiScene) bool {
 
 	//只比较一部分，并且修改协议
 	deepEqualScene(p1, p2)
-	deepEqualNode(p1.RootNode, p2.RootNode)
+	deepEqualNode(p1.RootNode, p2.RootNode, 0)
 	deepEqualMaterials(p1.Materials, p2.Materials)
 	deepEqualMesh(p1.Meshes, p2.Meshes)
 	deepEqualTexture(p1.Textures, p2.Textures)

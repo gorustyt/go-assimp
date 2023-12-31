@@ -3,7 +3,6 @@ package core
 import (
 	"assimp/common"
 	"assimp/common/logger"
-	"fmt"
 	"time"
 )
 
@@ -272,13 +271,6 @@ func (div *CatmullClarkSubdivider) InternSubdivide(smesh []*AiMesh,
 					e = NewEdge()
 					edges[key] = e
 				}
-				if mp[0] == 29030 || mp[0] == 29075 || mp[0] == 29113 || mp[0] == 29073 {
-					fmt.Printf("%s", "")
-				}
-				if i < 300 {
-					//fmt.Printf("i:%v  mp[0]:%v======mp[1]:%v\n", i, mp[0], mp[1])
-				}
-
 				e.ref++
 				if e.ref <= 2 {
 					if e.ref == 1 { // original points (end points) - add only once

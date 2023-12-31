@@ -110,7 +110,7 @@ func (s *ScenePreprocessor) ProcessAnimation(anim *core.AiAnimation) {
 func (s *ScenePreprocessor) ProcessMesh(mesh *core.AiMesh) {
 	// If aiMesh::mNumUVComponents is *not* set assign the default value of 2
 	for i := 0; i < int(core.AI_MAX_NUMBER_OF_TEXTURECOORDS); i++ {
-		if mesh.TextureCoords[i] == nil {
+		if len(mesh.TextureCoords[i]) == 0 {
 			mesh.NumUVComponents[i] = 0
 			continue
 		}

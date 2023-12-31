@@ -853,7 +853,12 @@ func (dest *Material) Convert(db *FileDatabase, s *Structure) (err error) {
 	}
 	value, err := s.ReadFieldPtr("*group", db)
 	if err = IsPtrError(err, func() {
-		dest.group = value.(*Group)
+		if value == nil {
+			dest.group = nil
+		} else {
+			dest.group = value.(*Group)
+		}
+
 	}); err != nil {
 		return err
 	}
@@ -868,10 +873,16 @@ func (dest *Material) Convert(db *FileDatabase, s *Structure) (err error) {
 	}
 
 	value1, err := s.ReadFieldPtrArray(len(dest.mtex), "*mtex", db)
-	if err != nil {
+	if err = IsPtrError(err, func() {
+		if value1 == nil {
+			dest.group = nil
+		} else {
+			copy(dest.mtex[:], SliceToT[*MTex](value1))
+		}
+	}); err != nil {
 		return err
 	}
-	copy(dest.mtex[:], SliceToT[*MTex](value1))
+
 	err = s.ReadField(&dest.amb, "amb", db)
 	if err != nil {
 		return err

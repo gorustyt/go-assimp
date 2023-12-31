@@ -43,7 +43,7 @@ func TestAcImporter3(t *testing.T) {
 	vertexAvg := common.NewAiVector3D3(0.0, 0.0, 0.0)
 	for i := 0; i < len(p.Meshes); i++ {
 		mesh := p.Meshes[i]
-		Assert(t, mesh == nil)
+		Assert(t, mesh != nil)
 
 		invVertexCount := 1.0 / len(mesh.Vertices)
 		for j := 0; j < len(mesh.Vertices); j++ {

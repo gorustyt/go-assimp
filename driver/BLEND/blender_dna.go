@@ -500,6 +500,9 @@ func (s *Structure) ReadFieldPtrSlice(name string, db *FileDatabase) (out []any,
 func (s *Structure) readFieldPtrArray(in any, count int, name string, db *FileDatabase) (out1 []any, err error) {
 	ptrval := make([]Pointer, count)
 	f := s.IndexByString(name)
+	if f == nil {
+		return out1, nil
+	}
 	// sanity check, should never happen if the genblenddna script is right
 	if (FieldFlag_Pointer | FieldFlag_Pointer) != (f.flags & (FieldFlag_Pointer | FieldFlag_Pointer)) {
 		return out1, fmt.Errorf("field ` %v` of structure ` %v ` ought to be a pointer AND an array", name, s.name)

@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"reflect"
 	"sort"
 	"unsafe"
 )
@@ -222,17 +223,18 @@ func (b *BlenderImporter) ParseSubCollection(in *Scene, root *core.AiNode, colle
 	//*Object
 	var root_objects = common.NewQueue[*Object]()
 	// Count number of objects
-	for cur := collection.gobject.first.(*CollectionObject); cur != nil; cur = cur.next {
-		if cur.ob != nil {
-			root_objects.PushBack(cur.ob)
+	for cur := collection.gobject.first; cur != nil && !reflect.ValueOf(cur).IsNil(); cur = cur.(*CollectionObject).next {
+		vcur := cur.(*CollectionObject)
+		if vcur.ob != nil {
+			root_objects.PushBack(vcur.ob)
 		}
 	}
 	//
 	var root_children = common.NewQueue[*Collection]()
 	// Count number of child nodes
-	for cur := collection.children.first.(*CollectionChild); cur != nil; cur = cur.next {
-		if cur.collection != nil {
-			root_children.PushBack(cur.collection)
+	for cur := collection.children.first; cur != nil && !reflect.ValueOf(cur).IsNil(); cur = cur.(*CollectionChild).next {
+		if cur.(*CollectionChild).collection != nil {
+			root_children.PushBack(cur.(*CollectionChild).collection)
 		}
 	}
 	root.Children = make([]*core.AiNode, root_objects.Size()+root_children.Size())
@@ -248,11 +250,11 @@ func (b *BlenderImporter) ParseSubCollection(in *Scene, root *core.AiNode, colle
 
 	// For each subcollection create a new node to represent it
 	iterator := root_objects.Size()
-	for cur := collection.children.first.(*CollectionChild); cur != nil; cur = cur.next {
-		if cur.collection != nil {
-			root.Children[iterator] = core.NewAiNode(cur.collection.id.name[:2]) // skip over the name prefix 'OB'
+	for cur := collection.children.first; cur != nil && !reflect.ValueOf(cur).IsNil(); cur = cur.(*CollectionChild).next {
+		if cur.(*CollectionChild).collection != nil {
+			root.Children[iterator] = core.NewAiNode(cur.(*CollectionChild).collection.id.name[2:]) // skip over the name prefix 'OB'
 			root.Children[iterator].Parent = root
-			err := b.ParseSubCollection(in, root.Children[iterator], cur.collection, conv_data)
+			err := b.ParseSubCollection(in, root.Children[iterator], cur.(*CollectionChild).collection, conv_data)
 			if err != nil {
 				return err
 			}
@@ -1091,13 +1093,13 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 		var f = core.NewAiFace()
 		out.Faces = append(out.Faces, f)
 		f.Indices = make([]uint32, mf.totloop)
-		vo, vn := getVoVn(out)
 		// XXX we can't fold this easily, because we are restricted
 		// to the member names from the BLEND file (v1,v2,v3,v4)
 		// which are assigned by the genblenddna.py script and
 		// cannot be changed without breaking the entire
 		// import process.
 		for j := 0; j < int(mf.totloop); j++ {
+			vo, vn := getVoVn(out)
 			loop := mesh.mloop[int(mf.loopstart)+j]
 
 			if loop.v >= mesh.totvert {
@@ -1112,8 +1114,8 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 			vn.X = v.no[0]
 			vn.Y = v.no[1]
 			vn.Z = v.no[2]
-			f.Indices[j] = uint32(len(out.Vertices))
-			vo, vn = getVoVn(out)
+			f.Indices[j] = uint32(len(out.Vertices)) - 1
+
 		}
 		if mf.totloop == 3 {
 			out.PrimitiveTypes |= core.AiPrimitiveType_TRIANGLE
@@ -1147,14 +1149,21 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 			matTexUvMappings[uint32(m)] = texuv
 		}
 	}
-
+	var (
+		numFacesMap    = map[*core.AiMesh]int{}
+		numVerticesMap = map[*core.AiMesh]int{}
+	)
+	for _, v := range *temp {
+		numVerticesMap[v] = len(v.Vertices)
+		numFacesMap[v] = len(v.Faces)
+	}
 	// collect texture coordinates, they're stored in a separate per-face buffer
 	if len(mesh.mtface) != 0 || len(mesh.mloopuv) != 0 {
 		if int(mesh.totface) > len(mesh.mtface) {
 			return errors.New("number of UV faces is larger than the corresponding UV face array (#1)")
 		}
 		for it := old; it != len(*temp); it++ {
-			if 0 == len((*temp)[it].Vertices) {
+			if 0 == numVerticesMap[(*temp)[it]] {
 				return errors.New("invalid type ")
 			}
 			if 0 == len((*temp)[it].Faces) {
@@ -1163,23 +1172,31 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 			itMatTexUvMapping, ok := matTexUvMappings[uint32((*temp)[it].MaterialIndex)]
 			if !ok {
 				// default behaviour like before
-				(*temp)[it].TextureCoords[0] = make([]*common.AiVector3D, len((*temp)[it].Vertices))
+				(*temp)[it].TextureCoords[0] = make([]*common.AiVector3D, numVerticesMap[(*temp)[it]])
+				for i := range (*temp)[it].TextureCoords[0] {
+					(*temp)[it].TextureCoords[0][i] = common.NewAiVector3D()
+				}
 			} else {
 				// create texture coords for every mapped tex
 				for i := 0; i < len(itMatTexUvMapping); i++ {
-					(*temp)[it].TextureCoords[i] = make([]*common.AiVector3D, len((*temp)[it].Vertices))
+					(*temp)[it].TextureCoords[i] = make([]*common.AiVector3D, numVerticesMap[(*temp)[it]])
+					for j := range (*temp)[it].TextureCoords[i] {
+						(*temp)[it].TextureCoords[i][j] = common.NewAiVector3D()
+					}
 				}
 			}
+			numFacesMap[(*temp)[it]] = 0
+			numVerticesMap[(*temp)[it]] = 0
 		}
 
 		for i := 0; i < int(mesh.totface); i++ {
 			v := mesh.mtface[i]
 			out := (*temp)[mat_num_to_mesh_idx[int(mesh.mface[i].mat_nr)]]
-			f := core.NewAiFace()
-			out.Faces = append(out.Faces, f)
-			vo1 := common.NewAiVector3D()
-			out.TextureCoords[0] = append(out.TextureCoords[0], vo1)
+			f := out.Faces[numFacesMap[out]]
+			numFacesMap[out]++
 			for j := 0; j < len(f.Indices); j++ {
+				vo1 := out.TextureCoords[0][numVerticesMap[out]]
+				numVerticesMap[out]++
 				vo1.X = v.uv[j][0]
 				vo1.Y = v.uv[j][1]
 			}
@@ -1189,14 +1206,14 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 			v := mesh.mpoly[i]
 			out := (*temp)[mat_num_to_mesh_idx[int(v.mat_nr)]]
 
-			f := core.NewAiFace()
-			out.Faces = append(out.Faces, f)
+			f := out.Faces[numFacesMap[out]]
+			numFacesMap[out]++
 			itMatTexUvMapping, ok := matTexUvMappings[uint32(v.mat_nr)]
 			if !ok {
 				// old behavior
-				vo1 := common.NewAiVector3D()
-				out.TextureCoords[0] = append(out.TextureCoords[0], vo1)
 				for j := 0; j < len(f.Indices); j++ {
+					vo1 := out.TextureCoords[0][numVerticesMap[out]]
+					numVerticesMap[out]++
 					uv := mesh.mloopuv[int(v.loopstart)+j]
 					vo1.X = uv.uv[0]
 					vo1.Y = uv.uv[1]
@@ -1205,10 +1222,10 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 				// create textureCoords for every mapped tex
 				for m := 0; m < len(itMatTexUvMapping); m++ {
 					tm := matTexUvMappings[uint32(m)]
-					vo1 := common.NewAiVector3D()
-					out.TextureCoords[0] = append(out.TextureCoords[0], vo1)
 					j := 0
 					for ; j < len(f.Indices); j++ {
+						vo1 := out.TextureCoords[0][numVerticesMap[out]]
+						numVerticesMap[out]++
 						uv := tm[uint32(int(v.loopstart)+j)]
 						vo1.X = uv.uv[0]
 						vo1.Y = uv.uv[1]
@@ -1216,7 +1233,7 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 					// only update written mNumVertices in last loop
 					// TODO why must the numVertices be incremented here?
 					if m == len(itMatTexUvMapping)-1 {
-						//TODO out.NumVertices += j
+
 					}
 				}
 			}
@@ -1229,25 +1246,30 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 			return errors.New("Number of faces is larger than the corresponding UV face array (#2)")
 		}
 		for it := old; it != len((*temp)); it++ {
-			if 0 == len((*temp)[it].Vertices) {
+			if 0 == numVerticesMap[(*temp)[it]] {
 				return errors.New("invalid ")
 			}
-			if 0 == len((*temp)[it].Faces) {
+			if 0 == numFacesMap[(*temp)[it]] {
 				return errors.New("invalid ")
 			}
 
-			(*temp)[it].TextureCoords[0] = make([]*common.AiVector3D, len((*temp)[it].Vertices))
+			(*temp)[it].TextureCoords[0] = make([]*common.AiVector3D, numVerticesMap[(*temp)[it]])
+			for i := range (*temp)[it].TextureCoords[0] {
+				(*temp)[it].TextureCoords[0][i] = common.NewAiVector3D()
+			}
+			numFacesMap[(*temp)[it]] = 0
+			numVerticesMap[(*temp)[it]] = 0
 		}
 
 		for i := 0; i < int(mesh.totface); i++ {
 			v := mesh.tface[i]
 
 			out := (*temp)[mat_num_to_mesh_idx[int(mesh.mface[i].mat_nr)]]
-			f := core.NewAiFace()
-			out.Faces = append(out.Faces, f)
-			vo1 := common.NewAiVector3D()
-			out.TextureCoords[0] = append(out.TextureCoords[0], vo1)
+			f := out.Faces[numFacesMap[out]]
+			numFacesMap[out]++
 			for j := 0; j < len(f.Indices); j++ {
+				vo1 := out.TextureCoords[0][numVerticesMap[out]]
+				numVerticesMap[out]++
 				vo1.X = float32(v.uv[j][0])
 				vo1.Y = float32(v.uv[j][1])
 			}
@@ -1260,24 +1282,28 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 			return errors.New("Number of faces is larger than the corresponding color face array")
 		}
 		for it := old; it != len((*temp)); it++ {
-			if 0 == len((*temp)[it].Vertices) {
+			if 0 == numVerticesMap[(*temp)[it]] {
 				return errors.New("invalid ")
 			}
-			if 0 == len((*temp)[it].Faces) {
+			if 0 == numFacesMap[(*temp)[it]] {
 				return errors.New("invalid ")
 			}
 
-			(*temp)[it].Colors[0] = make([]*common.AiColor4D, len((*temp)[it].Vertices))
+			(*temp)[it].Colors[0] = make([]*common.AiColor4D, numVerticesMap[(*temp)[it]])
+			for j := range (*temp)[it].Colors[0] {
+				(*temp)[it].Colors[0][j] = common.NewAiColor4D0()
+			}
+			numFacesMap[(*temp)[it]] = 0
+			numVerticesMap[(*temp)[it]] = 0
 		}
 
 		for i := 0; i < int(mesh.totface); i++ {
 
 			out := (*temp)[mat_num_to_mesh_idx[int(mesh.mface[i].mat_nr)]]
-			f := core.NewAiFace()
-			out.Faces = append(out.Faces, f)
-			vo := common.NewAiColor4D0()
-			out.Colors[0] = append(out.Colors[0], vo)
+			f := out.Faces[numFacesMap[out]]
+			numFacesMap[out]++
 			for n := 0; n < len(f.Indices); n++ {
+				vo := out.Colors[0][numVerticesMap[out]]
 				col := mesh.mcol[(i<<2)+n]
 				vo.R = float32(col.r)
 				vo.G = float32(col.g)
@@ -1291,12 +1317,11 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 		for i := 0; i < int(mesh.totpoly); i++ {
 			v := mesh.mpoly[i]
 			out := (*temp)[mat_num_to_mesh_idx[int(v.mat_nr)]]
-			f := core.NewAiFace()
-			out.Faces = append(out.Faces, f)
-			vo := common.NewAiColor4D0()
-			out.Colors[0] = append(out.Colors[0], vo)
+			f := out.Faces[numFacesMap[out]]
+			numFacesMap[out]++
 			scaleZeroToOne := float32(1. / 255.)
 			for j := 0; j < len(f.Indices); j++ {
+				vo := out.Colors[0][numVerticesMap[out]]
 				col := mesh.mloopcol[int(v.loopstart)+j]
 				vo.R = float32(col.r) * scaleZeroToOne
 				vo.G = float32(col.g) * scaleZeroToOne

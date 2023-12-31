@@ -1,7 +1,7 @@
 package BLEND
 
 import (
-	"fmt"
+	"assimp/common/logger"
 	"reflect"
 )
 
@@ -113,7 +113,8 @@ func isValidCustomDataType(cdtype int) bool {
 
 func readCustomData(cdtype int, cnt int, db *FileDatabase) (out []IElemBase, err error) {
 	if !isValidCustomDataType(cdtype) {
-		return out, fmt.Errorf("CustomData.type %v out of index", cdtype)
+		logger.WarnF("CustomData.type %v out of index", cdtype)
+		return out, nil
 	}
 	cdtd := customDataTypeDescriptions[cdtype]
 	if cdtd != nil && cnt > 0 {

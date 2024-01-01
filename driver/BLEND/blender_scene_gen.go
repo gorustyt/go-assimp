@@ -689,13 +689,13 @@ func (dest *Base) Convert(
 		// the return value of value,err =s.ReadFieldPtr indicates whether the object
 		// was already cached. In this case, we don't need to resolve
 		// it again.
-		value, err = s.ReadFieldPtr("*next", db, true)
-		if err = IsPtrError(err, func() {
+		value, err1 := s.ReadFieldPtr("*next", db, true)
+		if err1 == nil {
 			cur_dest.next = value.(*Base)
-		}); err != nil {
-			return err
+		} else if !errors.Is(err1, ErrorPtrZero) {
+			return err1
 		}
-		if cur_dest.next != nil {
+		if cur_dest.next != nil && err1 == nil {
 			todo = common.NewPair(cur_dest.next, db.GetCurPos())
 			if err != nil {
 				return err

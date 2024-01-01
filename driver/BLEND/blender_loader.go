@@ -666,7 +666,7 @@ func (b *BlenderImporter) BuildDefaultMaterial(conv_data *ConversionData) error 
 			if index == -1 {
 				// Setup a default material.
 				p := &Material{ElemBase: &ElemBase{}}
-				p.id.name = core.AI_DEFAULT_MATERIAL_NAME
+				p.id.name = string(append([]byte{0, 0}, []byte(core.AI_DEFAULT_MATERIAL_NAME)...))
 				// Note: MSVC11 does not zero-initialize Material here, although it should.
 				// Thus all relevant fields should be explicitly initialized. We cannot add
 				// a default constructor to Material since the DNA codegen does not support

@@ -32,7 +32,7 @@ func TestDeepEqual(t *testing.T) {
 }
 
 func TestUtf8(t *testing.T) {
-	data, err := os.ReadFile("../example_data/AC/SphereWithLight_UTF16LE.ac")
+	data, err := os.ReadFile("../example/example_data/AC/SphereWithLight_UTF16LE.ac")
 	AssertError(t, err)
 
 	data, _, err = transform.Bytes(unicode.UTF16(unicode.LittleEndian, unicode.UseBOM).NewDecoder(), data)

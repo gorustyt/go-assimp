@@ -53,7 +53,7 @@ func (db *FileDatabase) cacheArray() []*ObjectCache {
 }
 
 type ObjectCache struct {
-	caches []map[*Pointer]IElemBase
+	caches []map[Pointer]IElemBase
 	db     *FileDatabase
 }
 
@@ -62,10 +62,10 @@ func (oc *ObjectCache) get(s *Structure, ptr *Pointer) IElemBase {
 	if s.cache_idx == -1 {
 		s.cache_idx = oc.db.next_cache_idx
 		oc.db.next_cache_idx++
-		oc.caches = make([]map[*Pointer]IElemBase, oc.db.next_cache_idx)
+		oc.caches = make([]map[Pointer]IElemBase, oc.db.next_cache_idx)
 		return nil
 	}
-	it, ok := oc.caches[s.cache_idx][ptr]
+	it, ok := oc.caches[s.cache_idx][*ptr]
 	if !ok {
 		oc.db.stats().cache_hits++
 	}
@@ -78,12 +78,12 @@ func (oc *ObjectCache) set(s *Structure, ptr *Pointer, value IElemBase) {
 	if s.cache_idx == -1 {
 		s.cache_idx = oc.db.next_cache_idx
 		oc.db.next_cache_idx++
-		oc.caches = make([]map[*Pointer]IElemBase, oc.db.next_cache_idx)
+		oc.caches = make([]map[Pointer]IElemBase, oc.db.next_cache_idx)
 	}
 	if oc.caches[s.cache_idx] == nil {
-		oc.caches[s.cache_idx] = map[*Pointer]IElemBase{}
+		oc.caches[s.cache_idx] = map[Pointer]IElemBase{}
 	}
-	oc.caches[s.cache_idx][ptr] = value
+	oc.caches[s.cache_idx][*ptr] = value
 	oc.db.stats().cached_objects++
 
 }

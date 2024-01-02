@@ -1,6 +1,8 @@
 package reader
 
 import (
+	"bytes"
+	"compress/gzip"
 	"encoding/binary"
 	"errors"
 	"io"
@@ -204,10 +206,22 @@ func (s *streamReader) read(n int, isPeek bool) (res []byte, err error) {
 }
 
 func (s *streamReader) ResetGzipReader() error {
-	//r, err := gzip.NewReader(s.Reader)
-	//if err != nil {
-	//	return err
-	//}
-	//s.Reader = bufio.NewReader(r)
+	r, err := gzip.NewReader(bytes.NewReader(s.data))
+	if err != nil {
+		return err
+	}
+	var b [4096]byte
+	var tmp []byte
+	for {
+		n, err := r.Read(b[:])
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		tmp = append(tmp, b[:n]...)
+	}
+	s.data = tmp
 	return nil
 }

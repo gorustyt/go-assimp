@@ -373,16 +373,16 @@ var emptyElem = (IElemBase)(&ElemBase{})
 var emptyFileSet = &FileOffset{}
 
 // --------------------------------------------------------------------------------
-func (s *Structure) ReadFieldPtrPtr(name string, db *FileDatabase, non_recursives ...bool) (out any, err error) {
+func (s *Structure) ReadFieldPtrPtr(name string, db *FileDatabase, non_recursives ...bool) (out any, fromCache bool, err error) {
 	return s.readFieldPtr(emptyElemSlice, name, db, non_recursives...)
 }
-func (s *Structure) ReadFieldPtr(name string, db *FileDatabase, non_recursives ...bool) (out any, err error) {
+func (s *Structure) ReadFieldPtr(name string, db *FileDatabase, non_recursives ...bool) (out any, fromCache bool, err error) {
 	return s.readFieldPtr(emptyElem, name, db, non_recursives...)
 }
-func (s *Structure) ReadFieldFileOffsetPtr(name string, db *FileDatabase, non_recursives ...bool) (out any, err error) {
+func (s *Structure) ReadFieldFileOffsetPtr(name string, db *FileDatabase, non_recursives ...bool) (out any, fromCache bool, err error) {
 	return s.readFieldPtr(emptyFileSet, name, db, non_recursives...)
 }
-func (s *Structure) readFieldPtr(in any, name string, db *FileDatabase, non_recursives ...bool) (out any, err error) {
+func (s *Structure) readFieldPtr(in any, name string, db *FileDatabase, non_recursives ...bool) (out any, fromCache bool, err error) {
 	non_recursive := false
 	if len(non_recursives) > 0 {
 		non_recursive = non_recursives[0]
@@ -402,35 +402,35 @@ func (s *Structure) readFieldPtr(in any, name string, db *FileDatabase, non_recu
 	}
 	// sanity check, should never happen if the genblenddna script is right
 	if (f.flags & FieldFlag_Pointer) == 0 {
-		return out, fmt.Errorf("field `%v` of structure `%v` ought to be a pointer", name, s.name)
+		return out, fromCache, fmt.Errorf("field `%v` of structure `%v` ought to be a pointer", name, s.name)
 	}
 
 	err = db.Discard(int(f.offset))
 	if err != nil {
-		return out, err
+		return out, fromCache, err
 	}
 	err = s.Convert(&ptrval, db)
 	if err != nil {
-		return out, err
+		return out, fromCache, err
 	}
 	// actually it is meaningless on which Structure the Convert is called
 	// because the `Pointer` argument triggers a special implementation.
 
 	// resolve the pointer and load the corresponding structure
-	out, err = s.ResolvePointer(in, &ptrval, db, f, non_recursives...)
+	out, fromCache, err = s.ResolvePointer(in, &ptrval, db, f, non_recursives...)
 	if err != nil {
-		return nil, err
+		return out, fromCache, err
 	}
 
 	db.stats().fields_read++
-	return out, nil
+	return out, fromCache, nil
 }
 
-func (s *Structure) ReadFieldPtrArray(count int, name string, db *FileDatabase) (out []any, err error) {
+func (s *Structure) ReadFieldPtrArray(count int, name string, db *FileDatabase) (out []any, fromCache bool, err error) {
 	return s.readFieldPtrArray(emptyElem, count, name, db)
 }
 
-func (s *Structure) ReadFieldFileOffsetPtrArray(count int, name string, db *FileDatabase) (out []any, err error) {
+func (s *Structure) ReadFieldFileOffsetPtrArray(count int, name string, db *FileDatabase) (out []any, fromCache bool, err error) {
 	return s.readFieldPtrArray((*FileOffset)(nil), count, name, db)
 }
 
@@ -497,28 +497,28 @@ func (s *Structure) ReadFieldPtrSlice(name string, db *FileDatabase) (out []any,
 	return out, nil
 }
 
-func (s *Structure) readFieldPtrArray(in any, count int, name string, db *FileDatabase) (out1 []any, err error) {
+func (s *Structure) readFieldPtrArray(in any, count int, name string, db *FileDatabase) (out []any, fromCache bool, err error) {
 	ptrval := make([]Pointer, count)
 	f := s.IndexByString(name)
 	if f == nil {
-		return out1, nil
+		return out, fromCache, nil
 	}
 	// sanity check, should never happen if the genblenddna script is right
 	if (FieldFlag_Pointer | FieldFlag_Pointer) != (f.flags & (FieldFlag_Pointer | FieldFlag_Pointer)) {
-		return out1, fmt.Errorf("field ` %v` of structure ` %v ` ought to be a pointer AND an array", name, s.name)
+		return out, fromCache, fmt.Errorf("field ` %v` of structure ` %v ` ought to be a pointer AND an array", name, s.name)
 	}
 	oldPos := db.GetCurPos()
 	defer db.SetCurPos(oldPos)
 	err = db.Discard(int(f.offset))
 	if err != nil {
-		return out1, err
+		return out, fromCache, err
 	}
 	// find the structure definition pertaining to this field
 	i := 0
 	for ; i < int(math.Min(float64(f.array_sizes[0]), float64(len(ptrval)))); i++ {
-		err := s.Convert(&ptrval[i], db)
+		err = s.Convert(&ptrval[i], db)
 		if err != nil {
-			return out1, err
+			return out, fromCache, err
 		}
 	}
 	for ; i < count; i++ {
@@ -526,47 +526,48 @@ func (s *Structure) readFieldPtrArray(in any, count int, name string, db *FileDa
 	}
 	for i = 0; i < count; i++ {
 		// resolve the pointer and load the corresponding structure
-		v, err := s.ResolvePointer(in, &ptrval[i], db, f)
+		v, _, err := s.ResolvePointer(in, &ptrval[i], db, f)
 		if err != nil {
 			if errors.Is(err, ErrorPtrZero) {
 				continue
 			}
-			return out1, err
+			return out, fromCache, err
 		}
-		out1 = append(out1, v)
+		out = append(out, v)
 	}
 
 	// and recover the previous stream position
 	db.stats().fields_read++
-	return out1, nil
+	return out, fromCache, nil
 }
 
-func (st *Structure) ResolvePointer(in any, ptrval *Pointer, db *FileDatabase, f *Field, non_recursiveds ...bool) (out any, err error) {
+func (st *Structure) ResolvePointer(in any, ptrval *Pointer, db *FileDatabase, f *Field, non_recursiveds ...bool) (out any, fromCache bool, err error) {
 	switch v := in.(type) {
 	case []IElemBase:
 		return st.ResolvePointerSlice(v, ptrval, db, f)
 	case IElemBase:
 		return st.ResolvePointerObject(v, ptrval, db, f, non_recursiveds...)
 	case *FileOffset:
-		return v, st.ResolvePointerFileOffset(v, ptrval, db, f)
+		fromCache, err = st.ResolvePointerFileOffset(v, ptrval, db, f)
+		return v, fromCache, err
 	default:
 		panic("not impl")
 	}
 }
 
-func (st *Structure) ResolvePointerSlice(in []IElemBase, ptrval *Pointer, db *FileDatabase, f *Field) (out any, err error) {
+func (st *Structure) ResolvePointerSlice(in []IElemBase, ptrval *Pointer, db *FileDatabase, f *Field) (out any, fromCache bool, err error) {
 	// This is a function overload, not a template specialization. According to
 	// the partial ordering rules, it should be selected by the compiler
 	// for array-of-pointer inputs, i.e. Object::mats.
 
 	if ptrval.val == 0 {
-		return out, ErrorPtrZero
+		return out, fromCache, ErrorPtrZero
 	}
 
 	// find the file block the pointer is pointing to
 	block, err := st.LocateFileBlockForAddress(ptrval, db)
 	if err != nil {
-		return nil, err
+		return nil, fromCache, err
 	}
 	tmp := 4
 	if db.i64bit {
@@ -584,88 +585,35 @@ func (st *Structure) ResolvePointerSlice(in []IElemBase, ptrval *Pointer, db *Fi
 		var val Pointer
 		err = st.Convert(&val, db)
 		if err != nil {
-			return res, err
+			return res, fromCache, err
 		}
 		// and resolve the pointees
-		out, err = st.ResolvePointer(in[i], &val, db, f)
+		out, fromCache, err = st.ResolvePointer(in[i], &val, db, f)
 		if err != nil {
-			return res, err
+			return res, fromCache, err
 		}
 		res = append(res, out)
 	}
 
 	db.SetCurPos(pold)
-	return res, nil
+	return res, fromCache, nil
 }
 func (st *Structure) ResolvePointerFileOffset(out *FileOffset, ptrval *Pointer, db *FileDatabase,
-	f *Field) error {
+	f *Field) (fromCache bool, err error) {
 	// Currently used exclusively by PackedFile::data to represent
 	// a simple offset into the mapped BLEND file.
 
 	if ptrval.val == 0 {
-		return nil
+		return fromCache, nil
 	}
 
 	// find the file block the pointer is pointing to
 	block, err := st.LocateFileBlockForAddress(ptrval, db)
 	if err != nil {
-		return err
+		return fromCache, err
 	}
 	out.val = block.start + int(ptrval.val-block.address.val)
-	return nil
-}
-
-func (st *Structure) resolvePointer(out IElemBase, ptrval *Pointer, db *FileDatabase, f *Field, non_recursiveds ...bool) (ok bool, err error) {
-	non_recursived := false
-	if len(non_recursiveds) > 0 {
-		non_recursived = non_recursiveds[0]
-	}
-	if ptrval.val == 0 {
-		return false, nil
-	}
-	s := db.dna.IndexByString(f.Type)
-	// find the file block the pointer is pointing to
-	block, err := st.LocateFileBlockForAddress(ptrval, db)
-	if err != nil {
-		return false, nil
-	}
-	// also determine the target type from the block header
-	// and check if it matches the type which we expect.
-	ss := db.dna.Index(int(block.dna_index))
-	if ss != s {
-		return false, fmt.Errorf("expected target to be of type `%v ` but seemingly it is a `%v ` instead", s.name, ss.name)
-	}
-
-	// try to retrieve the object from the cache
-	out = db.cache().get(s, ptrval)
-	if out != nil {
-		return true, nil
-	}
-	pold := db.GetCurPos()
-	db.SetCurPos(int(ptrval.val - block.address.val))
-	// seek to this location, but save the previous stream pointer.
-	// FIXME: basically, this could cause problems with 64 bit pointers on 32 bit systems.
-	// I really ought to improve StreamReader to work with 64 bit indices exclusively.
-
-	// continue conversion after allocating the required storage
-	//num := block.size / ss.size
-	// cache the object before we convert it to avoid cyclic recursion.
-	db.cache().set(s, ptrval, out)
-
-	// if the non_recursive flag is set, we don't do anything but leave
-	// the cursor at the correct position to resolve the object.
-	if !non_recursived {
-		err = s.Convert(out, db)
-		if err != nil {
-			return false, err
-		}
-		db.SetCurPos(pold)
-	}
-	if out != nil {
-		db.stats().pointers_resolved++
-	}
-
-	return false, nil
+	return fromCache, nil
 }
 
 var (
@@ -676,17 +624,17 @@ var (
 func (st *Structure) ResolvePointerObject(in IElemBase,
 	ptrval *Pointer,
 	db *FileDatabase,
-	f *Field, non_recursiveds ...bool) (out IElemBase, err error) {
+	f *Field, non_recursiveds ...bool) (out IElemBase, fromCache bool, err error) {
 	// Special case when the data type needs to be determined at runtime.
 	// Less secure than in the `strongly-typed` case.
 	if ptrval.val == 0 {
-		return in, ErrorPtrZero
+		return in, fromCache, ErrorPtrZero
 	}
 
 	// find the file block the pointer is pointing to
 	block, err := st.LocateFileBlockForAddress(ptrval, db)
 	if err != nil {
-		return in, err
+		return in, fromCache, err
 	}
 	// determine the target type from the block header
 	s := db.dna.Index(int(block.dna_index))
@@ -694,7 +642,7 @@ func (st *Structure) ResolvePointerObject(in IElemBase,
 	// try to retrieve the object from the cache
 	out = db.cache().get(s, ptrval)
 	if out != nil {
-		return out, nil
+		return out, true, nil
 	}
 	pold := db.GetCurPos()
 	// seek to this location, but save the previous stream pointer.
@@ -708,7 +656,7 @@ func (st *Structure) ResolvePointerObject(in IElemBase,
 		// this might happen if DNA::RegisterConverters hasn't been called so far
 		// or if the target type is not contained in `our` DNA.
 		logger.WarnF("Failed to find a converter for the `%v` structure", s.name)
-		return in, nil
+		return in, fromCache, nil
 	}
 
 	// allocate the object hull
@@ -721,7 +669,7 @@ func (st *Structure) ResolvePointerObject(in IElemBase,
 		// and do the actual conversion
 		err = oc.Convert(db, s)
 		if err != nil {
-			return oc, err
+			return oc, fromCache, err
 		}
 		// store a pointer to the name string of the actual type
 		// in the object itself. This allows the conversion code
@@ -733,7 +681,7 @@ func (st *Structure) ResolvePointerObject(in IElemBase,
 
 	}
 	db.stats().pointers_resolved++
-	return oc, err
+	return oc, fromCache, err
 }
 
 func (st *Structure) ReadFieldArray(out []any, name string, db *FileDatabase) error {

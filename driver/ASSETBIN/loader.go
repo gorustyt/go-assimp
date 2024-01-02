@@ -515,7 +515,7 @@ func (ai *AssBinImporter) ReadBinaryMesh(mesh *core.AiMesh) error {
 		}
 	}
 	for n := 0; n < core.AI_MAX_NUMBER_OF_COLOR_SETS; n++ {
-		if c&uint32(ASSBIN_MESH_HAS_COLOR(int32(0))) == 0 {
+		if c&uint32(ASSBIN_MESH_HAS_COLOR(int32(n))) == 0 {
 			break
 		}
 

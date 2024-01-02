@@ -4,6 +4,7 @@ import (
 	"assimp/common"
 	"assimp/common/logger"
 	"errors"
+	"reflect"
 )
 
 // --------------------------------------------------------------------------------
@@ -69,48 +70,56 @@ func (dest *Object) Convert(db *FileDatabase, s *Structure) (err error) {
 		return err
 	}
 	dest.parsubstr = getName(tmp2)
-	out, err := s.ReadFieldPtr("*parent", db)
+	out, _, err := s.ReadFieldPtr("*parent", db)
 	if err := IsPtrError(err, func() {
 		dest.parent = out.(*Object)
 	}); err != nil {
 		return err
 	}
-	value, err := s.ReadFieldPtr("*track", db)
+	value, _, err := s.ReadFieldPtr("*track", db)
 	if err := IsPtrError(err, func() {
 		dest.track = value.(*Object)
 	}); err != nil {
 		return err
 	}
 
-	value, err = s.ReadFieldPtr("*proxy", db)
+	value, _, err = s.ReadFieldPtr("*proxy", db)
 	if err := IsPtrError(err, func() {
-		dest.proxy = value.(*Object)
+		if value != nil && !reflect.ValueOf(value).IsNil() {
+			dest.proxy = value.(*Object)
+		}
 	}); err != nil {
 		return err
 	}
 
-	value, err = s.ReadFieldPtr("*proxy_from", db)
+	value, _, err = s.ReadFieldPtr("*proxy_from", db)
 	if err := IsPtrError(err, func() {
-		dest.proxy_from = value.(*Object)
+		if value != nil && !reflect.ValueOf(value).IsNil() {
+			dest.proxy_from = value.(*Object)
+		}
 	}); err != nil {
 		return err
 	}
 
-	value, err = s.ReadFieldPtr("*proxy_group", db)
+	value, _, err = s.ReadFieldPtr("*proxy_group", db)
 	if err := IsPtrError(err, func() {
-		dest.proxy_group = value.(*Object)
+		if value != nil && !reflect.ValueOf(value).IsNil() {
+			dest.proxy_group = value.(*Object)
+		}
 	}); err != nil {
 		return err
 	}
 
-	value, err = s.ReadFieldPtr("*dup_group", db)
+	value, _, err = s.ReadFieldPtr("*dup_group", db)
 	if err := IsPtrError(err, func() {
-		dest.dup_group = value.(*Group)
+		if value != nil && !reflect.ValueOf(value).IsNil() {
+			dest.dup_group = value.(*Group)
+		}
 	}); err != nil {
 		return err
 	}
 
-	value, err = s.ReadFieldPtr("*data", db)
+	value, _, err = s.ReadFieldPtr("*data", db)
 	if err := IsPtrError(err, func() {
 		dest.data = value.(IElemBase)
 	}); err != nil {
@@ -137,7 +146,7 @@ func (dest *Group) Convert(
 	if err != nil {
 		return err
 	}
-	value, err := s.ReadFieldPtr("*gobject", db)
+	value, _, err := s.ReadFieldPtr("*gobject", db)
 	if err = IsPtrError(err, func() {
 		dest.gobject = value.(*GroupObject)
 	}); err != nil {
@@ -152,14 +161,14 @@ func (dest *Group) Convert(
 func (dest *CollectionObject) Convert(
 	db *FileDatabase, s *Structure) (err error) {
 
-	value, err := s.ReadFieldPtr("*next", db)
+	value, _, err := s.ReadFieldPtr("*next", db)
 	if err = IsPtrError(err, func() {
 		dest.next = value.(*CollectionObject)
 	}); err != nil {
 		return err
 	}
 
-	value, err = s.ReadFieldPtr("*ob", db)
+	value, _, err = s.ReadFieldPtr("*ob", db)
 	if err = IsPtrError(err, func() {
 		dest.ob = value.(*Object)
 	}); err != nil {
@@ -172,21 +181,21 @@ func (dest *CollectionObject) Convert(
 
 func (dest *CollectionChild) Convert(db *FileDatabase, s *Structure) (err error) {
 
-	value, err := s.ReadFieldPtr("*prev", db)
+	value, _, err := s.ReadFieldPtr("*prev", db)
 	if err = IsPtrError(err, func() {
 		dest.prev = value.(*CollectionChild)
 	}); err != nil {
 		return err
 	}
 
-	value, err = s.ReadFieldPtr("*next", db)
+	value, _, err = s.ReadFieldPtr("*next", db)
 	if err = IsPtrError(err, func() {
 		dest.next = value.(*CollectionChild)
 	}); err != nil {
 		return err
 	}
 
-	value, err = s.ReadFieldPtr("*collection", db)
+	value, _, err = s.ReadFieldPtr("*collection", db)
 	if err = IsPtrError(err, func() {
 		dest.collection = value.(*Collection)
 	}); err != nil {
@@ -255,14 +264,14 @@ func (dest *MTex) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	value, err := s.ReadFieldPtr("*object", db)
+	value, _, err := s.ReadFieldPtr("*object", db)
 	if err = IsPtrError(err, func() {
 		dest.object = value.(*Object)
 	}); err != nil {
 		return err
 	}
 
-	value, err = s.ReadFieldPtr("*tex", db)
+	value, _, err = s.ReadFieldPtr("*tex", db)
 	if err = IsPtrError(err, func() {
 		dest.tex = value.(*Tex)
 	}); err != nil {
@@ -437,11 +446,12 @@ func (dest *TFace) Convert(db *FileDatabase, s *Structure) (err error) {
 //--------------------------------------------------------------------------------
 
 func (dest *SubsurfModifierData) Convert(db *FileDatabase, s *Structure) (err error) {
-
-	err = s.ReadField(&dest.modifier, "modifier", db)
+	modTmp := &ModifierData{}
+	err = s.ReadField(modTmp, "modifier", db)
 	if err != nil {
 		return err
 	}
+	dest.modifier = modTmp
 	err = s.ReadField(&dest.subdivType, "subdivType", db)
 	if err != nil {
 		return err
@@ -635,7 +645,7 @@ func (dest *PackedFile) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	value, err := s.ReadFieldFileOffsetPtr("*data", db)
+	value, _, err := s.ReadFieldFileOffsetPtr("*data", db)
 	if err != nil {
 		return err
 	}
@@ -679,7 +689,7 @@ func (dest *Base) Convert(
 			return err
 		}
 
-		value, err := s.ReadFieldPtr("*object", db)
+		value, _, err := s.ReadFieldPtr("*object", db)
 		if err = IsPtrError(err, func() {
 			cur_dest.object = value.(*Object)
 		}); err != nil {
@@ -689,13 +699,13 @@ func (dest *Base) Convert(
 		// the return value of value,err =s.ReadFieldPtr indicates whether the object
 		// was already cached. In this case, we don't need to resolve
 		// it again.
-		value, err1 := s.ReadFieldPtr("*next", db, true)
+		value, fromCache, err1 := s.ReadFieldPtr("*next", db, true)
 		if err1 == nil {
 			cur_dest.next = value.(*Base)
 		} else if !errors.Is(err1, ErrorPtrZero) {
 			return err1
 		}
-		if cur_dest.next != nil && err1 == nil {
+		if cur_dest.next != nil && !fromCache {
 			todo = common.NewPair(cur_dest.next, db.GetCurPos())
 			if err != nil {
 				return err
@@ -851,7 +861,7 @@ func (dest *Material) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	value, err := s.ReadFieldPtr("*group", db)
+	value, _, err := s.ReadFieldPtr("*group", db)
 	if err = IsPtrError(err, func() {
 		if value == nil {
 			dest.group = nil
@@ -872,7 +882,7 @@ func (dest *Material) Convert(db *FileDatabase, s *Structure) (err error) {
 		return err
 	}
 
-	value1, err := s.ReadFieldPtrArray(len(dest.mtex), "*mtex", db)
+	value1, _, err := s.ReadFieldPtrArray(len(dest.mtex), "*mtex", db)
 	if err = IsPtrError(err, func() {
 		if value1 == nil {
 			dest.group = nil
@@ -1216,7 +1226,7 @@ func (dest *Material) Convert(db *FileDatabase, s *Structure) (err error) {
 //--------------------------------------------------------------------------------
 
 func (dest *MTexPoly) Convert(db *FileDatabase, s *Structure) (err error) {
-	value, err := s.ReadFieldPtr("*tpage", db)
+	value, _, err := s.ReadFieldPtr("*tpage", db)
 	if err = IsPtrError(err, func() {
 		dest.tpage = value.(*Image)
 	}); err != nil {
@@ -1350,7 +1360,7 @@ func (dest *Mesh) Convert(db *FileDatabase, s *Structure) (err error) {
 		return err
 	}
 	dest.mcol = SliceToT[*MCol](value1)
-	value2, err := s.ReadFieldPtrPtr("**mat", db)
+	value2, _, err := s.ReadFieldPtrPtr("**mat", db)
 	if err := IsPtrError(err, func() {
 		tmp := value2.([]any)
 		for _, v := range tmp {
@@ -1527,21 +1537,21 @@ func (dest *MLoopUV) Convert(db *FileDatabase, s *Structure) (err error) {
 
 func (dest *GroupObject) Convert(db *FileDatabase, s *Structure) (err error) {
 
-	value, err := s.ReadFieldPtr("*prev", db)
+	value, _, err := s.ReadFieldPtr("*prev", db)
 	if err = IsPtrError(err, func() {
 		dest.prev = value.(*GroupObject)
 	}); err != nil {
 		return err
 	}
 
-	value, err = s.ReadFieldPtr("*next", db)
+	value, _, err = s.ReadFieldPtr("*next", db)
 	if err = IsPtrError(err, func() {
 		dest.next = value.(*GroupObject)
 	}); err != nil {
 		return err
 	}
 
-	value, err = s.ReadFieldPtr("*ob", db)
+	value, _, err = s.ReadFieldPtr("*ob", db)
 	if err = IsPtrError(err, func() {
 		dest.ob = value.(Object)
 	}); err != nil {
@@ -1555,14 +1565,14 @@ func (dest *GroupObject) Convert(db *FileDatabase, s *Structure) (err error) {
 
 func (dest *ListBase) Convert(db *FileDatabase, s *Structure) (err error) {
 
-	value, err := s.ReadFieldPtr("*first", db)
+	value, _, err := s.ReadFieldPtr("*first", db)
 	if err = IsPtrError(err, func() {
 		dest.first = value.(IElemBase)
 	}); err != nil {
 		return err
 	}
 
-	value, err = s.ReadFieldPtr("*last", db)
+	value, _, err = s.ReadFieldPtr("*last", db)
 	if err = IsPtrError(err, func() {
 		dest.last = value.(IElemBase)
 	}); err != nil {
@@ -1596,14 +1606,14 @@ func (dest *MLoop) Convert(db *FileDatabase, s *Structure) (err error) {
 
 func (dest *ModifierData) Convert(db *FileDatabase, s *Structure) (err error) {
 
-	value, err := s.ReadFieldPtr("*next", db)
+	value, _, err := s.ReadFieldPtr("*next", db)
 	if err = IsPtrError(err, func() {
 		dest.next = value.(IElemBase)
 	}); err != nil {
 		return err
 	}
 
-	value, err = s.ReadFieldPtr("*prev", db)
+	value, _, err = s.ReadFieldPtr("*prev", db)
 	if err = IsPtrError(err, func() {
 		dest.prev = value.(IElemBase)
 	}); err != nil {
@@ -1699,28 +1709,28 @@ func (dest *Scene) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	value, err := s.ReadFieldPtr("*camera", db)
+	value, _, err := s.ReadFieldPtr("*camera", db)
 	if err = IsPtrError(err, func() {
 		dest.camera = value.(*Object)
 	}); err != nil {
 		return err
 	}
 
-	value, err = s.ReadFieldPtr("*world", db)
+	value, _, err = s.ReadFieldPtr("*world", db)
 	if err = IsPtrError(err, func() {
 		dest.world = value.(*World)
 	}); err != nil {
 		return err
 	}
 
-	value, err = s.ReadFieldPtr("*basact", db)
+	value, _, err = s.ReadFieldPtr("*basact", db)
 	if err = IsPtrError(err, func() {
 		dest.basact = value.(*Base)
 	}); err != nil {
 		return err
 	}
 
-	value, err = s.ReadFieldPtr("*master_collection", db)
+	value, _, err = s.ReadFieldPtr("*master_collection", db)
 	if err = IsPtrError(err, func() {
 		if value != nil {
 			dest.master_collection = value.(*Collection)
@@ -1757,7 +1767,7 @@ func (dest *Library) Convert(db *FileDatabase, s *Structure) (err error) {
 		return err
 	}
 	dest.filename = getName(tmp)
-	value, err := s.ReadFieldPtr("*parent", db)
+	value, _, err := s.ReadFieldPtr("*parent", db)
 	if err = IsPtrError(err, func() {
 		dest.parent = value.(*Library)
 	}); err != nil {
@@ -1788,7 +1798,7 @@ func (dest *Tex) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	value, err := s.ReadFieldPtr("*ima", db)
+	value, _, err := s.ReadFieldPtr("*ima", db)
 	if err = IsPtrError(err, func() {
 		dest.ima = value.(*Image)
 	}); err != nil {
@@ -1847,11 +1857,12 @@ func (dest *Camera) Convert(db *FileDatabase, s *Structure) (err error) {
 
 func (dest *MirrorModifierData) Convert(
 	db *FileDatabase, s *Structure) (err error) {
-
-	err = s.ReadField(&dest.modifier, "modifier", db)
+	modTmp := &ModifierData{}
+	err = s.ReadField(modTmp, "modifier", db)
 	if err != nil {
 		return err
 	}
+	dest.modifier = modTmp
 	err = s.ReadField(&dest.axis, "axis", db)
 	if err != nil {
 		return err
@@ -1864,7 +1875,7 @@ func (dest *MirrorModifierData) Convert(
 	if err != nil {
 		return err
 	}
-	value, err := s.ReadFieldPtr("*mirror_ob", db)
+	value, _, err := s.ReadFieldPtr("*mirror_ob", db)
 	if err = IsPtrError(err, func() {
 		dest.mirror_ob = value.(*Object)
 	}); err != nil {
@@ -1940,7 +1951,7 @@ func (dest *Image) Convert(db *FileDatabase, s *Structure) (err error) {
 	if err != nil {
 		return err
 	}
-	value, err := s.ReadFieldPtr("*packedfile", db)
+	value, _, err := s.ReadFieldPtr("*packedfile", db)
 	if err != nil {
 		return err
 	}

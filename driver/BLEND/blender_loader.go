@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"unsafe"
@@ -519,24 +520,14 @@ func (b *BlenderImporter) ResolveImage(out *core.AiMaterial, mat *Material, tex 
 		conv_data.textures = append(conv_data.textures, curTex)
 		// usually 'img.name' will be the original file name of the embedded textures,
 		// so we can extract the file extension from it.
-		s := len(img.name)
-		e := s
-		for s >= len(img.name) && img.name[s] != '.' {
-			s--
+		s := filepath.Ext(img.name)
+		tmp := "\x00\x00\x00"
+		if s != "" {
+			tmp = s
 		}
-		tmp := img.name[s:]
 		curTex.AchFormatHint[0] = tmp[1]
-		if s+1 > e {
-			curTex.AchFormatHint[0] = '\x00'
-		}
 		curTex.AchFormatHint[1] = tmp[2]
-		if s+2 > e {
-			curTex.AchFormatHint[1] = '\x00'
-		}
 		curTex.AchFormatHint[2] = tmp[3]
-		if s+3 > e {
-			curTex.AchFormatHint[2] = '\x00'
-		}
 		curTex.AchFormatHint[3] = '\x00'
 
 		// tex.mHeight = 0;
@@ -873,7 +864,10 @@ func (b *BlenderImporter) BuildMaterials(conv_data *ConversionData) error {
 		col = common.NewAiColor3D(mat.mirr, mat.mirg, mat.mirb)
 		mout.AddAiColor3DPropertyVar(core.AI_MATKEY_COLOR_REFLECTIVE, col)
 
-		for i := 0; i < int(unsafe.Sizeof(mat.mtex)/unsafe.Sizeof(mat.mtex[0])); i++ {
+		for _, v := range mat.mtex {
+			if v == nil {
+				continue
+			}
 			if mat.mtex[i] == nil {
 				continue
 			}
@@ -1304,11 +1298,12 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 			numFacesMap[out]++
 			for n := 0; n < len(f.Indices); n++ {
 				vo := out.Colors[0][numVerticesMap[out]]
+				numVerticesMap[out]++
 				col := mesh.mcol[(i<<2)+n]
-				vo.R = float32(col.r)
-				vo.G = float32(col.g)
-				vo.B = float32(col.b)
-				vo.A = float32(col.a)
+				vo.R = float32(int8(col.r))
+				vo.G = float32(int8(col.g))
+				vo.B = float32(int8(col.b))
+				vo.A = float32(int8(col.a))
 			}
 			for n := len(f.Indices); n < 4; n++ {
 			}

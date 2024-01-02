@@ -238,9 +238,6 @@ func deepEqualScene(p1, p2 *core.AiScene) {
 }
 
 func deepEqualNode(p1, p2 *core.AiNode, level int) {
-	if !deepEqual(p1, p2) {
-		logger.Error("deepScene Node not equal ")
-	}
 	if p1.Name != p2.Name {
 		logger.ErrorF("deepEqualNode Name not equal ")
 	}

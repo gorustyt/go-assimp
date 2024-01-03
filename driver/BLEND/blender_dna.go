@@ -588,7 +588,7 @@ func (st *Structure) ResolvePointerSlice(in []IElemBase, ptrval *Pointer, db *Fi
 			return res, fromCache, err
 		}
 		// and resolve the pointees
-		out, fromCache, err = st.ResolvePointer(in[i], &val, db, f)
+		out, fromCache, err = st.ResolvePointer(in[0], &val, db, f)
 		if err != nil {
 			return res, fromCache, err
 		}

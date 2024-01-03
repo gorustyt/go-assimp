@@ -451,6 +451,7 @@ func (dest *SubsurfModifierData) Convert(db *FileDatabase, s *Structure) (err er
 	if err != nil {
 		return err
 	}
+	dest.SharedModifierData = &SharedModifierData{}
 	dest.modifier = modTmp
 	err = s.ReadField(&dest.subdivType, "subdivType", db)
 	if err != nil {
@@ -1952,10 +1953,11 @@ func (dest *Image) Convert(db *FileDatabase, s *Structure) (err error) {
 		return err
 	}
 	value, _, err := s.ReadFieldPtr("*packedfile", db)
-	if err != nil {
+	if err := IsPtrError(err, func() {
+		dest.packedfile = value.(*PackedFile)
+	}); err != nil {
 		return err
 	}
-	dest.packedfile = value.(*PackedFile)
 	err = s.ReadField(&dest.lastupdate, "lastupdate", db)
 	if err != nil {
 		return err

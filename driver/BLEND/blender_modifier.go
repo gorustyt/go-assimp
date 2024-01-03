@@ -47,10 +47,10 @@ func (b *BlenderModifierShowcase) ApplyModifiers(out core.AiNode,
 	}
 	var curv *SharedModifierData
 	if cur != nil {
-		curv = cur.(*SharedModifierData)
+		curv = cur.(*SubsurfModifierData).SharedModifierData
 	}
 	for ; cur != nil && curv != nil; cur = curv.modifier.next {
-		curv = cur.(*SharedModifierData)
+		curv = cur.(*SubsurfModifierData).SharedModifierData
 		if cur.GetDnaType() == "" {
 			return errors.New("invalid GetDnaType")
 		}

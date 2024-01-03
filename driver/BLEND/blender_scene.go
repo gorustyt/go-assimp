@@ -569,7 +569,7 @@ const (
 
 type SubsurfModifierData struct {
 	*ElemBase
-	SharedModifierData
+	*SharedModifierData
 	subdivType   int16
 	levels       int16
 	renderLevels int16

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/binary"
-	"errors"
 	"io"
 	"math"
 )
@@ -30,7 +29,7 @@ type StreamReader interface {
 	Discard(n int) error
 	SetCurPos(pos int)
 	GetCurPos() int
-	Remain() int
+	GetRemainingSizeToLimit() int
 	ResetData()
 }
 
@@ -53,8 +52,19 @@ func (s *streamReader) SetCurPos(pos int) {
 func (s *streamReader) GetCurPos() int {
 	return s.mCurrent - s.mBuffer
 }
-func (s *streamReader) Remain() int {
-	return len(s.data) - s.GetCurPos()
+
+// ---------------------------------------------------------------------
+/** Get the remaining stream size (to the current read limit). The
+ *  return value is the remaining size of the stream if no custom
+ *  read limit has been set. */
+
+func (s *streamReader) GetRemainingSizeToLimit() int {
+	return len(s.data) - s.mCurrent
+}
+
+// / Get the remaining stream size (to the end of the stream)
+func (s *streamReader) GetRemainingSize() int {
+	return len(s.data) - s.mCurrent
 }
 
 func (s *streamReader) ResetData() {
@@ -160,7 +170,7 @@ func (s *streamReader) GetFloat64() (v float64, err error) {
 	if err != nil {
 		return v, err
 	}
-	bits := binary.LittleEndian.Uint64(res)
+	bits := s.ByteOrder.Uint64(res)
 	float := math.Float64frombits(bits)
 	return float, nil
 }
@@ -170,7 +180,7 @@ func (s *streamReader) GetFloat32() (v float32, err error) {
 	if err != nil {
 		return v, err
 	}
-	bits := binary.LittleEndian.Uint32(res)
+	bits := s.ByteOrder.Uint32(res)
 	float := math.Float32frombits(bits)
 	return float, nil
 }
@@ -191,9 +201,6 @@ func (s *streamReader) GetNBytes(n int) (res []byte, err error) {
 }
 
 func (s *streamReader) read(n int, isPeek bool) (res []byte, err error) {
-	if n > 1024 {
-		return res, errors.New("streamReader limit bytes 1024")
-	}
 	if s.mCurrent+n > len(s.data) {
 		return res, io.EOF
 	}
@@ -215,6 +222,7 @@ func (s *streamReader) ResetGzipReader() error {
 	for {
 		n, err := r.Read(b[:])
 		if err == io.EOF {
+			tmp = append(tmp, b[:n]...)
 			break
 		}
 		if err != nil {

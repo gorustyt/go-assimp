@@ -283,14 +283,14 @@ func (b *BlenderImporter) ConvertBlendFile(out *core.AiScene, in *Scene, file *F
 				if cur.object.parent == nil {
 					no_parents.PushBack(cur.object)
 				} else {
-					conv.objects = append(conv.objects, cur.object)
+					conv.InsertObject(cur.object)
 				}
 			}
 		}
 		for cur := in.basact; cur != nil; cur = cur.next {
 			if cur.object != nil {
 				if cur.object.parent != nil {
-					conv.objects = append(conv.objects, cur.object)
+					conv.InsertObject(cur.object)
 				}
 			}
 		}
@@ -369,7 +369,6 @@ func (b *BlenderImporter) ConvertNode(in *Scene, obj *Object, conv_data *Convers
 				objs = append(objs, v)
 			}
 			conv_data.objects = objs
-			it++
 			continue
 		}
 	}
@@ -868,11 +867,7 @@ func (b *BlenderImporter) BuildMaterials(conv_data *ConversionData) error {
 			if v == nil {
 				continue
 			}
-			if mat.mtex[i] == nil {
-				continue
-			}
-
-			err = b.ResolveTexture(&mout, mat, mat.mtex[i], conv_data)
+			err = b.ResolveTexture(&mout, mat, v, conv_data)
 			if err != nil {
 				return err
 			}
@@ -959,7 +954,15 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 	// ... and allocate the corresponding meshes
 	old := len(*temp)
 	mat_num_to_mesh_idx := map[int]int{}
-	for k, _ := range per_mat {
+	//sort map
+	var keys []int
+	for k := range per_mat {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i] < keys[j]
+	})
+	for _, k := range keys {
 
 		mat_num_to_mesh_idx[k] = len(*temp)
 		var out = core.NewAiMesh()

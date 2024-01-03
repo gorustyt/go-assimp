@@ -8,6 +8,7 @@ import (
 	"assimp/driver/base/iassimp"
 	"errors"
 	"fmt"
+	"unsafe"
 )
 
 var (
@@ -808,17 +809,17 @@ func (ai *AssBinImporter) ReadBinaryTexture(tex *core.AiTexture) error {
 		return err
 	}
 	if tex.Height == 0 {
-		tex.PcData = make([]*core.AiTexel, tex.Width)
-	} else {
-		tex.PcData = make([]*core.AiTexel, tex.Width*tex.Height)
-	}
-
-	for i := range tex.PcData {
-		tex.PcData[i] = &core.AiTexel{}
-		err = ai.ReadBinaryTex(tex.PcData[i])
+		bytes, err := ai.GetNBytes(int(tex.Width))
 		if err != nil {
 			return err
 		}
+		tex.PcData = *(*[]*core.AiTexel)(unsafe.Pointer(&bytes))
+	} else {
+		bytes, err := ai.GetNBytes(int(tex.Width * tex.Height * 4))
+		if err != nil {
+			return err
+		}
+		tex.PcData = *(*[]*core.AiTexel)(unsafe.Pointer(&bytes))
 	}
 	return nil
 }

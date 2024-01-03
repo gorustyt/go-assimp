@@ -247,7 +247,7 @@ func (s *SectionParser) Next() error {
 		return err
 	}
 	s.current.start = s.GetCurPos()
-	if s.Remain() < int(s.current.size) {
+	if s.GetRemainingSizeToLimit() < int(s.current.size) {
 		return errors.New("BLEND: invalid size of file block")
 	}
 	return nil

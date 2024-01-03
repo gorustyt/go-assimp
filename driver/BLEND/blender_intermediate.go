@@ -3,6 +3,7 @@ package BLEND
 import (
 	"assimp/common"
 	"assimp/core"
+	"sort"
 )
 
 type TempArray struct {
@@ -27,6 +28,18 @@ type ConversionData struct {
 
 	// original file data
 	db *FileDatabase
+}
+
+func (s *ConversionData) InsertObject(obj *Object) {
+	for _, v := range s.objects {
+		if v == obj {
+			return
+		}
+	}
+	s.objects = append(s.objects, obj)
+	sort.Slice(s.objects, func(i, j int) bool {
+		return s.objects[i].id.name < s.objects[j].id.name
+	})
 }
 
 func newConversionData(db *FileDatabase) *ConversionData {

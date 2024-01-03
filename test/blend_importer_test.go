@@ -206,7 +206,7 @@ func Test21(t *testing.T) {
 }
 
 func Test22(t *testing.T) {
-	p, err := assimp.ParseFile(".../example/example_nonbsd_data/BLEND/Bob.blend")
+	p, err := assimp.ParseFile("../example/example_nonbsd_data/BLEND/Bob.blend")
 	AssertError(t, err)
 	p1, err := assimp.ParseFile("../example/example_nonbsd_data/BLEND/Bob_blend.assbin")
 	AssertError(t, err)
@@ -216,7 +216,7 @@ func Test22(t *testing.T) {
 func Test23(t *testing.T) {
 	p, err := assimp.ParseFile("../example/example_nonbsd_data/BLEND/fleurOptonl.blend")
 	AssertError(t, err)
-	p1, err := assimp.ParseFile("./example/example_nonbsd_data/BLEND/fleurOptonl_blend.assbin")
+	p1, err := assimp.ParseFile("../example/example_nonbsd_data/BLEND/fleurOptonl_blend.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }

@@ -71,7 +71,7 @@ func (b *BlenderModifierShowcase) ApplyModifiers(out core.AiNode,
 		}
 
 		s = conv_data.db.dna.Get(f.Type)
-		if s != nil || s.name != "ModifierData" {
+		if s == nil || s.name != "ModifierData" {
 			logger.WarnF("BlendModifier: expected a ModifierData structure as first member")
 			ful++
 			continue
@@ -308,7 +308,7 @@ func (b *BlenderModifier_Subdivision) DoIt(out core.AiNode,
 	meshes := conv_data.meshes[len(conv_data.meshes)-len(out.Meshes):]
 	tempmeshes := make([]*core.AiMesh, len(out.Meshes))
 	subd.Subdivide(meshes, tempmeshes, int(math.Max(float64(mir.renderLevels), float64(mir.levels))), true)
-	copy(tempmeshes[:len(out.Meshes)], tempmeshes)
+	copy(conv_data.meshes[:len(out.Meshes)], tempmeshes)
 	logger.InfoF("BlendModifier: Applied the `Subdivision` modifier to `%v %v",
 		orig_object.id.name, "`")
 	return

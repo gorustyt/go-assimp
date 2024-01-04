@@ -46,7 +46,7 @@ func NewBlenderImporter(data []byte) (iassimp.Loader, error) {
 	if err != nil {
 		return nil, err
 	}
-	b := &BlenderImporter{StreamReader: r}
+	b := &BlenderImporter{StreamReader: r, modifier_cache: &BlenderModifierShowcase{}}
 	return b, nil
 }
 
@@ -357,22 +357,15 @@ func (b *BlenderImporter) ConvertBlendFile(out *core.AiScene, in *Scene, file *F
 // ------------------------------------------------------------------------------------------------
 func (b *BlenderImporter) ConvertNode(in *Scene, obj *Object, conv_data *ConversionData, parentTransform *common.AiMatrix4x4) (*core.AiNode, error) {
 	children := common.NewQueue[*Object]()
-	for it := 0; it < len(conv_data.objects); it++ {
-		object := conv_data.objects[it]
+	var objs []*Object
+	for _, object := range conv_data.objects {
 		if object.parent == obj {
 			children.PushBack(object)
-			var objs []*Object
-			for i, v := range conv_data.objects {
-				if i == it {
-					continue
-				}
-				objs = append(objs, v)
-			}
-			conv_data.objects = objs
-			continue
+		} else {
+			objs = append(objs, obj)
 		}
 	}
-
+	conv_data.objects = objs
 	node := core.NewAiNode(obj.id.name[2:]) // skip over the name prefix 'OB'
 	if obj.data != nil {
 		switch obj.Type {
@@ -514,7 +507,7 @@ func (b *BlenderImporter) ResolveImage(out *core.AiMaterial, mat *Material, tex 
 
 	// check if the file contents are bundled with the BLEND file
 	if img.packedfile != nil {
-		name += "*"
+		name += fmt.Sprintf("*%v", len(conv_data.textures))
 		var curTex = core.NewAiTexture()
 		conv_data.textures = append(conv_data.textures, curTex)
 		// usually 'img.name' will be the original file name of the embedded textures,
@@ -816,7 +809,7 @@ func (b *BlenderImporter) BuildMaterials(conv_data *ConversionData) error {
 	for i := 0; i < conv_data.materials_raw.Size(); i++ {
 		mat := conv_data.materials_raw.Index(i)
 		// reset per material global counters
-		for i := 0; i < len(conv_data.next_texture)/4; i++ {
+		for i := 0; i < len(conv_data.next_texture); i++ {
 			conv_data.next_texture[i] = 0
 		}
 
@@ -998,9 +991,7 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 	}
 
 	for i := 0; i < int(mesh.totface); i++ {
-
 		mf := mesh.mface[i]
-
 		out := (*temp)[mat_num_to_mesh_idx[int(mf.mat_nr)]]
 		var f = core.NewAiFace()
 		out.Faces = append(out.Faces, f)
@@ -1009,8 +1000,8 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 			tmp = 4
 		}
 		f.Indices = make([]uint32, tmp)
-
 		vo, vn := getVoVn(out)
+
 		// XXX we can't fold this easily, because we are restricted
 		// to the member names from the BLEND file (v1,v2,v3,v4)
 		// which are assigned by the genblenddna.py script and
@@ -1057,13 +1048,12 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 		vn.Z = v.no[2]
 		f.Indices[2] = uint32(len(out.Vertices)) - 1
 
-		vo, vn = getVoVn(out)
-
 		if mf.v4 >= mesh.totvert {
 			return errors.New("vertex index v4 out of range")
 		}
 		//  if (f.mNumIndices >= 4) {
 		if mf.v4 != 0 {
+			vo, vn = getVoVn(out)
 			v = mesh.mvert[mf.v4]
 			vo.X = v.co[0]
 			vo.Y = v.co[1]
@@ -1076,10 +1066,6 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 		} else {
 			out.PrimitiveTypes |= core.AiPrimitiveType_TRIANGLE
 		}
-
-		//  }
-		//  }
-		//  }
 	}
 
 	for i := 0; i < int(mesh.totpoly); i++ {

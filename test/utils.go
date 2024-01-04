@@ -48,7 +48,7 @@ func deepEqualMaterials(p1, p2 []*core.AiMaterial) {
 				if err != nil {
 					panic(err)
 				}
-				if !deepEqual(v, v1) {
+				if !deepEqual(t1, t2) {
 					logger.ErrorF("v1Name:%v v2Name:%v  Properties not equal!", v.Key, v1.Key)
 				}
 			case pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D:
@@ -121,6 +121,20 @@ func deepEqualMaterials(p1, p2 []*core.AiMaterial) {
 				if !deepEqual((&core.AiUVTransform{}).FromPbMsg(t1), (&core.AiUVTransform{}).FromPbMsg(t2)) {
 					logger.ErrorF("v1Name:%v v2Name:%v  Properties not equal!", v.Key, v1.Key)
 				}
+			case pb_msg.AiMaterialPropertyType_AiPropertyTypeString:
+				t1 := &pb_msg.AiMaterialPropertyString{}
+				t2 := &pb_msg.AiMaterialPropertyString{}
+				err := proto.Unmarshal(v.Data, t1)
+				if err != nil {
+					panic(err)
+				}
+				err = proto.Unmarshal(v1.Data, t2)
+				if err != nil {
+					panic(err)
+				}
+				if !deepEqual(t1.Data, t2.Data) {
+					logger.ErrorF("v1Name:%v v2Name:%v  Properties not equal!", v.Key, v1.Key)
+				}
 			default:
 				if !deepEqual(v, v1) {
 					logger.ErrorF("v1Name:%v v2Name:%v  Properties not equal!", v.Key, v1.Key)
@@ -133,8 +147,11 @@ func deepEqualMaterials(p1, p2 []*core.AiMaterial) {
 }
 func deepEqualMesh(p1, p2 []*core.AiMesh) {
 
-	for _, vi := range p1 {
-		for _, vj := range p2 {
+	for i, vi := range p1 {
+		for j, vj := range p2 {
+			if i != j {
+				continue
+			}
 			if !deepEqual(vi.Method, vj.Method) {
 				logger.ErrorF("deepEqualMesh Method not equal vi:%v,vj:%v", vi.Method, vj.Method)
 			}
@@ -168,7 +185,7 @@ func deepEqualMesh(p1, p2 []*core.AiMesh) {
 			for iv := range vi.Faces {
 				v1, v2 := vi.Faces[iv], vj.Faces[iv]
 				if !deepEqual(v1, v2) {
-					logger.ErrorF("deepEqualMesh Face not equal vi:%v,vj:%v", *v1, *v2)
+					logger.ErrorF("deepEqualMesh Face not equal i:%v j:%v  vi:%v,vj:%v", i, j, *v1, *v2)
 				}
 			}
 

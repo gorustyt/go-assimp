@@ -514,13 +514,14 @@ func (div *CatmullClarkSubdivider) InternSubdivide(smesh []*AiMesh,
 							var nidx int
 
 							if adj[o] < moffsets[0].First {
-								nidx := 0
+								nidx = 0
 								mp = smesh[nidx]
 							} else {
-								for nidx := 1; nidx <= len(smesh); nidx++ {
+								for nidx = 1; nidx <= len(smesh); nidx++ {
 									if nidx == len(smesh) || moffsets[nidx].First > adj[o] {
 										nidx--
 										mp = smesh[nidx]
+
 										break
 									}
 								}

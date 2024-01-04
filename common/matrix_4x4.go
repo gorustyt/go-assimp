@@ -321,15 +321,16 @@ func (ai *AiMatrix4x4) Determinant() float32 {
 		ai.A4*ai.B1*ai.C2*ai.D3 + ai.A4*ai.B1*ai.C3*ai.D2 - ai.A4*ai.B2*ai.C3*ai.D1 +
 		ai.A4*ai.B2*ai.C1*ai.D3 - ai.A4*ai.B3*ai.C1*ai.D2 + ai.A4*ai.B3*ai.C2*ai.D1
 }
-func (ai *AiMatrix4x4) Transpose() *AiMatrix4x4 {
+func (mat *AiMatrix4x4) Transpose() *AiMatrix4x4 {
 	// (TReal&) don't remove, GCC complains cause of packed fields
+	ai := *mat
 	ai.B1, ai.A2 = ai.A2, ai.B1
 	ai.C1, ai.A3 = ai.A3, ai.C1
 	ai.C2, ai.B3 = ai.B3, ai.C2
 	ai.D1, ai.A4 = ai.A4, ai.D1
 	ai.D2, ai.B4 = ai.B4, ai.D2
 	ai.D3, ai.C4 = ai.C4, ai.D3
-	return ai
+	return &ai
 }
 
 func (ai *AiMatrix4x4) Inverse() *AiMatrix4x4 {
@@ -346,24 +347,25 @@ func (ai *AiMatrix4x4) Inverse() *AiMatrix4x4 {
 			nan, nan, nan, nan,
 			nan, nan, nan, nan)
 	}
-
+	tmp := *ai
 	invdet := 1.0 / det
 
-	ai.A1 = invdet * (ai.B2*(ai.C3*ai.D4-ai.C4*ai.D3) + ai.B3*(ai.C4*ai.D2-ai.C2*ai.D4) + ai.B4*(ai.C2*ai.D3-ai.C3*ai.D2))
-	ai.A2 = -invdet * (ai.A2*(ai.C3*ai.D4-ai.C4*ai.D3) + ai.A3*(ai.C4*ai.D2-ai.C2*ai.D4) + ai.A4*(ai.C2*ai.D3-ai.C3*ai.D2))
-	ai.A3 = invdet * (ai.A2*(ai.B3*ai.D4-ai.B4*ai.D3) + ai.A3*(ai.B4*ai.D2-ai.B2*ai.D4) + ai.A4*(ai.B2*ai.D3-ai.B3*ai.D2))
-	ai.A4 = -invdet * (ai.A2*(ai.B3*ai.C4-ai.B4*ai.C3) + ai.A3*(ai.B4*ai.C2-ai.B2*ai.C4) + ai.A4*(ai.B2*ai.C3-ai.B3*ai.C2))
-	ai.B1 = -invdet * (ai.B1*(ai.C3*ai.D4-ai.C4*ai.D3) + ai.B3*(ai.C4*ai.D1-ai.C1*ai.D4) + ai.B4*(ai.C1*ai.D3-ai.C3*ai.D1))
-	ai.B2 = invdet * (ai.A1*(ai.C3*ai.D4-ai.C4*ai.D3) + ai.A3*(ai.C4*ai.D1-ai.C1*ai.D4) + ai.A4*(ai.C1*ai.D3-ai.C3*ai.D1))
-	ai.B3 = -invdet * (ai.A1*(ai.B3*ai.D4-ai.B4*ai.D3) + ai.A3*(ai.B4*ai.D1-ai.B1*ai.D4) + ai.A4*(ai.B1*ai.D3-ai.B3*ai.D1))
-	ai.B4 = invdet * (ai.A1*(ai.B3*ai.C4-ai.B4*ai.C3) + ai.A3*(ai.B4*ai.C1-ai.B1*ai.C4) + ai.A4*(ai.B1*ai.C3-ai.B3*ai.C1))
-	ai.C1 = invdet * (ai.B1*(ai.C2*ai.D4-ai.C4*ai.D2) + ai.B2*(ai.C4*ai.D1-ai.C1*ai.D4) + ai.B4*(ai.C1*ai.D2-ai.C2*ai.D1))
-	ai.C2 = -invdet * (ai.A1*(ai.C2*ai.D4-ai.C4*ai.D2) + ai.A2*(ai.C4*ai.D1-ai.C1*ai.D4) + ai.A4*(ai.C1*ai.D2-ai.C2*ai.D1))
-	ai.C3 = invdet * (ai.A1*(ai.B2*ai.D4-ai.B4*ai.D2) + ai.A2*(ai.B4*ai.D1-ai.B1*ai.D4) + ai.A4*(ai.B1*ai.D2-ai.B2*ai.D1))
-	ai.C4 = -invdet * (ai.A1*(ai.B2*ai.C4-ai.B4*ai.C2) + ai.A2*(ai.B4*ai.C1-ai.B1*ai.C4) + ai.A4*(ai.B1*ai.C2-ai.B2*ai.C1))
-	ai.D1 = -invdet * (ai.B1*(ai.C2*ai.D3-ai.C3*ai.D2) + ai.B2*(ai.C3*ai.D1-ai.C1*ai.D3) + ai.B3*(ai.C1*ai.D2-ai.C2*ai.D1))
-	ai.D2 = invdet * (ai.A1*(ai.C2*ai.D3-ai.C3*ai.D2) + ai.A2*(ai.C3*ai.D1-ai.C1*ai.D3) + ai.A3*(ai.C1*ai.D2-ai.C2*ai.D1))
-	ai.D3 = -invdet * (ai.A1*(ai.B2*ai.D3-ai.B3*ai.D2) + ai.A2*(ai.B3*ai.D1-ai.B1*ai.D3) + ai.A3*(ai.B1*ai.D2-ai.B2*ai.D1))
-	ai.D4 = invdet * (ai.A1*(ai.B2*ai.C3-ai.B3*ai.C2) + ai.A2*(ai.B3*ai.C1-ai.B1*ai.C3) + ai.A3*(ai.B1*ai.C2-ai.B2*ai.C1))
+	tmp.A1 = invdet * (ai.B2*(ai.C3*ai.D4-ai.C4*ai.D3) + ai.B3*(ai.C4*ai.D2-ai.C2*ai.D4) + ai.B4*(ai.C2*ai.D3-ai.C3*ai.D2))
+	tmp.A2 = -invdet * (ai.A2*(ai.C3*ai.D4-ai.C4*ai.D3) + ai.A3*(ai.C4*ai.D2-ai.C2*ai.D4) + ai.A4*(ai.C2*ai.D3-ai.C3*ai.D2))
+	tmp.A3 = invdet * (ai.A2*(ai.B3*ai.D4-ai.B4*ai.D3) + ai.A3*(ai.B4*ai.D2-ai.B2*ai.D4) + ai.A4*(ai.B2*ai.D3-ai.B3*ai.D2))
+	tmp.A4 = -invdet * (ai.A2*(ai.B3*ai.C4-ai.B4*ai.C3) + ai.A3*(ai.B4*ai.C2-ai.B2*ai.C4) + ai.A4*(ai.B2*ai.C3-ai.B3*ai.C2))
+	tmp.B1 = -invdet * (ai.B1*(ai.C3*ai.D4-ai.C4*ai.D3) + ai.B3*(ai.C4*ai.D1-ai.C1*ai.D4) + ai.B4*(ai.C1*ai.D3-ai.C3*ai.D1))
+	tmp.B2 = invdet * (ai.A1*(ai.C3*ai.D4-ai.C4*ai.D3) + ai.A3*(ai.C4*ai.D1-ai.C1*ai.D4) + ai.A4*(ai.C1*ai.D3-ai.C3*ai.D1))
+	tmp.B3 = -invdet * (ai.A1*(ai.B3*ai.D4-ai.B4*ai.D3) + ai.A3*(ai.B4*ai.D1-ai.B1*ai.D4) + ai.A4*(ai.B1*ai.D3-ai.B3*ai.D1))
+	tmp.B4 = invdet * (ai.A1*(ai.B3*ai.C4-ai.B4*ai.C3) + ai.A3*(ai.B4*ai.C1-ai.B1*ai.C4) + ai.A4*(ai.B1*ai.C3-ai.B3*ai.C1))
+	tmp.C1 = invdet * (ai.B1*(ai.C2*ai.D4-ai.C4*ai.D2) + ai.B2*(ai.C4*ai.D1-ai.C1*ai.D4) + ai.B4*(ai.C1*ai.D2-ai.C2*ai.D1))
+	tmp.C2 = -invdet * (ai.A1*(ai.C2*ai.D4-ai.C4*ai.D2) + ai.A2*(ai.C4*ai.D1-ai.C1*ai.D4) + ai.A4*(ai.C1*ai.D2-ai.C2*ai.D1))
+	tmp.C3 = invdet * (ai.A1*(ai.B2*ai.D4-ai.B4*ai.D2) + ai.A2*(ai.B4*ai.D1-ai.B1*ai.D4) + ai.A4*(ai.B1*ai.D2-ai.B2*ai.D1))
+	tmp.C4 = -invdet * (ai.A1*(ai.B2*ai.C4-ai.B4*ai.C2) + ai.A2*(ai.B4*ai.C1-ai.B1*ai.C4) + ai.A4*(ai.B1*ai.C2-ai.B2*ai.C1))
+	tmp.D1 = -invdet * (ai.B1*(ai.C2*ai.D3-ai.C3*ai.D2) + ai.B2*(ai.C3*ai.D1-ai.C1*ai.D3) + ai.B3*(ai.C1*ai.D2-ai.C2*ai.D1))
+	tmp.D2 = invdet * (ai.A1*(ai.C2*ai.D3-ai.C3*ai.D2) + ai.A2*(ai.C3*ai.D1-ai.C1*ai.D3) + ai.A3*(ai.C1*ai.D2-ai.C2*ai.D1))
+	tmp.D3 = -invdet * (ai.A1*(ai.B2*ai.D3-ai.B3*ai.D2) + ai.A2*(ai.B3*ai.D1-ai.B1*ai.D3) + ai.A3*(ai.B1*ai.D2-ai.B2*ai.D1))
+	tmp.D4 = invdet * (ai.A1*(ai.B2*ai.C3-ai.B3*ai.C2) + ai.A2*(ai.B3*ai.C1-ai.B1*ai.C3) + ai.A3*(ai.B1*ai.C2-ai.B2*ai.C1))
+	*ai = tmp
 	return ai
 }

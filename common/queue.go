@@ -7,7 +7,11 @@ type Queue[T any] struct {
 func NewQueue[T any]() *Queue[T] {
 	return &Queue[T]{}
 }
-
+func (q *Queue[T]) Range(fn func(v T)) {
+	for _, v := range q.data {
+		fn(v)
+	}
+}
 func (q *Queue[T]) PushBack(v T) {
 	q.data = append(q.data, v)
 }

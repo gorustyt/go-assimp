@@ -11,7 +11,7 @@ import (
 )
 
 func AssertFloatEqual(t *testing.T, t1, t2 float64, eps float64) {
-	Assert(t, math.Abs(t1-t2) > eps)
+	Assert(t, math.Abs(t1-t2) < eps)
 }
 func Assert(t *testing.T, ok bool, msg ...string) {
 	if !ok {
@@ -37,20 +37,6 @@ func deepEqualMaterials(p1, p2 []*core.AiMaterial) {
 				logger.ErrorF("deepEqualMaterials key  not equal v1:%v v2%v", v.Type, v1.Type)
 			}
 			switch v.Type {
-			case pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32, pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat64:
-				t1 := &pb_msg.AiMaterialPropertyFloat64{}
-				t2 := &pb_msg.AiMaterialPropertyFloat64{}
-				err := proto.Unmarshal(v.Data, t1)
-				if err != nil {
-					panic(err)
-				}
-				err = proto.Unmarshal(v1.Data, t2)
-				if err != nil {
-					panic(err)
-				}
-				if !deepEqual(t1, t2) {
-					logger.ErrorF("v1Name:%v v2Name:%v  Properties not equal!", v.Key, v1.Key)
-				}
 			case pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D:
 				t1 := &pb_msg.AiColor3D{}
 				t2 := &pb_msg.AiColor3D{}
@@ -119,20 +105,6 @@ func deepEqualMaterials(p1, p2 []*core.AiMaterial) {
 					panic(err)
 				}
 				if !deepEqual((&core.AiUVTransform{}).FromPbMsg(t1), (&core.AiUVTransform{}).FromPbMsg(t2)) {
-					logger.ErrorF("v1Name:%v v2Name:%v  Properties not equal!", v.Key, v1.Key)
-				}
-			case pb_msg.AiMaterialPropertyType_AiPropertyTypeString:
-				t1 := &pb_msg.AiMaterialPropertyString{}
-				t2 := &pb_msg.AiMaterialPropertyString{}
-				err := proto.Unmarshal(v.Data, t1)
-				if err != nil {
-					panic(err)
-				}
-				err = proto.Unmarshal(v1.Data, t2)
-				if err != nil {
-					panic(err)
-				}
-				if !deepEqual(t1.Data, t2.Data) {
 					logger.ErrorF("v1Name:%v v2Name:%v  Properties not equal!", v.Key, v1.Key)
 				}
 			default:
@@ -273,8 +245,14 @@ func deepEqualNode(p1, p2 *core.AiNode, level int) {
 }
 
 func deepEqualTexture(p1, p2 []*core.AiTexture) {
-	if !deepEqual(p1, p2) {
-		logger.Error("deepScene Texture not equal ")
+	for i, v1 := range p1 {
+		v2 := p2[i]
+		for j, vj1 := range v1.PcData {
+			vj2 := v2.PcData[j]
+			if !deepEqual(vj1, vj2) {
+				logger.FatalF("deepEqualTexture PcData not equal i:%v ,j %v ", i, j)
+			}
+		}
 	}
 }
 

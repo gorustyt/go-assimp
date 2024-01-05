@@ -1859,6 +1859,7 @@ func (dest *Camera) Convert(db *FileDatabase, s *Structure) (err error) {
 func (dest *MirrorModifierData) Convert(
 	db *FileDatabase, s *Structure) (err error) {
 	modTmp := &ModifierData{}
+	dest.SharedModifierData = &SharedModifierData{}
 	err = s.ReadField(modTmp, "modifier", db)
 	if err != nil {
 		return err

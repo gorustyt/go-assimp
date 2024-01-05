@@ -154,12 +154,12 @@ func Test16(t *testing.T) {
 	}
 
 	// must not be inf or nan
-	Assert(t, math.IsInf(float64(vertexAvg.X), 1) ||
-		math.IsInf(float64(vertexAvg.X), -1) || math.IsNaN(float64(vertexAvg.X)))
-	Assert(t, math.IsInf(float64(vertexAvg.Y), 1) ||
-		math.IsInf(float64(vertexAvg.Y), -1) || math.IsNaN(float64(vertexAvg.Y)))
-	Assert(t, math.IsInf(float64(vertexAvg.Z), 1) ||
-		math.IsInf(float64(vertexAvg.Z), -1) || math.IsNaN(float64(vertexAvg.Z)))
+	Assert(t, !math.IsInf(float64(vertexAvg.X), 1) &&
+		!math.IsInf(float64(vertexAvg.X), -1) && !math.IsNaN(float64(vertexAvg.X)))
+	Assert(t, !math.IsInf(float64(vertexAvg.Y), 1) &&
+		!math.IsInf(float64(vertexAvg.Y), -1) && !math.IsNaN(float64(vertexAvg.Y)))
+	Assert(t, !math.IsInf(float64(vertexAvg.Z), 1) &&
+		!math.IsInf(float64(vertexAvg.Z), -1) && !math.IsNaN(float64(vertexAvg.Z)))
 	AssertFloatEqual(t, float64(vertexAvg.X), 6.4022515289252624e-08, 0.0001)
 	AssertFloatEqual(t, float64(vertexAvg.Y), 0.060569953173398972, 0.0001)
 	AssertFloatEqual(t, float64(vertexAvg.Z), 0.31429031491279602, 0.0001)

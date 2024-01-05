@@ -4,6 +4,7 @@ import (
 	"assimp/common"
 	"assimp/core"
 	"sort"
+	"strings"
 )
 
 type TempArray struct {
@@ -32,7 +33,7 @@ type ConversionData struct {
 
 func (s *ConversionData) InsertObject(obj *Object) {
 	for _, v := range s.objects {
-		if v == obj {
+		if strings.Contains(v.id.name, obj.id.name) || strings.Contains(obj.id.name, v.id.name) {
 			return
 		}
 	}

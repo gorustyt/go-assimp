@@ -8,7 +8,7 @@ import (
 	"unsafe"
 )
 
-const Eps = 0.01
+const Eps = 0.0001
 
 type visit struct {
 	a1  unsafe.Pointer

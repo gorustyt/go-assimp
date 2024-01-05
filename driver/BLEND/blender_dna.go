@@ -370,7 +370,6 @@ func (s *Structure) ReadField(out any, name string, db *FileDatabase) error {
 
 var emptyElemSlice = []IElemBase{emptyElem}
 var emptyElem = (IElemBase)(&ElemBase{})
-var emptyFileSet = &FileOffset{}
 
 // --------------------------------------------------------------------------------
 func (s *Structure) ReadFieldPtrPtr(name string, db *FileDatabase, non_recursives ...bool) (out any, fromCache bool, err error) {
@@ -380,7 +379,7 @@ func (s *Structure) ReadFieldPtr(name string, db *FileDatabase, non_recursives .
 	return s.readFieldPtr(emptyElem, name, db, non_recursives...)
 }
 func (s *Structure) ReadFieldFileOffsetPtr(name string, db *FileDatabase, non_recursives ...bool) (out any, fromCache bool, err error) {
-	return s.readFieldPtr(emptyFileSet, name, db, non_recursives...)
+	return s.readFieldPtr(&FileOffset{}, name, db, non_recursives...)
 }
 func (s *Structure) readFieldPtr(in any, name string, db *FileDatabase, non_recursives ...bool) (out any, fromCache bool, err error) {
 	non_recursive := false

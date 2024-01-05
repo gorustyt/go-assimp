@@ -271,7 +271,6 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 				mesh.Vertices[verts] = object.vertices[i]
 				mesh.Faces[faces].Indices = make([]uint32, 1)
 				mesh.Faces[faces].Indices[0] = uint32(i)
-				i++
 				faces++
 				verts++
 			}
@@ -287,10 +286,10 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 			for i := range needMat {
 				needMat[i] = &common.Pair[int, int]{}
 			}
-			for _, v := range object.surfaces {
+			for ind, v := range object.surfaces {
 				idx := v.mat
 				if idx >= len(needMat) {
-					logger.Warn("AC3D: material index is out of range")
+					logger.WarnF("AC3D: material index is out of range index:%v", ind)
 					idx = 0
 				}
 				if len(v.entries) == 0 {
@@ -433,6 +432,9 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 
 								face := mesh.Faces[faces]
 								faces++
+								if faces == 3731 {
+									_ = faces
+								}
 								face.Indices = make([]uint32, 3)
 								face.Indices[0] = uint32(cur)
 								cur++
@@ -639,6 +641,7 @@ func (ac *AC3DImporter) Read(pScene *core.AiScene) (err error) {
 			return err
 		}
 		rootObjects = append(rootObjects, objs...)
+		ac.NextLine()
 	}
 	if len(rootObjects) == 0 || ac.NumMeshes == 0 {
 		return errors.New("AC3D: No meshes have been loaded")

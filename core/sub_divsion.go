@@ -292,7 +292,7 @@ func (div *CatmullClarkSubdivider) InternSubdivide(smesh []*AiMesh,
 	bad_cnt := 0
 	for i, v := range edges {
 		if v.ref < 2 {
-			logger.ErrorF("fond bad cnt first:%v second:%v", i.First, i.Second)
+			logger.WarnF("fond bad cnt first:%v second:%v", i.First, i.Second)
 			common.AiAssert(v.ref != 0)
 			bad_cnt++
 		}

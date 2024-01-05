@@ -116,3 +116,11 @@ func TestAcImporter10(t *testing.T) {
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
+
+func TestAcImporter11(t *testing.T) {
+	p, err := assimp.ParseFile("../example/example_data/AC/TestFormatDetection")
+	AssertError(t, err)
+	p1, err := assimp.ParseFile("../example/example_data/AC/TestFormatDetection.assbin")
+	AssertError(t, err)
+	Assert(t, DeepEqual(p, p1))
+}

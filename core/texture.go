@@ -86,3 +86,30 @@ func (ai *AiTexel) ToPbMsg() *pb_msg.AiTexel {
 		A: uint32(ai.A),
 	}
 }
+
+func BytesToAiTexel(bytes []byte) (res []*AiTexel) {
+	for i := 0; i < len(bytes); {
+		var v AiTexel
+		res = append(res, &v)
+		if i < len(bytes) {
+			v.B = bytes[i]
+		}
+		i++
+
+		if i < len(bytes) {
+			v.G = bytes[i]
+		}
+		i++
+
+		if i < len(bytes) {
+			v.R = bytes[i]
+		}
+		i++
+
+		if i < len(bytes) {
+			v.A = bytes[i]
+		}
+		i++
+	}
+	return res
+}

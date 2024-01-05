@@ -29,7 +29,7 @@ type BlenderModifierShowcase struct {
 	cached_modifiers []IBlenderModifier
 }
 
-func (b *BlenderModifierShowcase) ApplyModifiers(out core.AiNode,
+func (b *BlenderModifierShowcase) ApplyModifiers(out *core.AiNode,
 	conv_data *ConversionData,
 	in *Scene,
 	orig_object *Object,
@@ -47,10 +47,20 @@ func (b *BlenderModifierShowcase) ApplyModifiers(out core.AiNode,
 	}
 	var curv *SharedModifierData
 	if cur != nil {
-		curv = cur.(*SubsurfModifierData).SharedModifierData
+		curTmp, ok := cur.(*SubsurfModifierData)
+		if ok {
+			curv = curTmp.SharedModifierData
+		} else {
+			curv = cur.(*MirrorModifierData).SharedModifierData
+		}
 	}
 	for ; cur != nil && curv != nil; cur = curv.modifier.next {
-		curv = cur.(*SubsurfModifierData).SharedModifierData
+		curTmp, ok := cur.(*SubsurfModifierData)
+		if ok {
+			curv = curTmp.SharedModifierData
+		} else {
+			curv = cur.(*MirrorModifierData).SharedModifierData
+		}
 		if cur.GetDnaType() == "" {
 			return errors.New("invalid GetDnaType")
 		}
@@ -103,7 +113,7 @@ func (b *BlenderModifierShowcase) ApplyModifiers(out core.AiNode,
 			curgod++
 			curmod++
 		}
-		if curgod == -1 || creators[curgod] == nil {
+		if curgod != -1 {
 			logger.WarnF("Couldn't find a handler for modifier: ", dat.name)
 		}
 		ful++
@@ -120,7 +130,7 @@ func (b *BlenderModifierShowcase) ApplyModifiers(out core.AiNode,
 
 type IBlenderModifier interface {
 	IsActive(modin *ModifierData) bool
-	DoIt(out core.AiNode,
+	DoIt(out *core.AiNode,
 		conv_data *ConversionData,
 		orig_modifier IElemBase,
 		in *Scene,
@@ -135,7 +145,7 @@ func (b *BlenderModifier) IsActive(modin *ModifierData) bool {
 	return false
 }
 
-func (b *BlenderModifier) DoIt(out core.AiNode,
+func (b *BlenderModifier) DoIt(out *core.AiNode,
 	conv_data *ConversionData,
 	orig_modifier IElemBase,
 	in *Scene,
@@ -153,7 +163,7 @@ func (b *BlenderModifier_Mirror) IsActive(modin *ModifierData) bool {
 	return modin.Type == int32(eModifierType_Mirror)
 }
 
-func (b *BlenderModifier_Mirror) DoIt(out core.AiNode,
+func (b *BlenderModifier_Mirror) DoIt(out *core.AiNode,
 	conv_data *ConversionData,
 	orig_modifier IElemBase,
 	in *Scene,
@@ -274,7 +284,7 @@ type BlenderModifier_Subdivision struct {
 func (b *BlenderModifier_Subdivision) IsActive(modin *ModifierData) bool {
 	return modin.Type == int32(eModifierType_Subsurf)
 }
-func (b *BlenderModifier_Subdivision) DoIt(out core.AiNode,
+func (b *BlenderModifier_Subdivision) DoIt(out *core.AiNode,
 	conv_data *ConversionData,
 	orig_modifier IElemBase,
 	in *Scene,

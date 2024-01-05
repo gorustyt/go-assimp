@@ -591,7 +591,7 @@ const (
 
 type MirrorModifierData struct {
 	*ElemBase
-	SharedModifierData
+	*SharedModifierData
 	axis, flag int16
 	tolerance  float32
 	mirror_ob  *Object

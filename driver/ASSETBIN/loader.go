@@ -8,7 +8,6 @@ import (
 	"assimp/driver/base/iassimp"
 	"errors"
 	"fmt"
-	"unsafe"
 )
 
 var (
@@ -804,22 +803,24 @@ func (ai *AssBinImporter) ReadBinaryTexture(tex *core.AiTexture) error {
 	if err != nil {
 		return err
 	}
-	tex.AchFormatHint, err = ai.GetNBytes(core.HINTMAXTEXTURELEN - 1)
+	tmp, err := ai.GetNBytes(core.HINTMAXTEXTURELEN - 1)
 	if err != nil {
 		return err
 	}
+	copy(tex.AchFormatHint, tmp)
 	if tex.Height == 0 {
+		//tex.PcData = make([]*core.AiTexel, tex.Width)
 		bytes, err := ai.GetNBytes(int(tex.Width))
 		if err != nil {
 			return err
 		}
-		tex.PcData = *(*[]*core.AiTexel)(unsafe.Pointer(&bytes))
+		tex.PcData = core.BytesToAiTexel(bytes)
 	} else {
 		bytes, err := ai.GetNBytes(int(tex.Width * tex.Height * 4))
 		if err != nil {
 			return err
 		}
-		tex.PcData = *(*[]*core.AiTexel)(unsafe.Pointer(&bytes))
+		tex.PcData = core.BytesToAiTexel(bytes)
 	}
 	return nil
 }

@@ -358,11 +358,12 @@ func (b *BlenderImporter) ConvertBlendFile(out *core.AiScene, in *Scene, file *F
 func (b *BlenderImporter) ConvertNode(in *Scene, obj *Object, conv_data *ConversionData, parentTransform *common.AiMatrix4x4) (*core.AiNode, error) {
 	children := common.NewQueue[*Object]()
 	var objs []*Object
-	for _, object := range conv_data.objects {
+	for i := range conv_data.objects {
+		object := conv_data.objects[i]
 		if object.parent == obj {
 			children.PushBack(object)
 		} else {
-			objs = append(objs, obj)
+			objs = append(objs, object)
 		}
 	}
 	conv_data.objects = objs
@@ -444,7 +445,7 @@ func (b *BlenderImporter) ConvertNode(in *Scene, obj *Object, conv_data *Convers
 		}
 	}
 
-	m := parentTransform
+	m := parentTransform.Clone()
 	m = m.Inverse()
 
 	node.Transformation = m.MulAiMatrix4x4(node.Transformation)
@@ -465,7 +466,7 @@ func (b *BlenderImporter) ConvertNode(in *Scene, obj *Object, conv_data *Convers
 	}
 
 	// apply modifiers
-	err := b.modifier_cache.ApplyModifiers(*node, conv_data, in, obj)
+	err := b.modifier_cache.ApplyModifiers(node, conv_data, in, obj)
 	return node, err
 }
 
@@ -524,15 +525,12 @@ func (b *BlenderImporter) ResolveImage(out *core.AiMaterial, mat *Material, tex 
 
 		// tex.mHeight = 0;
 		curTex.Width = uint32(img.packedfile.size)
-		ch := make([]byte, curTex.Width)
-
 		conv_data.db.SetCurPos(img.packedfile.data.val)
-		ch, err := conv_data.db.GetNBytes(int(curTex.Width))
+		bytes, err := conv_data.db.GetNBytes(int(curTex.Width))
 		if err != nil {
 			return err
 		}
-
-		curTex.PcData = *(*[]*core.AiTexel)(unsafe.Pointer(&ch))
+		curTex.PcData = core.BytesToAiTexel(bytes)
 
 		logger.InfoF("Reading embedded texture, original file was %v", img.name)
 	} else {
@@ -603,22 +601,33 @@ func (b *BlenderImporter) ResolveTexture(out *core.AiMaterial, mat *Material, te
 	switch rtex.Type {
 	// these are listed in blender's UI
 	case Type_CLOUDS:
+		fallthrough
 	case Type_WOOD:
+		fallthrough
 	case Type_MARBLE:
+		fallthrough
 	case Type_MAGIC:
+		fallthrough
 	case Type_BLEND:
+		fallthrough
 	case Type_STUCCI:
+		fallthrough
 	case Type_NOISE:
+		fallthrough
 	case Type_PLUGIN:
+		fallthrough
 	case Type_MUSGRAVE:
+		fallthrough
 	case Type_VORONOI:
+		fallthrough
 	case Type_DISTNOISE:
+		fallthrough
 	case Type_ENVMAP:
-
+		fallthrough
 		// these do no appear in the UI, why?
 	case Type_POINTDENSITY:
+		fallthrough
 	case Type_VOXELDATA:
-
 		logger.WarnF("Encountered a texture with an unsupported type: ", dispnam)
 		b.AddSentinelTexture(out, mat, tex, conv_data)
 		break
@@ -906,15 +915,15 @@ func (b *BlenderImporter) ConvertMesh(in *Scene, obj *Object, mesh *Mesh,
 
 	// some sanity checks
 	if int(mesh.totface) > len(mesh.mface) {
-		return errors.New("Number of faces is larger than the corresponding array")
+		return errors.New("number of faces is larger than the corresponding array")
 	}
 
 	if int(mesh.totvert) > len(mesh.mvert) {
-		return errors.New("Number of vertices is larger than the corresponding array")
+		return errors.New("number of vertices is larger than the corresponding array")
 	}
 
 	if int(mesh.totloop) > len(mesh.mloop) {
-		return errors.New("Number of vertices is larger than the corresponding array")
+		return errors.New("number of vertices is larger than the corresponding array")
 	}
 	getVoVn := func(o *core.AiMesh) (vo, vn *common.AiVector3D) {
 		vo = common.NewAiVector3D()

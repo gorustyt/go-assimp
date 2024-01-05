@@ -112,6 +112,8 @@ func newMaterial() *Material {
 	return &Material{
 		rgb:  common.NewAiColor3D(0.6, 0.6, 0.6),
 		spec: common.NewAiColor3D(1, 1, 1),
+		emis: common.NewAiColor3D(0, 0, 0),
+		amb:  common.NewAiColor3D(0, 0, 0),
 	}
 }
 

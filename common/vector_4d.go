@@ -9,6 +9,9 @@ func (ai AiVector4D) ToPbMsg() *pb_msg.AiVector4D {
 }
 
 func (ai *AiVector4D) FromPbMsg(data *pb_msg.AiVector4D) *AiVector4D {
+	if data == nil {
+		return nil
+	}
 	ai[0] = data.X
 	ai[1] = data.Y
 	ai[2] = data.Z

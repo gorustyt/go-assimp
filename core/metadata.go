@@ -38,6 +38,9 @@ type AiMetadata struct {
 }
 
 func (ai *AiMetadata) Clone() *AiMetadata {
+	if ai == nil {
+		return nil
+	}
 	r := &AiMetadata{}
 	r.Keys = ai.Keys
 	for _, v := range ai.Values {
@@ -46,6 +49,9 @@ func (ai *AiMetadata) Clone() *AiMetadata {
 	return r
 }
 func (ai *AiMetadata) ToPbMsg() *pb_msg.AiMetadata {
+	if ai == nil {
+		return nil
+	}
 	r := pb_msg.AiMetadata{}
 	r.Keys = ai.Keys
 	for _, v := range ai.Values {
@@ -54,6 +60,9 @@ func (ai *AiMetadata) ToPbMsg() *pb_msg.AiMetadata {
 	return &r
 }
 func (ai *AiMetadata) FromPbMsg(data *pb_msg.AiMetadata) *AiMetadata {
+	if data == nil {
+		return nil
+	}
 	ai.Keys = data.Keys
 	for _, v := range data.Values {
 		ai.Values = append(ai.Values, ((&AiMetadataEntry{}).FromPbMsg(v)))
@@ -73,6 +82,9 @@ type AiMetadataEntry struct {
 }
 
 func (ai *AiMetadataEntry) Clone() *AiMetadataEntry {
+	if ai == nil {
+		return nil
+	}
 	r := &AiMetadataEntry{}
 	r.Type = ai.Type
 
@@ -87,6 +99,9 @@ func (ai *AiMetadataEntry) Clone() *AiMetadataEntry {
 	return r
 }
 func (ai *AiMetadataEntry) ToPbMsg() *pb_msg.AiMetadataEntry {
+	if ai == nil {
+		return nil
+	}
 	r := pb_msg.AiMetadataEntry{}
 	r.Type = int32(ai.Type)
 	var v proto.Message
@@ -122,6 +137,9 @@ func (ai *AiMetadataEntry) ToPbMsg() *pb_msg.AiMetadataEntry {
 }
 
 func (ai *AiMetadataEntry) FromPbMsg(data *pb_msg.AiMetadataEntry) *AiMetadataEntry {
+	if data == nil {
+		return nil
+	}
 	ai.Type = AiMetadataType(data.Type)
 	switch ai.Type {
 	case AI_BOOL:

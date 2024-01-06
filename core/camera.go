@@ -87,7 +87,43 @@ type AiCamera struct {
 	OrthographicWidth float32
 }
 
+func (ai *AiCamera) FromPbMsg(p *pb_msg.AiCamera) *AiCamera {
+	if p == nil {
+		return nil
+	}
+	ai.Name = p.Name
+	ai.Position = (&common.AiVector3D{}).FromPbMsg(p.Position)
+	ai.Up = (&common.AiVector3D{}).FromPbMsg(p.Up)
+	ai.LookAt = (&common.AiVector3D{}).FromPbMsg(p.LookAt)
+	ai.HorizontalFOV = p.HorizontalFOV
+	ai.ClipPlaneNear = p.ClipPlaneNear
+	ai.ClipPlaneFar = p.ClipPlaneFar
+	ai.Aspect = p.Aspect
+	ai.OrthographicWidth = p.OrthographicWidth
+	return ai
+}
+
+func (ai *AiCamera) Clone() *AiCamera {
+	if ai == nil {
+		return nil
+	}
+	r := &AiCamera{}
+	r.Name = ai.Name
+	r.Position = ai.Position.Clone()
+	r.Up = ai.Up.Clone()
+	r.LookAt = ai.LookAt.Clone()
+	r.HorizontalFOV = ai.HorizontalFOV
+	r.ClipPlaneNear = ai.ClipPlaneNear
+	r.ClipPlaneFar = ai.ClipPlaneFar
+	r.Aspect = ai.Aspect
+	r.OrthographicWidth = ai.OrthographicWidth
+	return r
+}
+
 func (ai *AiCamera) ToPbMsg() *pb_msg.AiCamera {
+	if ai == nil {
+		return nil
+	}
 	r := &pb_msg.AiCamera{}
 	r.Name = ai.Name
 	r.Position = ai.Position.ToPbMsg()

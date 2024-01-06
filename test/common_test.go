@@ -1,6 +1,7 @@
 package test
 
 import (
+	"assimp"
 	"assimp/common"
 	"golang.org/x/text/encoding/unicode"
 	"golang.org/x/text/transform"
@@ -39,4 +40,10 @@ func TestUtf8(t *testing.T) {
 	AssertError(t, err)
 	err = os.WriteFile("./SphereWithLight_UTF16LE.ac", data, 0664)
 	AssertError(t, err)
+}
+
+func TestClone(t *testing.T) {
+	p, err := assimp.ParseFile("../example/example_nonbsd_data/BLEND/fleurOptonl.blend")
+	AssertError(t, err)
+	Assert(t, DeepEqual(p, p.Clone()))
 }

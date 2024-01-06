@@ -48,7 +48,47 @@ type AiAnimation struct {
 	MorphMeshChannels []*AiMeshMorphAnim
 }
 
+func (ai *AiAnimation) FromPbMsg(p *pb_msg.AiAnimation) *AiAnimation {
+	if p == nil {
+		return nil
+	}
+	ai.Name = p.Name
+	ai.Duration = p.Duration
+	ai.TicksPerSecond = p.TicksPerSecond
+	for _, v := range p.Channels {
+		ai.Channels = append(ai.Channels, (&AiNodeAnim{}).FromPbMsg(v))
+	}
+	for _, v := range p.MeshChannels {
+		ai.MeshChannels = append(ai.MeshChannels, (&AiMeshAnim{}).FromPbMsg(v))
+	}
+	for _, v := range p.MorphMeshChannels {
+		ai.MorphMeshChannels = append(ai.MorphMeshChannels, (&AiMeshMorphAnim{}).FromPbMsg(v))
+	}
+	return ai
+}
+func (ai *AiAnimation) Clone() *AiAnimation {
+	if ai == nil {
+		return nil
+	}
+	r := &AiAnimation{}
+	r.Name = ai.Name
+	r.Duration = ai.Duration
+	r.TicksPerSecond = ai.TicksPerSecond
+	for _, v := range ai.Channels {
+		r.Channels = append(r.Channels, v.Clone())
+	}
+	for _, v := range ai.MeshChannels {
+		r.MeshChannels = append(r.MeshChannels, v.Clone())
+	}
+	for _, v := range ai.MorphMeshChannels {
+		r.MorphMeshChannels = append(r.MorphMeshChannels, v.Clone())
+	}
+	return r
+}
 func (ai *AiAnimation) ToPbMsg() *pb_msg.AiAnimation {
+	if ai == nil {
+		return nil
+	}
 	r := &pb_msg.AiAnimation{}
 	r.Name = ai.Name
 	r.Duration = ai.Duration
@@ -75,7 +115,32 @@ type AiMeshMorphAnim struct {
 	Keys []*AiMeshMorphKey
 }
 
+func (ai *AiMeshMorphAnim) FromPbMsg(p *pb_msg.AiMeshMorphAnim) *AiMeshMorphAnim {
+	if p == nil {
+		return nil
+	}
+	ai.Name = p.Name
+	for _, v := range p.Keys {
+		ai.Keys = append(ai.Keys, (&AiMeshMorphKey{}).FromPbMsg(v))
+	}
+	return ai
+}
+func (ai *AiMeshMorphAnim) Clone() *AiMeshMorphAnim {
+	if ai == nil {
+		return nil
+	}
+	r := &AiMeshMorphAnim{}
+	r.Name = ai.Name
+	for _, v := range ai.Keys {
+		r.Keys = append(r.Keys, v.Clone())
+	}
+	return r
+}
+
 func (ai *AiMeshMorphAnim) ToPbMsg() *pb_msg.AiMeshMorphAnim {
+	if ai == nil {
+		return nil
+	}
 	r := &pb_msg.AiMeshMorphAnim{}
 	r.Name = ai.Name
 	for _, v := range ai.Keys {
@@ -96,7 +161,29 @@ type AiMeshMorphKey struct {
 	Weights []float64
 }
 
+func (ai *AiMeshMorphKey) FromPbMsg(p *pb_msg.AiMeshMorphKey) *AiMeshMorphKey {
+	if p == nil {
+		return nil
+	}
+	ai.Time = p.Time
+	ai.Values = p.Values
+	ai.Weights = p.Weights
+	return ai
+}
+func (ai *AiMeshMorphKey) Clone() *AiMeshMorphKey {
+	if ai == nil {
+		return nil
+	}
+	r := &AiMeshMorphKey{}
+	r.Time = ai.Time
+	r.Values = ai.Values
+	r.Weights = ai.Weights
+	return r
+}
 func (ai *AiMeshMorphKey) ToPbMsg() *pb_msg.AiMeshMorphKey {
+	if ai == nil {
+		return nil
+	}
 	r := &pb_msg.AiMeshMorphKey{}
 	r.Time = ai.Time
 	r.Values = ai.Values
@@ -159,7 +246,51 @@ type AiNodeAnim struct {
 	PostState AiAnimBehaviour
 }
 
+func (ai *AiNodeAnim) FromPbMsg(p *pb_msg.AiNodeAnim) *AiNodeAnim {
+	if p == nil {
+		return nil
+	}
+	ai.NodeName = p.NodeName
+
+	for _, v := range p.PositionKeys {
+		ai.PositionKeys = append(ai.PositionKeys, (&common.AiVectorKey{}).FromPbMsg(v))
+	}
+	for _, v := range p.RotationKeys {
+		ai.RotationKeys = append(ai.RotationKeys, (&common.AiQuatKey{}).FromPbMsg(v))
+	}
+
+	for _, v := range p.ScalingKeys {
+		ai.ScalingKeys = append(ai.ScalingKeys, (&common.AiVectorKey{}).FromPbMsg(v))
+	}
+	ai.PreState = AiAnimBehaviour(p.PreState)
+	ai.PostState = AiAnimBehaviour(p.PostState)
+	return ai
+}
+func (ai *AiNodeAnim) Clone() *AiNodeAnim {
+	if ai == nil {
+		return nil
+	}
+	r := &AiNodeAnim{}
+	r.NodeName = ai.NodeName
+
+	for _, v := range ai.PositionKeys {
+		r.PositionKeys = append(r.PositionKeys, v.Clone())
+	}
+	for _, v := range ai.RotationKeys {
+		r.RotationKeys = append(r.RotationKeys, v.Clone())
+	}
+
+	for _, v := range ai.ScalingKeys {
+		r.ScalingKeys = append(r.ScalingKeys, v.Clone())
+	}
+	r.PreState = ai.PreState
+	r.PostState = ai.PostState
+	return r
+}
 func (ai *AiNodeAnim) ToPbMsg() *pb_msg.AiNodeAnim {
+	if ai == nil {
+		return nil
+	}
 	r := &pb_msg.AiNodeAnim{}
 	r.NodeName = ai.NodeName
 
@@ -195,7 +326,33 @@ type AiMeshAnim struct {
 	Keys []*AiMeshKey
 }
 
+func (ai *AiMeshAnim) FromPbMsg(p *pb_msg.AiMeshAnim) *AiMeshAnim {
+	if p == nil {
+		return nil
+	}
+	ai.Name = p.Name
+	for _, v := range p.Keys {
+		ai.Keys = append(ai.Keys, (&AiMeshKey{}).FromPbMsg(v))
+	}
+	return ai
+}
+
+func (ai *AiMeshAnim) Clone() *AiMeshAnim {
+	if ai == nil {
+		return nil
+	}
+	r := &AiMeshAnim{
+		Name: ai.Name,
+	}
+	for _, v := range ai.Keys {
+		r.Keys = append(r.Keys, v.Clone())
+	}
+	return r
+}
 func (ai *AiMeshAnim) ToPbMsg() *pb_msg.AiMeshAnim {
+	if ai == nil {
+		return nil
+	}
 	r := &pb_msg.AiMeshAnim{
 		Name: ai.Name,
 	}
@@ -218,7 +375,29 @@ type AiMeshKey struct {
 	Value uint32
 }
 
+func (ai *AiMeshKey) FromPbMsg(p *pb_msg.AiMeshKey) *AiMeshKey {
+	if p == nil {
+		return nil
+	}
+	ai.Time = p.Time
+	ai.Value = p.Value
+	return ai
+}
+func (ai *AiMeshKey) Clone() *AiMeshKey {
+	if ai == nil {
+		return nil
+	}
+	r := &AiMeshKey{
+		Time:  ai.Time,
+		Value: ai.Value,
+	}
+	return r
+}
+
 func (ai *AiMeshKey) ToPbMsg() *pb_msg.AiMeshKey {
+	if ai == nil {
+		return nil
+	}
 	r := &pb_msg.AiMeshKey{
 		Time:  ai.Time,
 		Value: ai.Value,

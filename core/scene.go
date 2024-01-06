@@ -92,7 +92,79 @@ type AiScene struct {
 	Skeletons []*AiSkeleton
 }
 
+func (ai *AiScene) FromPbMsg(p *pb_msg.AiScene) *AiScene {
+	if p == nil {
+		return nil
+	}
+	ai.Flags = p.Flags
+	ai.RootNode = (&AiNode{}).FromPbMsg(p.RootNode)
+	for _, v := range p.Meshes {
+		ai.Meshes = append(ai.Meshes, (&AiMesh{}).FromPbMsg(v))
+	}
+	for _, v := range p.Materials {
+		ai.Materials = append(ai.Materials, (&AiMaterial{}).FromPbMsg(v))
+	}
+	for _, v := range p.Animations {
+		ai.Animations = append(ai.Animations, (&AiAnimation{}).FromPbMsg(v))
+	}
+	for _, v := range p.Textures {
+		ai.Textures = append(ai.Textures, (&AiTexture{}).FromPbMsg(v))
+	}
+	for _, v := range p.Lights {
+		ai.Lights = append(ai.Lights, (&AiLight{}).FromPbMsg(v))
+	}
+	for _, v := range p.Cameras {
+		ai.Cameras = append(ai.Cameras, (&AiCamera{}).FromPbMsg(v))
+	}
+	for _, v := range p.MetaData {
+		ai.MetaData = append(ai.MetaData, (&AiMetadata{}).FromPbMsg(v))
+	}
+	ai.Name = p.Name
+	for _, v := range p.Skeletons {
+		ai.Skeletons = append(ai.Skeletons, (&AiSkeleton{}).FromPbMsg(v))
+	}
+	return ai
+}
+
+func (ai *AiScene) Clone() *AiScene {
+	if ai == nil {
+		return nil
+	}
+	r := &AiScene{}
+	r.Flags = ai.Flags
+	r.RootNode = ai.RootNode.Clone()
+	for _, v := range ai.Meshes {
+		r.Meshes = append(r.Meshes, v.Clone())
+	}
+	for _, v := range ai.Materials {
+		r.Materials = append(r.Materials, v.Clone())
+	}
+	for _, v := range ai.Animations {
+		r.Animations = append(r.Animations, v.Clone())
+	}
+	for _, v := range ai.Textures {
+		r.Textures = append(r.Textures, v.Clone())
+	}
+	for _, v := range ai.Lights {
+		r.Lights = append(r.Lights, v.Clone())
+	}
+	for _, v := range ai.Cameras {
+		r.Cameras = append(r.Cameras, v.Clone())
+	}
+	for _, v := range ai.MetaData {
+		r.MetaData = append(r.MetaData, v.Clone())
+	}
+	r.Name = ai.Name
+	for _, v := range ai.Skeletons {
+		r.Skeletons = append(r.Skeletons, v.Clone())
+	}
+	return r
+}
+
 func (ai *AiScene) ToPbMsg() *pb_msg.AiScene {
+	if ai == nil {
+		return nil
+	}
 	r := &pb_msg.AiScene{}
 	r.Flags = ai.Flags
 	r.RootNode = ai.RootNode.ToPbMsg()
@@ -176,26 +248,52 @@ type AiNode struct {
 	MetaData *AiMetadata
 }
 
-func (node *AiNode) Clone() *AiNode {
+func (node *AiNode) fromPbMsg(p *pb_msg.AiNode, parent *AiNode) *AiNode {
+	if p == nil {
+		return nil
+	}
+	node.Name = p.Name
+	node.Transformation = (&common.AiMatrix4x4{}).FromPbMsg(p.Transformation)
+	node.Parent = parent
+	for _, v := range p.Children {
+		node.Children = append(node.Children, (&AiNode{}).fromPbMsg(v, node))
+	}
+	node.Meshes = p.Meshes
+	node.MetaData = (&AiMetadata{}).FromPbMsg(p.MetaData)
+	return node
+}
+
+func (node *AiNode) FromPbMsg(p *pb_msg.AiNode) *AiNode {
+	return node.fromPbMsg(p, nil)
+}
+
+func (node *AiNode) clone(parent *AiNode) *AiNode {
 	if node == nil {
 		return nil
 	}
 	r := NewAiNode("")
 	r.Name = node.Name
 	r.Transformation = node.Transformation.Clone()
-	r.Parent = node.Parent.Clone()
+	r.Parent = parent
 	for _, v := range node.Children {
-		r.Children = append(r.Children, v.Clone())
+		r.Children = append(r.Children, v.clone(node))
 	}
 	r.Meshes = node.Meshes
 	r.MetaData = node.MetaData.Clone()
 	return r
 }
-func (node *AiNode) ToPbMsg() *pb_msg.AiNode {
+
+func (node *AiNode) Clone() *AiNode {
+	return node.clone(nil)
+}
+
+func (node *AiNode) toPbMsg(parent *pb_msg.AiNode) *pb_msg.AiNode {
+	if node == nil {
+		return nil
+	}
 	r := pb_msg.AiNode{}
 	r.Name = node.Name
 	r.Transformation = node.Transformation.ToPbMsg()
-	r.Parent = node.Parent.ToPbMsg()
 	for _, v := range node.Children {
 		r.Children = append(r.Children, v.ToPbMsg())
 	}
@@ -203,6 +301,11 @@ func (node *AiNode) ToPbMsg() *pb_msg.AiNode {
 	r.MetaData = node.MetaData.ToPbMsg()
 	return &r
 }
+
+func (node *AiNode) ToPbMsg() *pb_msg.AiNode {
+	return node.toPbMsg(nil)
+}
+
 func NewAiNode(name string) *AiNode {
 	return &AiNode{
 		Name:           name,

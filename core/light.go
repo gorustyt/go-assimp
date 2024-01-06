@@ -164,7 +164,51 @@ type AiLight struct {
 	Size *common.AiVector2D
 }
 
+func (ai *AiLight) FromPbMsg(p *pb_msg.AiLight) *AiLight {
+	if ai == nil {
+		return nil
+	}
+	ai.Name = p.Name
+	ai.Type = AiLightSourceType(p.Type)
+	ai.Position = (&common.AiVector3D{}).FromPbMsg(p.Position)
+	ai.Direction = (&common.AiVector3D{}).FromPbMsg(p.Direction)
+	ai.Up = (&common.AiVector3D{}).FromPbMsg(p.Up)
+	ai.AttenuationConstant = p.AttenuationConstant
+	ai.AttenuationLinear = p.AttenuationLinear
+	ai.AttenuationQuadratic = p.AttenuationQuadratic
+	ai.ColorDiffuse = (&common.AiColor3D{}).FromPbMsg(p.ColorDiffuse)
+	ai.ColorSpecular = (&common.AiColor3D{}).FromPbMsg(p.ColorSpecular)
+	ai.ColorAmbient = (&common.AiColor3D{}).FromPbMsg(p.ColorAmbient)
+	ai.AngleInnerCone = p.AngleInnerCone
+	ai.AngleOuterCone = p.AngleOuterCone
+	ai.Size = (&common.AiVector2D{}).FromPbMsg(p.Size)
+	return ai
+}
+func (ai *AiLight) Clone() *AiLight {
+	if ai == nil {
+		return nil
+	}
+	r := &AiLight{}
+	r.Name = ai.Name
+	r.Type = ai.Type
+	r.Position = ai.Position.Clone()
+	r.Direction = ai.Direction.Clone()
+	r.Up = ai.Up.Clone()
+	r.AttenuationConstant = ai.AttenuationConstant
+	r.AttenuationLinear = ai.AttenuationLinear
+	r.AttenuationQuadratic = ai.AttenuationQuadratic
+	r.ColorDiffuse = ai.ColorDiffuse.Clone()
+	r.ColorSpecular = ai.ColorSpecular.Clone()
+	r.ColorAmbient = ai.ColorAmbient.Clone()
+	r.AngleInnerCone = ai.AngleInnerCone
+	r.AngleOuterCone = ai.AngleOuterCone
+	r.Size = ai.Size.Clone()
+	return r
+}
 func (ai *AiLight) ToPbMsg() *pb_msg.AiLight {
+	if ai == nil {
+		return nil
+	}
 	r := &pb_msg.AiLight{}
 	r.Name = ai.Name
 	r.Type = int32(ai.Type)

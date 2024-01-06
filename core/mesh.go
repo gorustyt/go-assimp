@@ -206,7 +206,66 @@ type AiMesh struct {
 	TextureCoordsNames []string
 }
 
+func (ai *AiMesh) FromPbMsg(p *pb_msg.AiMesh) *AiMesh {
+	if p == nil {
+		return nil
+	}
+	*ai = *NewAiMesh()
+	ai.PrimitiveTypes = AiPrimitiveType(p.PrimitiveTypes)
+	for _, v := range p.Vertices {
+		ai.Vertices = append(ai.Vertices, (&common.AiVector3D{}).FromPbMsg(v))
+	}
+
+	for _, v := range p.Normals {
+		ai.Normals = append(ai.Normals, (&common.AiVector3D{}).FromPbMsg(v))
+	}
+
+	for _, v := range p.Tangents {
+		ai.Tangents = append(ai.Tangents, (&common.AiVector3D{}).FromPbMsg(v))
+	}
+
+	for _, v := range p.Bitangents {
+		ai.Bitangents = append(ai.Bitangents, (&common.AiVector3D{}).FromPbMsg(v))
+	}
+	for i, v := range p.Colors {
+		var tmp []*common.AiColor4D
+		for _, v1 := range v.Colors {
+			tmp = append(tmp, (&common.AiColor4D{}).FromPbMsg(v1))
+		}
+		ai.Colors[i] = tmp
+	}
+
+	for i, v := range p.TextureCoords {
+		var tmp []*common.AiVector3D
+		for _, v1 := range v.TextureCoords {
+			tmp = append(tmp, (&common.AiVector3D{}).FromPbMsg(v1))
+		}
+		ai.TextureCoords[i] = tmp
+	}
+	ai.NumUVComponents = p.NumUVComponents
+
+	for _, v := range p.Faces {
+		ai.Faces = append(ai.Faces, (&AiFace{}).FromPbMsg(v))
+	}
+
+	for _, v := range p.Bones {
+		ai.Bones = append(ai.Bones, (&AiBone{}).FromPbMsg(v))
+	}
+	ai.MaterialIndex = p.MaterialIndex
+	ai.Name = p.Name
+
+	for _, v := range p.AnimMeshes {
+		ai.AnimMeshes = append(ai.AnimMeshes, (&AiAnimMesh{}).FromPbMsg(v))
+	}
+	ai.Method = AiMorphingMethod(p.Method)
+	ai.AABB = (&AiAABB{}).FromPbMsg(p.AABB)
+	ai.TextureCoordsNames = p.TextureCoordsNames
+	return ai
+}
 func (ai *AiMesh) Clone() *AiMesh {
+	if ai == nil {
+		return nil
+	}
 	r := NewAiMesh()
 	r.PrimitiveTypes = ai.PrimitiveTypes
 	for _, v := range ai.Vertices {
@@ -225,6 +284,9 @@ func (ai *AiMesh) Clone() *AiMesh {
 		r.Bitangents = append(r.Bitangents, v.Clone())
 	}
 	for i, v := range ai.Colors {
+		if v != nil {
+			r.Colors[i] = make([]*common.AiColor4D, len(v))
+		}
 		for j, v1 := range v {
 			r.Colors[i][j] = v1.Clone()
 		}
@@ -232,6 +294,9 @@ func (ai *AiMesh) Clone() *AiMesh {
 	}
 
 	for i, v := range ai.TextureCoords {
+		if v != nil {
+			r.TextureCoords[i] = make([]*common.AiVector3D, len(v))
+		}
 		for j, v1 := range v {
 			r.TextureCoords[i][j] = v1.Clone()
 		}
@@ -256,7 +321,11 @@ func (ai *AiMesh) Clone() *AiMesh {
 	r.TextureCoordsNames = ai.TextureCoordsNames
 	return r
 }
+
 func (ai *AiMesh) ToPbMsg() *pb_msg.AiMesh {
+	if ai == nil {
+		return nil
+	}
 	r := pb_msg.AiMesh{}
 	r.PrimitiveTypes = uint32(ai.PrimitiveTypes)
 	for _, v := range ai.Vertices {
@@ -298,7 +367,7 @@ func (ai *AiMesh) ToPbMsg() *pb_msg.AiMesh {
 	for _, v := range ai.Bones {
 		r.Bones = append(r.Bones, v.ToPbMsg())
 	}
-	r.MaterialIndex = int32(ai.MaterialIndex)
+	r.MaterialIndex = ai.MaterialIndex
 	r.Name = ai.Name
 
 	for _, v := range ai.AnimMeshes {
@@ -459,7 +528,49 @@ type AiAnimMesh struct {
 	Weight float32
 }
 
+func (ai *AiAnimMesh) FromPbMsg(p *pb_msg.AiAnimMesh) *AiAnimMesh {
+	if p == nil {
+		return nil
+	}
+	ai.Name = p.Name
+	for _, v := range p.Vertices {
+		ai.Vertices = append(ai.Vertices, (&common.AiVector3D{}).FromPbMsg(v))
+	}
+	for _, v := range p.Normals {
+		ai.Normals = append(ai.Normals, (&common.AiVector3D{}).FromPbMsg(v))
+	}
+	for _, v := range p.Tangents {
+		ai.Tangents = append(ai.Tangents, (&common.AiVector3D{}).FromPbMsg(v))
+	}
+
+	for _, v := range p.Bitangents {
+		ai.Bitangents = append(ai.Bitangents, (&common.AiVector3D{}).FromPbMsg(v))
+	}
+
+	for i, v := range p.Colors {
+		var tmp []*common.AiColor4D
+		for _, v1 := range v.Colors {
+			tmp = append(tmp, (&common.AiColor4D{}).FromPbMsg(v1))
+		}
+		ai.Colors[i] = tmp
+	}
+
+	for i, v := range p.TextureCoords {
+		var tmp []*common.AiVector3D
+		for _, v1 := range v.TextureCoords {
+			tmp = append(tmp, (&common.AiVector3D{}).FromPbMsg(v1))
+		}
+		ai.TextureCoords[i] = tmp
+	}
+
+	ai.Weight = p.Weight
+	return ai
+}
+
 func (ai *AiAnimMesh) ToPbMsg() *pb_msg.AiAnimMesh {
+	if ai == nil {
+		return nil
+	}
 	r := &pb_msg.AiAnimMesh{}
 	r.Name = ai.Name
 	for _, v := range ai.Vertices {
@@ -497,6 +608,9 @@ func (ai *AiAnimMesh) ToPbMsg() *pb_msg.AiAnimMesh {
 }
 
 func (ai *AiAnimMesh) Clone() *AiAnimMesh {
+	if ai == nil {
+		return nil
+	}
 	r := &AiAnimMesh{}
 	r.Name = ai.Name
 	for _, v := range ai.Vertices {
@@ -590,7 +704,17 @@ type AiFace struct {
 	Indices []uint32
 }
 
+func (ai *AiFace) FromPbMsg(p *pb_msg.AiFace) *AiFace {
+	if p == nil {
+		return nil
+	}
+	ai.Indices = p.Indices
+	return ai
+}
 func (ai *AiFace) Clone() *AiFace {
+	if ai == nil {
+		return nil
+	}
 	tmp := NewAiFace()
 	tmp.Indices = make([]uint32, len(ai.Indices))
 	copy(tmp.Indices, ai.Indices)
@@ -598,6 +722,9 @@ func (ai *AiFace) Clone() *AiFace {
 }
 
 func (ai *AiFace) ToPbMsg() *pb_msg.AiFace {
+	if ai == nil {
+		return nil
+	}
 	return &pb_msg.AiFace{
 		Indices: ai.Indices,
 	}
@@ -643,7 +770,27 @@ type AiBone struct {
 	OffsetMatrix *common.AiMatrix4x4
 }
 
+func (ai *AiBone) FromPbMsg(p *pb_msg.AiBone) *AiBone {
+	if p == nil {
+		return nil
+	}
+	ai.Name = p.Name
+	for _, v := range p.Armature {
+		ai.Armature = append(ai.Armature, (&AiNode{}).FromPbMsg(v))
+	}
+	for _, v := range p.Node {
+		ai.Node = append(ai.Node, (&AiNode{}).FromPbMsg(v))
+	}
+	for _, v := range p.Weights {
+		ai.Weights = append(ai.Weights, (&common.AiVertexWeight{}).FromPbMsg(v))
+	}
+	ai.OffsetMatrix = (&common.AiMatrix4x4{}).FromPbMsg(p.OffsetMatrix)
+	return ai
+}
 func (ai *AiBone) Clone() *AiBone {
+	if ai == nil {
+		return nil
+	}
 	r := &AiBone{}
 	r.Name = ai.Name
 	for _, v := range ai.Armature {
@@ -660,6 +807,9 @@ func (ai *AiBone) Clone() *AiBone {
 	return r
 }
 func (ai *AiBone) ToPbMsg() *pb_msg.AiBone {
+	if ai == nil {
+		return nil
+	}
 	r := &pb_msg.AiBone{}
 	r.Name = ai.Name
 	for _, v := range ai.Armature {
@@ -701,7 +851,32 @@ type AiSkeleton struct {
 	Bones []*AiSkeletonBone
 }
 
+func (ai *AiSkeleton) FromPbMsg(p *pb_msg.AiSkeleton) *AiSkeleton {
+	if p == nil {
+		return nil
+	}
+	ai.Name = p.Name
+	for _, v := range p.Bones {
+		ai.Bones = append(ai.Bones, (&AiSkeletonBone{}).FromPbMsg(v))
+	}
+	return ai
+}
+func (ai *AiSkeleton) Clone() *AiSkeleton {
+	if ai == nil {
+		return nil
+	}
+	r := &AiSkeleton{
+		Name: ai.Name,
+	}
+	for _, v := range ai.Bones {
+		r.Bones = append(r.Bones, v.Clone())
+	}
+	return r
+}
 func (ai *AiSkeleton) ToPbMsg() *pb_msg.AiSkeleton {
+	if ai == nil {
+		return nil
+	}
 	r := &pb_msg.AiSkeleton{
 		Name: ai.Name,
 	}
@@ -760,7 +935,54 @@ type AiSkeletonBone struct {
 	LocalMatrix common.AiMatrix4x4
 }
 
+func (ai *AiSkeletonBone) FromPbMsg(p *pb_msg.AiSkeletonBone) *AiSkeletonBone {
+	if p == nil {
+		return nil
+	}
+	ai.Parent = p.Parent
+	for _, v := range p.Armature {
+		ai.Armature = append(ai.Armature, (&AiNode{}).FromPbMsg(v))
+	}
+	for _, v := range p.Node {
+		ai.Node = append(ai.Node, (&AiNode{}).FromPbMsg(v))
+	}
+	for _, v := range p.MeshId {
+		ai.MeshId = append(ai.MeshId, (&AiMesh{}).FromPbMsg(v))
+	}
+	for _, v := range p.Weights {
+		ai.Weights = append(ai.Weights, (&common.AiVertexWeight{}).FromPbMsg(v))
+	}
+	ai.OffsetMatrix = *(&common.AiMatrix4x4{}).FromPbMsg(p.OffsetMatrix)
+	ai.LocalMatrix = *(&common.AiMatrix4x4{}).FromPbMsg(p.LocalMatrix)
+	return ai
+}
+func (ai *AiSkeletonBone) Clone() *AiSkeletonBone {
+	if ai == nil {
+		return nil
+	}
+	r := &AiSkeletonBone{}
+	r.Parent = ai.Parent
+	for _, v := range ai.Armature {
+		r.Armature = append(r.Armature, v.Clone())
+	}
+	for _, v := range ai.Node {
+		r.Node = append(r.Node, v.Clone())
+	}
+	for _, v := range ai.MeshId {
+		r.MeshId = append(r.MeshId, v.Clone())
+	}
+	for _, v := range ai.Weights {
+		r.Weights = append(r.Weights, v.Clone())
+	}
+	r.OffsetMatrix = *ai.OffsetMatrix.Clone()
+	r.LocalMatrix = *ai.LocalMatrix.Clone()
+	return r
+}
+
 func (ai *AiSkeletonBone) ToPbMsg() *pb_msg.AiSkeletonBone {
+	if ai == nil {
+		return nil
+	}
 	r := &pb_msg.AiSkeletonBone{}
 	r.Parent = ai.Parent
 	for _, v := range ai.Armature {

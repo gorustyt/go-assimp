@@ -7,6 +7,9 @@ type AiColor4D struct {
 }
 
 func (ai *AiColor4D) Clone() *AiColor4D {
+	if ai == nil {
+		return nil
+	}
 	tmp := *ai
 	return &tmp
 }
@@ -19,9 +22,15 @@ func (ai *AiColor4D) BoundMax(a, b *AiColor4D) *AiColor4D {
 }
 
 func (ai *AiColor4D) ToPbMsg() *pb_msg.AiColor4D {
+	if ai == nil {
+		return nil
+	}
 	return &pb_msg.AiColor4D{R: ai.R, G: ai.G, B: ai.B, A: ai.A}
 }
 func (ai *AiColor4D) FromPbMsg(data *pb_msg.AiColor4D) *AiColor4D {
+	if data == nil {
+		return nil
+	}
 	ai.R = data.R
 	ai.G = data.G
 	ai.B = data.B

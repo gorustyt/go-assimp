@@ -57,7 +57,39 @@ type AiTexture struct {
 	Filename string
 }
 
+func (ai *AiTexture) FromPbMsg(p *pb_msg.AiTexture) *AiTexture {
+	if p == nil {
+		return nil
+	}
+	ai.Width = p.Width
+	ai.Height = p.Height
+	ai.AchFormatHint = p.AchFormatHint
+	for _, v := range p.PcData {
+		ai.PcData = append(ai.PcData, (&AiTexel{}).FromPbMsg(v))
+	}
+	ai.Filename = p.Filename
+	return ai
+}
+
+func (ai *AiTexture) Clone() *AiTexture {
+	if ai == nil {
+		return nil
+	}
+	r := &AiTexture{}
+	r.Width = ai.Width
+	r.Height = ai.Height
+	r.AchFormatHint = ai.AchFormatHint
+	for _, v := range ai.PcData {
+		r.PcData = append(r.PcData, v.Clone())
+	}
+	r.Filename = ai.Filename
+	return r
+}
+
 func (ai *AiTexture) ToPbMsg() *pb_msg.AiTexture {
+	if ai == nil {
+		return nil
+	}
 	r := &pb_msg.AiTexture{}
 	r.Width = ai.Width
 	r.Height = ai.Height
@@ -78,7 +110,32 @@ type AiTexel struct {
 	B, G, R, A uint8
 }
 
+func (ai *AiTexel) FromPbMsg(p *pb_msg.AiTexel) *AiTexel {
+	if p == nil {
+		return nil
+	}
+	ai.R = uint8(p.R)
+	ai.G = uint8(p.G)
+	ai.B = uint8(p.B)
+	ai.A = uint8(p.A)
+	return ai
+}
+func (ai *AiTexel) Clone() *AiTexel {
+	if ai == nil {
+		return nil
+	}
+	return &AiTexel{
+		B: ai.B,
+		G: ai.G,
+		R: ai.R,
+		A: ai.A,
+	}
+}
+
 func (ai *AiTexel) ToPbMsg() *pb_msg.AiTexel {
+	if ai == nil {
+		return nil
+	}
 	return &pb_msg.AiTexel{
 		B: uint32(ai.B),
 		G: uint32(ai.G),

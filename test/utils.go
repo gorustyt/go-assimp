@@ -214,8 +214,12 @@ func deepEqualMesh(p1, p2 []*core.AiMesh) {
 	}
 }
 func deepEqualScene(p1, p2 *core.AiScene) {
-	for _, mesh := range p1.Meshes {
-		mesh.Name = "" //assetBin 沒有這個字段
+	for i, mesh1 := range p1.Meshes {
+		mesh2 := p2.Meshes[i]
+		if mesh2.Name == "" {
+			mesh1.Name = "" //assetBin 沒有這個字段
+		}
+
 	}
 	if p1.Flags != p2.Flags {
 		logger.ErrorF("deepScene Flags not equal v1:%v v2%v  ", p1.Flags, p2.Flags)

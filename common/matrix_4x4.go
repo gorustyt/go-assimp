@@ -12,11 +12,42 @@ type AiMatrix4x4 struct {
 	D1, D2, D3, D4 float32
 }
 
+func (ai *AiMatrix4x4) FromPbMsg(p *pb_msg.AiMatrix4X4) *AiMatrix4x4 {
+	if p == nil {
+		return nil
+	}
+	ai.A1 = p.A1
+	ai.A2 = p.A2
+	ai.A3 = p.A3
+	ai.A4 = p.A4
+
+	ai.B1 = p.B1
+	ai.B2 = p.B2
+	ai.B3 = p.B3
+	ai.B4 = p.B4
+
+	ai.C1 = p.C1
+	ai.C2 = p.C2
+	ai.C3 = p.C3
+	ai.C4 = p.C4
+
+	ai.D1 = p.D1
+	ai.D2 = p.D2
+	ai.D3 = p.D3
+	ai.D4 = p.D4
+	return ai
+}
 func (ai *AiMatrix4x4) Clone() *AiMatrix4x4 {
+	if ai == nil {
+		return nil
+	}
 	tmp := *ai
 	return &tmp
 }
 func (ai *AiMatrix4x4) ToPbMsg() *pb_msg.AiMatrix4X4 {
+	if ai == nil {
+		return nil
+	}
 	r := &pb_msg.AiMatrix4X4{
 		A1: ai.A1, A2: ai.A2, A3: ai.A3, A4: ai.A4,
 		B1: ai.B1, B2: ai.B2, B3: ai.B3, B4: ai.B4,

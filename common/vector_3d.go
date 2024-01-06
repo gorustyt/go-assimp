@@ -18,16 +18,25 @@ func (ai *AiVector3D) BoundMax(b *AiVector3D) *AiVector3D {
 }
 
 func (ai *AiVector3D) FromPbMsg(data *pb_msg.AiVector3D) *AiVector3D {
+	if data == nil {
+		return nil
+	}
 	ai.X = data.X
 	ai.Y = data.Y
 	ai.Z = data.Z
 	return ai
 }
 func (ai *AiVector3D) ToPbMsg() *pb_msg.AiVector3D {
+	if ai == nil {
+		return nil
+	}
 	return &pb_msg.AiVector3D{X: ai.X, Y: ai.Y, Z: ai.Z}
 }
 
 func (ai *AiVector3D) Clone() *AiVector3D {
+	if ai == nil {
+		return nil
+	}
 	tmp := *ai
 	return &tmp
 }
@@ -176,8 +185,36 @@ type AiVectorKey struct {
 	Value *AiVector3D
 }
 
+func (ai *AiVectorKey) FromPbMsg(p *pb_msg.AiVectorKey) *AiVectorKey {
+	if p == nil {
+		return nil
+	}
+	ai.Time = p.Time
+	ai.Value = (&AiVector3D{}).FromPbMsg(p.Value)
+	return ai
+}
+
+func (ai *AiVectorKey) Clone() *AiVectorKey {
+	if ai == nil {
+		return nil
+	}
+	r := &AiVectorKey{
+		Time:  ai.Time,
+		Value: ai.Value.Clone(),
+	}
+
+	return r
+}
+
 func (ai *AiVectorKey) ToPbMsg() *pb_msg.AiVectorKey {
-	r := &pb_msg.AiVectorKey{}
+	if ai == nil {
+		return nil
+	}
+	r := &pb_msg.AiVectorKey{
+		Time:  ai.Time,
+		Value: ai.Value.ToPbMsg(),
+	}
+
 	return r
 }
 

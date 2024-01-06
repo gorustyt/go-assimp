@@ -6,11 +6,23 @@ type AiColor3D struct {
 	R, G, B float32
 }
 
+func (ai *AiColor3D) Clone() *AiColor3D {
+	if ai == nil {
+		return nil
+	}
+	return &AiColor3D{R: ai.R, G: ai.G, B: ai.B}
+}
 func (ai *AiColor3D) ToPbMsg() *pb_msg.AiColor3D {
+	if ai == nil {
+		return nil
+	}
 	return &pb_msg.AiColor3D{R: ai.R, G: ai.G, B: ai.B}
 }
 
 func (ai *AiColor3D) FromPbMsg(data *pb_msg.AiColor3D) *AiColor3D {
+	if data == nil {
+		return nil
+	}
 	ai.R = data.R
 	ai.G = data.G
 	ai.B = data.B

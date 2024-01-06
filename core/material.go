@@ -1028,7 +1028,31 @@ type AiMaterial struct {
 	Properties []*AiMaterialProperty
 }
 
+func (ai *AiMaterial) Clone() *AiMaterial {
+	if ai == nil {
+		return nil
+	}
+	r := &AiMaterial{}
+	for _, v := range ai.Properties {
+		r.Properties = append(r.Properties, v.Clone())
+	}
+	return ai
+}
+
+func (ai *AiMaterial) FromPbMsg(p *pb_msg.AiMaterial) *AiMaterial {
+	if p == nil {
+		return nil
+	}
+	for _, v := range p.Properties {
+		ai.Properties = append(ai.Properties, (&AiMaterialProperty{}).FromPbMsg(v))
+	}
+	return ai
+}
+
 func (ai *AiMaterial) ToPbMsg() *pb_msg.AiMaterial {
+	if ai == nil {
+		return nil
+	}
 	r := &pb_msg.AiMaterial{}
 	for _, v := range ai.Properties {
 		r.Properties = append(r.Properties, v.ToPbMsg())
@@ -1140,25 +1164,43 @@ type AiMaterialProperty struct {
 	Data []byte
 }
 
-func (p AiMaterialProperty) ToPbMsg() *pb_msg.AiMaterialProperty {
+func (ai *AiMaterialProperty) FromPbMsg(p *pb_msg.AiMaterialProperty) *AiMaterialProperty {
+	if p == nil {
+		return nil
+	}
+	ai.Key = p.Key
+	ai.Semantic = p.Semantic
+	ai.Index = p.Index
+	ai.Type = p.Type
+	ai.Data = p.Data
+	return ai
+}
+
+func (ai *AiMaterialProperty) ToPbMsg() *pb_msg.AiMaterialProperty {
+	if ai == nil {
+		return nil
+	}
 	r := &pb_msg.AiMaterialProperty{}
-	r.Key = p.Key
-	r.Semantic = p.Semantic
-	r.Index = p.Index
-	r.Type = p.Type
-	r.Data = p.Data
+	r.Key = ai.Key
+	r.Semantic = ai.Semantic
+	r.Index = ai.Index
+	r.Type = ai.Type
+	r.Data = ai.Data
 	return r
 }
-func (p AiMaterialProperty) ResetData() AiMaterialProperty {
-	n := p
+func (ai AiMaterialProperty) ResetData() AiMaterialProperty {
+	n := ai
 	n.Data = n.Data[:0]
 	return n
 }
-func (p AiMaterialProperty) Clone() AiMaterialProperty {
-	n := p
-	n.Data = make([]byte, len(p.Data))
-	copy(n.Data, p.Data)
-	return n
+func (ai *AiMaterialProperty) Clone() *AiMaterialProperty {
+	if ai == nil {
+		return nil
+	}
+	n := *ai
+	n.Data = make([]byte, len(ai.Data))
+	copy(n.Data, ai.Data)
+	return &n
 }
 
 func NewAiMaterialProperty(key string, Type int, index int) AiMaterialProperty {
@@ -1206,6 +1248,9 @@ func (ai AiUVTransform) ToPbMsg() *pb_msg.AiUVTransform {
 }
 
 func (ai *AiUVTransform) FromPbMsg(data *pb_msg.AiUVTransform) *AiUVTransform {
+	if data == nil {
+		return nil
+	}
 	ai.Rotation = data.Rotation
 	ai.Scaling = (&common.AiVector2D{}).FromPbMsg(data.Scaling)
 	ai.Translation = (&common.AiVector2D{}).FromPbMsg(data.Translation)

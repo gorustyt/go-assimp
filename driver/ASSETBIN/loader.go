@@ -79,6 +79,7 @@ func NewAssBinImporter(data []byte) (iassimp.Loader, error) {
 	}
 	return &AssBinImporter{StreamReader: r}, nil
 }
+
 func (ai *AssBinImporter) InitConfig(cfg *config.Config) {
 
 }

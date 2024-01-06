@@ -11,11 +11,27 @@ type AiVertexWeight struct {
 	Weight float32
 }
 
+func (ai *AiVertexWeight) FromPbMsg(p *pb_msg.AiVertexWeight) *AiVertexWeight {
+	if p == nil {
+		return nil
+	}
+	ai.VertexId = p.VertexId
+	ai.Weight = p.Weight
+	return ai
+}
+
 func (ai *AiVertexWeight) Clone() *AiVertexWeight {
+	if ai == nil {
+		return nil
+	}
 	tmp := *ai
 	return &tmp
 }
+
 func (ai *AiVertexWeight) ToPbMsg() *pb_msg.AiVertexWeight {
+	if ai == nil {
+		return nil
+	}
 	return &pb_msg.AiVertexWeight{
 		VertexId: ai.VertexId,
 		Weight:   ai.Weight,

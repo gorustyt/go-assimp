@@ -10,6 +10,7 @@ import (
 	"assimp/driver/base/iassimp"
 	"assimp/driver/post_processing"
 	"assimp/driver/pre_processing"
+	"assimp/driver/protoBin"
 	"errors"
 	"os"
 	"path/filepath"
@@ -26,6 +27,7 @@ func init() {
 	RegisterLoader(ASSETBIN.NewAssBinImporter, ASSETBIN.Desc)
 	RegisterLoader(AC.NewAC3DImporter, AC.Desc)
 	RegisterLoader(BLEND.NewBlenderImporter, BLEND.Desc)
+	RegisterLoader(protoBin.NewAssProtoImporter, protoBin.Desc)
 }
 
 func RegisterLoader(l LoaderCons, desc core.AiImporterDesc) {

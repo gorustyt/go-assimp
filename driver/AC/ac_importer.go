@@ -427,14 +427,13 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 								if object.vertices[entry1.First] == object.vertices[entry2.First] ||
 									object.vertices[entry1.First] == object.vertices[entry3.First] ||
 									object.vertices[entry2.First] == object.vertices[entry3.First] {
+									numFaces--
+									numVertices -= 3
 									continue
 								}
 
 								face := mesh.Faces[faces]
 								faces++
-								if faces == 3731 {
-									_ = faces
-								}
 								face.Indices = make([]uint32, 3)
 								face.Indices[0] = uint32(cur)
 								cur++
@@ -541,6 +540,8 @@ func (ac *AC3DImporter) ConvertObjectSection(object *Object, meshes *[]*core.AiM
 				}
 				cit++
 				mat++
+				mesh.Faces = mesh.Faces[:numFaces]
+				mesh.Vertices = mesh.Vertices[:numVertices]
 			}
 
 			// Now apply catmull clark subdivision if necessary. We split meshes into

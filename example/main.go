@@ -1,16 +1,14 @@
 package main
 
 import (
-	"assimp/common/logger"
-	"assimp/driver"
-	"go.uber.org/zap"
+	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/widget"
 )
 
 func main() {
-	im := driver.NewImporter()
-	p, err := im.ReadFile("./exmaple_data/BLEND/4Cubes4Mats_248.blend", 0)
-	if err != nil {
-		logger.Fatal("", zap.Error(err))
-	}
-	_ = p
+	app := app.New()                       // 创建应用程序实例
+	window := app.NewWindow("Hello world") // 创建窗口，标题为"Hello Wolrd"
+
+	window.SetContent(widget.NewLabel("Hello world!")) // 往窗口中放入一个内容为"Hello world!"的标签控件
+	window.ShowAndRun()                                //展示并运行程序
 }

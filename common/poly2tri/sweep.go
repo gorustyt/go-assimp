@@ -1,7 +1,7 @@
 package poly2tri
 
 import (
-	"assimp/common/logger"
+	"github.com/gorustyt/go-assimp/common/logger"
 	"math"
 )
 

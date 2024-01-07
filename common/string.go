@@ -1,8 +1,8 @@
 package common
 
 import (
-	"assimp/common/logger"
 	"fmt"
+	"github.com/gorustyt/go-assimp/common/logger"
 	"math"
 	"strings"
 )

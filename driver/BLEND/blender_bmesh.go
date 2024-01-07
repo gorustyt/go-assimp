@@ -1,6 +1,6 @@
 package BLEND
 
-import "assimp/common/logger"
+import "github.com/gorustyt/go-assimp/common/logger"
 
 type BlenderBMeshConverter struct {
 	BMesh                            *Mesh

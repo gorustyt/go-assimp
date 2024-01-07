@@ -1,8 +1,8 @@
 package iassimp
 
 import (
-	"assimp/common/config"
-	"assimp/core"
+	"github.com/gorustyt/go-assimp/common/config"
+	"github.com/gorustyt/go-assimp/core"
 )
 
 type Loader interface {

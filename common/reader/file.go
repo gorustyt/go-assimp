@@ -1,10 +1,10 @@
 package reader
 
 import (
-	"assimp/common/logger"
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"github.com/gorustyt/go-assimp/common/logger"
 	"golang.org/x/text/encoding/unicode"
 	"golang.org/x/text/transform"
 )

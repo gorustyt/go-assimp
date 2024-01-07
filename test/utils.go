@@ -1,10 +1,10 @@
 package test
 
 import (
-	"assimp/common"
-	"assimp/common/logger"
-	"assimp/common/pb_msg"
-	"assimp/core"
+	"github.com/gorustyt/go-assimp/common"
+	"github.com/gorustyt/go-assimp/common/logger"
+	"github.com/gorustyt/go-assimp/common/pb_msg"
+	"github.com/gorustyt/go-assimp/core"
 	"google.golang.org/protobuf/proto"
 	"math"
 	"testing"

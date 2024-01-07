@@ -1,8 +1,8 @@
 package iassimp
 
 import (
-	"assimp/core"
 	"context"
+	"github.com/gorustyt/go-assimp/core"
 )
 
 // -----------------------------------------------------------------------------------

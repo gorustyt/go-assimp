@@ -1,9 +1,9 @@
 package BLEND
 
 import (
-	"assimp/common"
-	"assimp/common/logger"
-	"assimp/common/poly2tri"
+	"github.com/gorustyt/go-assimp/common"
+	"github.com/gorustyt/go-assimp/common/logger"
+	"github.com/gorustyt/go-assimp/common/poly2tri"
 	"math"
 )
 

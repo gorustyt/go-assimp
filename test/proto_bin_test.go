@@ -1,9 +1,9 @@
 package test
 
 import (
-	"assimp"
-	"assimp/common/pb_msg"
-	"assimp/core"
+	"github.com/gorustyt/go-assimp"
+	"github.com/gorustyt/go-assimp/common/pb_msg"
+	"github.com/gorustyt/go-assimp/core"
 	"google.golang.org/protobuf/proto"
 	"testing"
 )

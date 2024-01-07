@@ -1,8 +1,8 @@
 package BLEND
 
 import (
-	"assimp/common/reader"
 	"errors"
+	"github.com/gorustyt/go-assimp/common/reader"
 )
 
 type Converter interface {

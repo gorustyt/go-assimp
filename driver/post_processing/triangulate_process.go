@@ -1,9 +1,9 @@
 package post_processing
 
 import (
-	"assimp/core"
-	"assimp/driver/base/iassimp"
 	"context"
+	"github.com/gorustyt/go-assimp/core"
+	"github.com/gorustyt/go-assimp/driver/base/iassimp"
 )
 
 var (

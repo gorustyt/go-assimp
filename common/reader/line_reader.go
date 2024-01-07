@@ -1,12 +1,12 @@
 package reader
 
 import (
-	"assimp/common"
-	"assimp/common/logger"
 	"bufio"
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"github.com/gorustyt/go-assimp/common"
+	"github.com/gorustyt/go-assimp/common/logger"
 	"io"
 	"strconv"
 	"strings"

@@ -1,8 +1,8 @@
 package common
 
 import (
-	"assimp/common/logger"
 	"encoding/binary"
+	"github.com/gorustyt/go-assimp/common/logger"
 	"math"
 	"unsafe"
 )

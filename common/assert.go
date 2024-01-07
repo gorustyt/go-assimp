@@ -1,6 +1,6 @@
 package common
 
-import "assimp/common/logger"
+import "github.com/gorustyt/go-assimp/common/logger"
 
 func AiAssert(ok bool, msg ...string) {
 	if !ok {

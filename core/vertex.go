@@ -1,6 +1,6 @@
 package core
 
-import "assimp/common"
+import "github.com/gorustyt/go-assimp/common"
 
 type Vertex struct {
 	position           *common.AiVector3D

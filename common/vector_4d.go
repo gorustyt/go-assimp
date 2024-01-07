@@ -1,6 +1,6 @@
 package common
 
-import "assimp/common/pb_msg"
+import "github.com/gorustyt/go-assimp/common/pb_msg"
 
 type AiVector4D [4]float32
 

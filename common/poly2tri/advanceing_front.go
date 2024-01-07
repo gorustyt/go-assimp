@@ -1,6 +1,6 @@
 package poly2tri
 
-import "assimp/common/logger"
+import "github.com/gorustyt/go-assimp/common/logger"
 
 type Node struct {
 	point    *Point

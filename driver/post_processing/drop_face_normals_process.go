@@ -1,6 +1,6 @@
 package post_processing
 
-import "assimp/core"
+import "github.com/gorustyt/go-assimp/core"
 
 type DropFaceNormalsProcess struct {
 }

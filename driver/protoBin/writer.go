@@ -1,8 +1,8 @@
 package protoBin
 
 import (
-	"assimp/core"
 	"encoding/binary"
+	"github.com/gorustyt/go-assimp/core"
 	"google.golang.org/protobuf/proto"
 	"os"
 )

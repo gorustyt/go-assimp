@@ -1,6 +1,6 @@
 package common
 
-import "assimp/common/pb_msg"
+import "github.com/gorustyt/go-assimp/common/pb_msg"
 
 type AiColor3D struct {
 	R, G, B float32

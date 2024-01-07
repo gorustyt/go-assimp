@@ -1,8 +1,8 @@
 package core
 
 import (
-	"assimp/common/pb_msg"
 	"fmt"
+	"github.com/gorustyt/go-assimp/common/pb_msg"
 	"strings"
 )
 

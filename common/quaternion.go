@@ -1,6 +1,6 @@
 package common
 
-import "assimp/common/pb_msg"
+import "github.com/gorustyt/go-assimp/common/pb_msg"
 
 type AiQuaternion struct {
 	W, X, Y, Z float32

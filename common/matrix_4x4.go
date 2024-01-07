@@ -1,7 +1,7 @@
 package common
 
 import (
-	"assimp/common/pb_msg"
+	"github.com/gorustyt/go-assimp/common/pb_msg"
 	"math"
 )
 

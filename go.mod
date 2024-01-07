@@ -1,4 +1,4 @@
-module assimp
+module github.com/gorustyt/go-assimp
 
 go 1.21
 

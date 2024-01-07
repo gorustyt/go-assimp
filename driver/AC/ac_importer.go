@@ -1,14 +1,14 @@
 package AC
 
 import (
-	"assimp/common"
-	"assimp/common/config"
-	"assimp/common/logger"
-	"assimp/common/reader"
-	"assimp/core"
-	"assimp/driver/base/iassimp"
 	"errors"
 	"fmt"
+	"github.com/gorustyt/go-assimp/common"
+	"github.com/gorustyt/go-assimp/common/config"
+	"github.com/gorustyt/go-assimp/common/logger"
+	"github.com/gorustyt/go-assimp/common/reader"
+	"github.com/gorustyt/go-assimp/core"
+	"github.com/gorustyt/go-assimp/driver/base/iassimp"
 	"strings"
 	"unsafe"
 )

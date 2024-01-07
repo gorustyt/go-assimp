@@ -1,11 +1,11 @@
 package protoBin
 
 import (
-	"assimp/common/config"
-	"assimp/common/pb_msg"
-	"assimp/common/reader"
-	"assimp/core"
-	"assimp/driver/base/iassimp"
+	"github.com/gorustyt/go-assimp/common/config"
+	"github.com/gorustyt/go-assimp/common/pb_msg"
+	"github.com/gorustyt/go-assimp/common/reader"
+	"github.com/gorustyt/go-assimp/core"
+	"github.com/gorustyt/go-assimp/driver/base/iassimp"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -15,7 +15,7 @@ var (
 		"Gargaj / Conspiracy",
 		"",
 		"",
-		core.AiImporterFlags_SupportBinaryFlavour | core.AiImporterFlags_SupportCompressedFlavour,
+		0,
 		0,
 		0,
 		0,

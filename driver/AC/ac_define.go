@@ -1,10 +1,10 @@
 package AC
 
 import (
-	"assimp/common"
-	"assimp/common/logger"
-	"assimp/common/reader"
-	"assimp/core"
+	"github.com/gorustyt/go-assimp/common"
+	"github.com/gorustyt/go-assimp/common/logger"
+	"github.com/gorustyt/go-assimp/common/reader"
+	"github.com/gorustyt/go-assimp/core"
 	"strings"
 )
 

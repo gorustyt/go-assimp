@@ -1,8 +1,6 @@
 package core
 
-import (
-	"assimp/common"
-)
+import "github.com/gorustyt/go-assimp/common"
 
 // -------------------------------------------------------------------------------
 func ComputePositionEpsilon(pMeshes []*AiMesh) float64 {

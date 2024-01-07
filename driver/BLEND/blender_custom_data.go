@@ -1,7 +1,7 @@
 package BLEND
 
 import (
-	"assimp/common/logger"
+	"github.com/gorustyt/go-assimp/common/logger"
 	"reflect"
 )
 

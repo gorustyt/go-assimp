@@ -1,6 +1,6 @@
 package common
 
-import "assimp/common/pb_msg"
+import "github.com/gorustyt/go-assimp/common/pb_msg"
 
 type AiVertexWeight struct {
 	//! Index of the vertex which is influenced by the bone.

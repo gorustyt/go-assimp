@@ -1,8 +1,8 @@
 package core
 
 import (
-	"assimp/common"
-	"assimp/common/pb_msg"
+	"github.com/gorustyt/go-assimp/common"
+	"github.com/gorustyt/go-assimp/common/pb_msg"
 )
 
 // -------------------------------------------------------------------------------

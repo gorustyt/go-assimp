@@ -1,6 +1,6 @@
 package core
 
-import "assimp/common/pb_msg"
+import "github.com/gorustyt/go-assimp/common/pb_msg"
 
 type AiTexture struct {
 	/** Width of the texture, in pixels

@@ -1,8 +1,8 @@
 package test
 
 import (
-	"assimp/common/logger"
 	"bytes"
+	"github.com/gorustyt/go-assimp/common/logger"
 	"math"
 	"reflect"
 	"unsafe"

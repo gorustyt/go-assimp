@@ -1,8 +1,8 @@
 package test
 
 import (
-	"assimp"
-	"assimp/common"
+	"github.com/gorustyt/go-assimp"
+	"github.com/gorustyt/go-assimp/common"
 	"golang.org/x/text/encoding/unicode"
 	"golang.org/x/text/transform"
 	"os"

@@ -1,8 +1,8 @@
 package BLEND
 
 import (
-	"assimp/common"
-	"assimp/core"
+	"github.com/gorustyt/go-assimp/common"
+	"github.com/gorustyt/go-assimp/core"
 	"sort"
 	"strings"
 )

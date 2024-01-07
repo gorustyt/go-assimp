@@ -1,9 +1,9 @@
 package pre_processing
 
 import (
-	"assimp/common"
-	"assimp/common/logger"
-	"assimp/core"
+	"github.com/gorustyt/go-assimp/common"
+	"github.com/gorustyt/go-assimp/common/logger"
+	"github.com/gorustyt/go-assimp/core"
 	"log"
 	"math"
 )

@@ -1,7 +1,7 @@
 package core
 
 import (
-	"assimp/common"
+	"github.com/gorustyt/go-assimp/common"
 	"math"
 	"sort"
 	"unsafe"

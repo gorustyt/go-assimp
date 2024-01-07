@@ -1,8 +1,8 @@
 package test
 
 import (
-	"assimp"
-	"assimp/common"
+	"github.com/gorustyt/go-assimp"
+	"github.com/gorustyt/go-assimp/common"
 	"math"
 	"testing"
 )

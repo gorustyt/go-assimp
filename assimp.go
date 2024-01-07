@@ -1,10 +1,10 @@
 package assimp
 
 import (
-	"assimp/common/logger"
-	"assimp/core"
-	"assimp/driver"
-	"assimp/driver/protoBin"
+	"github.com/gorustyt/go-assimp/common/logger"
+	"github.com/gorustyt/go-assimp/core"
+	"github.com/gorustyt/go-assimp/driver"
+	"github.com/gorustyt/go-assimp/driver/protoBin"
 	"os"
 )
 

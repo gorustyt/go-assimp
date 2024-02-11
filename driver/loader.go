@@ -48,7 +48,12 @@ type importer struct {
 }
 
 func NewImporter() iassimp.Importer {
-	return &importer{}
+	return &importer{
+		PostProcessingSteps: []iassimp.PostProcessing{
+			post_processing.NewTriangulateProcess(),
+			&post_processing.FlipUVsProcess{},
+		},
+	}
 }
 func (im *importer) ApplyPostProcessing(pScene *core.AiScene, pFlags int) {
 	if pFlags == 0 || pScene == nil {

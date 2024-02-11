@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"github.com/gorustyt/go-assimp/common"
 	"github.com/gorustyt/go-assimp/common/pb_msg"
 	"google.golang.org/protobuf/proto"
@@ -1162,6 +1163,45 @@ type AiMaterialProperty struct {
 	 */
 	Type pb_msg.AiMaterialPropertyType
 	Data []byte
+}
+
+func (ai *AiMaterialProperty) GetData() proto.Message {
+	var v proto.Message
+	switch ai.Type {
+	case pb_msg.AiMaterialPropertyType_AiPropertyTypeString:
+		v = &pb_msg.AiMaterialPropertyString{}
+	case pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32, pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat64:
+		v = &pb_msg.AiMaterialPropertyFloat64{}
+	case pb_msg.AiMaterialPropertyType_AiPropertyTypeInt:
+		v = &pb_msg.AiMaterialPropertyInt64{}
+	case pb_msg.AiMaterialPropertyType_AiPropertyTypeVector3D:
+		v = &pb_msg.AiVector3D{}
+	case pb_msg.AiMaterialPropertyType_AiPropertyTypeAiUVTransform:
+		v = &pb_msg.AiUVTransform{}
+	case pb_msg.AiMaterialPropertyType_AiPropertyTypeVector4D:
+		v = &pb_msg.AiVector4D{}
+	case pb_msg.AiMaterialPropertyType_AiPropertyTypeColor4D:
+		v = &pb_msg.AiColor4D{}
+	case pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D:
+		v = &pb_msg.AiColor3D{}
+	}
+	err := proto.Unmarshal(ai.Data, v)
+	if err != nil {
+		panic(err)
+	}
+	if v == nil {
+		panic(fmt.Sprintf("not found PropertyType:%v", ai.Type))
+	}
+	return v
+}
+func (ai *AiMaterialProperty) UpdateData(fn func(v proto.Message)) {
+	v := ai.GetData()
+	fn(v)
+	data, err := proto.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+	ai.Data = data
 }
 
 func (ai *AiMaterialProperty) FromPbMsg(p *pb_msg.AiMaterialProperty) *AiMaterialProperty {

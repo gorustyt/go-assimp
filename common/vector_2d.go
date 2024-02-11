@@ -1,11 +1,34 @@
 package common
 
-import "github.com/gorustyt/go-assimp/common/pb_msg"
+import (
+	"github.com/gorustyt/go-assimp/common/pb_msg"
+	"math"
+)
 
 type AiVector2D struct {
 	X, Y float32
 }
 
+func (ai *AiVector2D) SquareLength() float32 {
+	return ai.X*ai.X + ai.Y*ai.Y
+}
+func (ai *AiVector2D) Length() float32 {
+	return float32(math.Sqrt(float64(ai.SquareLength())))
+}
+func (ai *AiVector2D) Div(f float32) *AiVector2D {
+	return NewAiVector2D(ai.X/f, ai.Y/f)
+}
+func (ai *AiVector2D) Mul(v2 *AiVector2D) float32 {
+	return ai.X*v2.X + ai.Y*v2.Y
+}
+
+func (ai *AiVector2D) Normalize() *AiVector2D {
+	return ai.Div(ai.Length())
+}
+
+func (ai *AiVector2D) Sub(v2 *AiVector2D) *AiVector2D {
+	return NewAiVector2D(ai.X-v2.X, ai.Y-v2.Y)
+}
 func (ai *AiVector2D) BoundMin(b *AiVector2D) *AiVector2D {
 	return NewAiVector2D(Min(ai.X, b.X), Min(ai.Y, b.Y))
 }

@@ -99,8 +99,8 @@ func (n *NGONEncoder) ngonEncodeQuad(tri1 *core.AiFace, tri2 *core.AiFace) {
  * @return false If used as is, this triangle is not considered part of the last ngon.
  */
 func (n *NGONEncoder) isConsideredSameAsLastNgon(tri *core.AiFace) bool {
-	if len(tri.Indices) == 3 {
-		panic("len(tri.Indices) == 3")
+	if len(tri.Indices) != 3 {
+		panic("len(tri.Indices) != 3")
 	}
 	return int(tri.Indices[0]) == n.LastNGONFirstIndex
 }
@@ -126,8 +126,8 @@ func (t *TriangulateProcess) Execute(pScene *core.AiScene) {
 	}
 }
 
-func (t TriangulateProcess) SetupProperties(ctx context.Context) {}
-func (t TriangulateProcess) TriangulateMesh(pMesh *core.AiMesh) bool {
+func (t *TriangulateProcess) SetupProperties(ctx context.Context) {}
+func (t *TriangulateProcess) TriangulateMesh(pMesh *core.AiMesh) bool {
 	// Now we have aiMesh::mPrimitiveTypes, so this is only here for test cases
 	if pMesh.PrimitiveTypes == 0 {
 		bNeed := false
@@ -273,7 +273,7 @@ func (t TriangulateProcess) TriangulateMesh(pMesh *core.AiMesh) bool {
 
 			nface := out[curOut]
 			curOut++
-			nface.Indices = face.Indices
+			nface.Indices = face.Indices[:3]
 			nface.Indices[0] = temp[start_vertex]
 			nface.Indices[1] = temp[(start_vertex+1)%4]
 			nface.Indices[2] = temp[(start_vertex+2)%4]

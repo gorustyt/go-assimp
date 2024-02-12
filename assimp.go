@@ -4,6 +4,7 @@ import (
 	"github.com/gorustyt/go-assimp/common/logger"
 	"github.com/gorustyt/go-assimp/core"
 	"github.com/gorustyt/go-assimp/driver"
+	"github.com/gorustyt/go-assimp/driver/base/iassimp"
 	"github.com/gorustyt/go-assimp/driver/protoBin"
 	"os"
 )
@@ -11,7 +12,7 @@ import (
 // AiImportFile Reads the given file and returns its content.
 func ParseFile(path string) (*core.AiScene, error) {
 	im := driver.NewImporter()
-	s, err := im.ReadFile(path, 0)
+	s, err := im.ReadFile(path, int(iassimp.AiProcess_Triangulate)|int(iassimp.AiProcess_FlipUVs))
 	im = nil
 	return s, err
 }

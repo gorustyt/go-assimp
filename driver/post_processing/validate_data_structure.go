@@ -14,8 +14,7 @@ type ValidateDSProcess struct {
 }
 
 func (v ValidateDSProcess) SetupProperties(ctx context.Context) {
-	//TODO implement me
-	panic("implement me")
+
 }
 
 func (v ValidateDSProcess) IsActive(pFlags int) bool {
@@ -23,6 +22,5 @@ func (v ValidateDSProcess) IsActive(pFlags int) bool {
 }
 
 func (v ValidateDSProcess) Execute(pScene *core.AiScene) {
-	//TODO implement me
-	panic("implement me")
+
 }

@@ -10,14 +10,22 @@ import (
 )
 
 // AiImportFile Reads the given file and returns its content.
-func ParseFile(path string) (*core.AiScene, error) {
+func ParseFile(path string, steps ...iassimp.AiPostProcessSteps) (*core.AiScene, error) {
+	flag := iassimp.AiPostProcessSteps(0)
+	for _, v := range steps {
+		flag = flag.Add(v)
+	}
 	im := driver.NewImporter()
-	s, err := im.ReadFile(path, int(iassimp.AiProcess_Triangulate)|int(iassimp.AiProcess_FlipUVs))
+	s, err := im.ReadFile(path, flag.Flag())
 	im = nil
 	return s, err
 }
 
-func ParseToProtoFile(fromPath, toPath string) error {
+func ParseToProtoFile(fromPath, toPath string, steps ...iassimp.AiPostProcessSteps) error {
+	flag := iassimp.AiPostProcessSteps(0)
+	for _, v := range steps {
+		flag = flag.Add(v)
+	}
 	_, err := os.Stat(fromPath)
 	if err != nil {
 		err = os.MkdirAll(fromPath, 0664)
@@ -26,7 +34,7 @@ func ParseToProtoFile(fromPath, toPath string) error {
 		}
 		logger.WarnF("find path:%v error:%v ,default will  mkdir -r", fromPath, err)
 	}
-	p, err := ParseFile(fromPath)
+	p, err := ParseFile(fromPath, flag)
 	if err != nil {
 		return err
 	}

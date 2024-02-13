@@ -19,6 +19,16 @@ import (
 
 type AiPostProcessSteps int
 
+func (a AiPostProcessSteps) Add(o AiPostProcessSteps) AiPostProcessSteps {
+	return a | o
+}
+func (a AiPostProcessSteps) Sub(o AiPostProcessSteps) AiPostProcessSteps {
+	return a | ^o
+}
+func (a AiPostProcessSteps) Flag() int {
+	return int(a)
+}
+
 const (
 
 	// -------------------------------------------------------------------------

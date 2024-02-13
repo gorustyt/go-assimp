@@ -3,6 +3,7 @@ package test
 import (
 	"github.com/gorustyt/go-assimp"
 	"github.com/gorustyt/go-assimp/common"
+	"github.com/gorustyt/go-assimp/driver/base/iassimp"
 	"math"
 	"testing"
 )
@@ -217,6 +218,14 @@ func Test23(t *testing.T) {
 	p, err := assimp.ParseFile("../example/example_nonbsd_data/BLEND/fleurOptonl.blend")
 	AssertError(t, err)
 	p1, err := assimp.ParseFile("../example/example_nonbsd_data/BLEND/fleurOptonl_blend.assbin")
+	AssertError(t, err)
+	Assert(t, DeepEqual(p, p1))
+}
+
+func Test24(t *testing.T) {
+	p, err := assimp.ParseFile("../example/example_data/BLEND/HUMAN.blend", iassimp.AiProcess_Triangulate, iassimp.AiProcess_FlipUVs)
+	AssertError(t, err)
+	p1, err := assimp.ParseFile("../example/example_data/BLEND/HUMAN_blend1.assbin")
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }

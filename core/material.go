@@ -1034,16 +1034,16 @@ type AiMaterial struct {
 	Properties []*AiMaterialProperty
 }
 
-func (ai *AiMaterial) GetPropByKey(mat *AiMaterial, Type AiTextureType, key string, index int) string {
+func (ai *AiMaterial) GetPropByKey(mat *AiMaterial, Type AiTextureType, key string, index int) interface{} {
 	for _, v := range mat.Properties {
 		if v.Key == key && AiTextureType(v.Semantic) == Type && int(v.Index) == index {
-			return v.GetData().(*pb_msg.AiMaterialPropertyString).String()
+			return v.GetData()
 		}
 	}
 	return ""
 }
 
-func (ai *AiMaterial) GetGetMaterialTextureCount(mat *AiMaterial, Type AiTextureType, i int) int {
+func (ai *AiMaterial) GetGetMaterialTextureCount(mat *AiMaterial, Type AiTextureType) int {
 	maxValue := 0
 	for _, v := range mat.Properties {
 		if v.Key == _AI_MATKEY_TEXTURE_BASE && AiTextureType(v.Semantic) == Type {
@@ -1189,7 +1189,30 @@ type AiMaterialProperty struct {
 	Data []byte
 }
 
-func (ai *AiMaterialProperty) GetData() proto.Message {
+func (ai *AiMaterialProperty) GetData() (res interface{}) {
+	v := ai.GetProtoData()
+	switch ai.Type {
+	case pb_msg.AiMaterialPropertyType_AiPropertyTypeString:
+		return v.(*pb_msg.AiMaterialPropertyString).GetData()
+	case pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32, pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat64:
+		return v.(*pb_msg.AiMaterialPropertyFloat64).GetData()
+	case pb_msg.AiMaterialPropertyType_AiPropertyTypeInt:
+		return v.(*pb_msg.AiMaterialPropertyInt64).GetData()
+	case pb_msg.AiMaterialPropertyType_AiPropertyTypeVector3D:
+		return (&common.AiVector3D{}).FromPbMsg(v.(*pb_msg.AiVector3D))
+	case pb_msg.AiMaterialPropertyType_AiPropertyTypeAiUVTransform:
+		return (&AiUVTransform{}).FromPbMsg(v.(*pb_msg.AiUVTransform))
+	case pb_msg.AiMaterialPropertyType_AiPropertyTypeVector4D:
+		return (&common.AiVector4D{}).FromPbMsg(v.(*pb_msg.AiVector4D))
+	case pb_msg.AiMaterialPropertyType_AiPropertyTypeColor4D:
+		return (&common.AiColor4D{}).FromPbMsg(v.(*pb_msg.AiColor4D))
+	case pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D:
+		return (&common.AiColor3D{}).FromPbMsg(v.(*pb_msg.AiColor3D))
+	}
+	return nil
+}
+
+func (ai *AiMaterialProperty) GetProtoData() (msg proto.Message) {
 	var v proto.Message
 	switch ai.Type {
 	case pb_msg.AiMaterialPropertyType_AiPropertyTypeString:
@@ -1216,10 +1239,12 @@ func (ai *AiMaterialProperty) GetData() proto.Message {
 	if v == nil {
 		panic(fmt.Sprintf("not found PropertyType:%v", ai.Type))
 	}
+
 	return v
 }
+
 func (ai *AiMaterialProperty) UpdateData(fn func(v proto.Message)) {
-	v := ai.GetData()
+	v := ai.GetProtoData()
 	fn(v)
 	data, err := proto.Marshal(v)
 	if err != nil {

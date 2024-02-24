@@ -12,6 +12,11 @@ const (
 )
 
 var (
+	AI_MATKEY_OBJ_ILLUM          = NewAiMaterialProperty("$mat.illum", 0, 0)
+	_AI_MATKEY_OBJ_BUMPMULT_BASE = NewAiMaterialProperty("$tex.bumpmult", 0, 0)
+)
+
+var (
 	AI_MATKEY_NAME                    = NewAiMaterialProperty("?mat.name", 0, 0)
 	AI_MATKEY_TWOSIDED                = NewAiMaterialProperty("$mat.twosided", 0, 0)
 	AI_MATKEY_SHADING_MODEL           = NewAiMaterialProperty("$mat.shadingm", 0, 0)
@@ -1027,6 +1032,25 @@ const (
 type AiMaterial struct {
 	/** List of all material properties loaded. */
 	Properties []*AiMaterialProperty
+}
+
+func (ai *AiMaterial) GetPropByKey(mat *AiMaterial, Type AiTextureType, key string, index int) string {
+	for _, v := range mat.Properties {
+		if v.Key == key && AiTextureType(v.Semantic) == Type && int(v.Index) == index {
+			return v.GetData().(*pb_msg.AiMaterialPropertyString).String()
+		}
+	}
+	return ""
+}
+
+func (ai *AiMaterial) GetGetMaterialTextureCount(mat *AiMaterial, Type AiTextureType, i int) int {
+	maxValue := 0
+	for _, v := range mat.Properties {
+		if v.Key == _AI_MATKEY_TEXTURE_BASE && AiTextureType(v.Semantic) == Type {
+			maxValue = max(maxValue, int(v.Index)+1)
+		}
+	}
+	return maxValue
 }
 
 func (ai *AiMaterial) Clone() *AiMaterial {

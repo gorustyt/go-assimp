@@ -52,6 +52,7 @@ const (
 )
 
 func init() {
+	RegisterPropertyTypeInfo("default", AI_MATKEY_OBJ_ILLUM.Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeInt)
 
 	RegisterPropertyTypeInfo("default", AI_MATKEY_NAME.Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeString)
 

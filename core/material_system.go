@@ -61,8 +61,11 @@ func init() {
 	RegisterPropertyTypeInfo("default", AI_MATKEY_COLOR_EMISSIVE.Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D, pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D)
 	RegisterPropertyTypeInfo("default", AI_MATKEY_COLOR_REFLECTIVE.Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D, pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D)
 	RegisterPropertyTypeInfo("default", AI_MATKEY_COLOR_SPECULAR.Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D, pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D)
+	RegisterPropertyTypeInfo("default", AI_MATKEY_COLOR_TRANSPARENT.Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D, pb_msg.AiMaterialPropertyType_AiPropertyTypeColor3D)
 
+	RegisterPropertyTypeInfo("default", AI_MATKEY_REFRACTI.Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32)
 	RegisterPropertyTypeInfo("default", AI_MATKEY_SHININESS.Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32)
+	RegisterPropertyTypeInfo("default", AI_MATKEY_ANISOTROPY_FACTOR.Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeFloat32)
 
 	RegisterPropertyTypeInfo("default", AI_MATKEY_UVTRANSFORM_AMBIENT(0).Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeAiUVTransform)
 	RegisterPropertyTypeInfo("default", AI_MATKEY_TEXTURE_DIFFUSE(0).Key, pb_msg.AiMaterialPropertyType_AiPropertyTypeString)

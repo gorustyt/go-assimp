@@ -229,3 +229,8 @@ func Test24(t *testing.T) {
 	AssertError(t, err)
 	Assert(t, DeepEqual(p, p1))
 }
+
+func Test25(t *testing.T) {
+	_, err := assimp.ParseFile("../example/example_data/OBJ/backpack_obj.assbin")
+	AssertError(t, err)
+}

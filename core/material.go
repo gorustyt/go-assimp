@@ -1034,8 +1034,8 @@ type AiMaterial struct {
 	Properties []*AiMaterialProperty
 }
 
-func (ai *AiMaterial) GetPropByKey(mat *AiMaterial, Type AiTextureType, key string, index int) interface{} {
-	for _, v := range mat.Properties {
+func (ai *AiMaterial) GetPropByKey(Type AiTextureType, key string, index int) interface{} {
+	for _, v := range ai.Properties {
 		if v.Key == key && AiTextureType(v.Semantic) == Type && int(v.Index) == index {
 			return v.GetData()
 		}
@@ -1043,9 +1043,9 @@ func (ai *AiMaterial) GetPropByKey(mat *AiMaterial, Type AiTextureType, key stri
 	return ""
 }
 
-func (ai *AiMaterial) GetGetMaterialTextureCount(mat *AiMaterial, Type AiTextureType) int {
+func (ai *AiMaterial) GetGetMaterialTextureCount(Type AiTextureType) int {
 	maxValue := 0
-	for _, v := range mat.Properties {
+	for _, v := range ai.Properties {
 		if v.Key == _AI_MATKEY_TEXTURE_BASE && AiTextureType(v.Semantic) == Type {
 			maxValue = max(maxValue, int(v.Index)+1)
 		}

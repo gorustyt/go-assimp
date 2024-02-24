@@ -1037,7 +1037,7 @@ type AiMaterial struct {
 func (ai *AiMaterial) GetPropByKey(Type AiTextureType, key string, index int) interface{} {
 	for _, v := range ai.Properties {
 		if v.Key == key && AiTextureType(v.Semantic) == Type && int(v.Index) == index {
-			return v.GetData()
+			return v.GetProtoData()
 		}
 	}
 	return ""
